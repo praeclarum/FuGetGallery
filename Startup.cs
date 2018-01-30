@@ -33,7 +33,7 @@ namespace FuGetGallery
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                app.UseExceptionHandler("/error");
             }
 
             app.UseStaticFiles();
