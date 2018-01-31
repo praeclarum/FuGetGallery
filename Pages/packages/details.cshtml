@@ -97,7 +97,7 @@
 
 @if (ns != null) {
     <h3 id="types">Types</h3>
-    <div style="line-height: 2.75em;">
+    <div style="line-height: 2.5em;">
     @foreach (var t in ns.OrderBy(x => x.Name)) {
         var bold = t.Name == typ?.Name ? "bold" : "normal";
         var isPublic = t.IsPublic;
