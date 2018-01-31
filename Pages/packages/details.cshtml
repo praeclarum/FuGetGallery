@@ -1,0 +1,32 @@
+@page
+@{    
+    var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"]);
+
+    ViewData["Title"] = package.Id;
+}
+
+<h1>@package.Id @package.Version</h1>
+
+<p>Download Url: <a href="@package.DownloadUrl">@package.DownloadUrl</a></p>
+
+<p>Size: @package.SizeInBytes.ToString("#,0") bytes</p>
+
+@if (package.Error != null) {
+    <p>Error: @package.Error</p>
+}
+
+<table class="table table-hover">
+@foreach (var tf in package.TargetFrameworks) {
+    <tr>
+    <th>@tf.Moniker</th>
+    <td>
+        <ul>
+        @foreach (var asm in tf.Assemblies) {
+            <li><a href="/packages/@package.Id/@tf.Moniker/lib/@asm.FileName">@asm.FileName</a> (@asm.SizeInBytes.ToString("#,0") bytes)</li>
+        }
+        </ul>
+    </td>
+    </tr>
+}
+</table>
+
