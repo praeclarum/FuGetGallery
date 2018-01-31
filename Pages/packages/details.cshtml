@@ -37,7 +37,7 @@
 </a>
 </p>
 
-<pre>&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</pre>
+<pre><code class="xml" style="background-color:transparent">&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</code></pre>
 
 @if (package.Error != null) {
     <p>Error: @package.Error</p>
@@ -111,7 +111,7 @@
 }
 
 @if (typ != null) {
-<div id="code" style="clear: both">
+<div id="code" style="clear: both;padding-top:2em">
     <pre style="tab-size: 4;line-height:1.2em;"><code class="csharp" style="background-color:transparent">@asm.DecompileType(typ)</code></pre>
 </div>
 }
