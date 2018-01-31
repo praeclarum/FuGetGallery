@@ -4,6 +4,20 @@
 
     var framework = package.GetTargetFramework (RouteData.Values["targetFramework"]);
 
+    var asm = framework?.GetAssembly (RouteData.Values["assemblyName"]);
+    var asmDef = asm?.Definition;
+
+    var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
+
+    var namespaces = types.Where(x => x.IsPublic).GroupBy(x => x.Namespace).OrderBy(x => x.Key).ToList();
+
+    var inputNamespace = (RouteData.Values["namespace"] ?? "").ToString().Trim();
+
+    var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
+    if (ns == null) {
+        ns = namespaces.FirstOrDefault ();
+    }
+
     var size = framework != null ? framework.SizeInBytes : package.SizeInBytes;
 
     var nupkgName = package.Id + "." + package.Version + ".nupkg";
@@ -26,8 +40,6 @@
 }
 
 
-<h2 style="margin-top:1em;">Assemblies <small>@size.ToString("#,0") bytes</small></h2>
-
 <nav style="margin-top:0em;line-height:3em;">
 @foreach (var tf in package.TargetFrameworks) {
     var active = tf.Moniker == framework.Moniker ? "active" : "";
@@ -38,16 +50,57 @@
 }
 </nav>
 
-<div style="margin-top:1em;max-height: 15em; overflow: scroll">
+<h2 style="margin-top:1em;">API <small>@size.ToString("#,0") bytes</small></h2>
+
+<div class="row">
+
 @if (framework != null) {
-        <table class="table">
-        @foreach (var asm in framework.Assemblies) {
-            <tr>
-                <td><a href="/packages/@package.Id/@framework.Moniker/lib/@asm.FileName">@asm.FileName</a></td>
-                <td>@asm.SizeInBytes.ToString("#,0") bytes</td>
-            </tr>
-        }
-        </table>
-}
+<div class="col-xs-6 col-sm-4">
+    <h3>Assemblies</h3>
+    <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    @foreach (var a in framework.Assemblies) {
+        var bold = a.FileName == asm?.FileName ? "bold" : "normal";
+        <li>
+            <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight: @bold"
+                href="/packages/@package.Id/@package.Version/@framework.Moniker/@a.FileName">@a.FileName</a>
+        </li>
+    }
+    </ul>
 </div>
+}
+
+@if (asmDef != null) {
+    <div class="col-xs-6 col-sm-4">
+        <h3>Namespaces</h3>
+        <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+        @foreach (var n in namespaces) {
+            var bold = n.Key == ns?.Key ? "bold" : "normal";
+            <li>
+                <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight: @bold"
+                    href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@n.Key">@n.Key</a>
+            </li>
+        }
+        </ul>
+    </div>
+}
+
+@if (ns != null) {
+    <div class="col-xs-6 col-sm-4">
+        <h3>Types</h3>
+        <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+        @foreach (var t in ns) {
+            var bold = t.Name == ns.Key ? "bold" : "normal";
+            <li>
+                <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>&nbsp;<a style="font-weight: @bold"
+                    href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@ns.Key/@t.Name">@t.Name</a>
+            </li>
+        }
+        </ul>
+    </div>
+}
+
+</div>
+
+
+
 

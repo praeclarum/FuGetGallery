@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.IO.Compression;
+using Mono.Cecil;
 
 namespace FuGetGallery
 {
@@ -106,6 +107,15 @@ namespace FuGetGallery
         public string Moniker { get; set; } = "";
         public List<PackageAssembly> Assemblies { get; set; } = new List<PackageAssembly> ();
         public long SizeInBytes => Assemblies.Sum (x => x.SizeInBytes);
+
+        public PackageAssembly GetAssembly (object inputName)
+        {
+            var cleanName = (inputName ?? "").ToString().Trim();
+            if (cleanName.Length == 0) {
+                return Assemblies.OrderByDescending(x=>x.SizeInBytes).FirstOrDefault();
+            }
+            return Assemblies.FirstOrDefault (x => x.FileName == cleanName);
+        }
     }
 
     public class PackageAssembly
@@ -113,5 +123,23 @@ namespace FuGetGallery
         public ZipArchiveEntry ArchiveEntry { get; set; }
         public string FileName => ArchiveEntry?.Name;
         public long SizeInBytes => ArchiveEntry != null ? ArchiveEntry.Length : 0;
+
+        readonly Lazy<AssemblyDefinition> definition;
+
+        public AssemblyDefinition Definition => definition.Value;
+
+        public PackageAssembly ()
+        {
+            definition = new Lazy<AssemblyDefinition> (() => {
+                if (ArchiveEntry == null)
+                    return null;
+                var ms = new MemoryStream ((int)ArchiveEntry.Length);
+                using (var es = ArchiveEntry.Open ()) {
+                    es.CopyTo (ms);
+                    ms.Position = 0;
+                }
+                return AssemblyDefinition.ReadAssembly (ms);
+            }, true);
+        }
     }
 }
