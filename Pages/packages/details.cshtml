@@ -40,6 +40,8 @@
 }
 
 
+<h2 style="margin-top:1em;">API <small>@size.ToString("#,0") bytes</small></h2>
+
 <nav style="margin-top:0em;line-height:3em;">
 @foreach (var tf in package.TargetFrameworks) {
     var active = tf.Moniker == framework.Moniker ? "active" : "";
@@ -49,8 +51,6 @@
     <a class="btn btn-@color btn-sm @active" role="button" href="/packages/@package.Id/@package.Version/@tf.Moniker">@tf.Moniker</a>
 }
 </nav>
-
-<h2 style="margin-top:1em;">API <small>@size.ToString("#,0") bytes</small></h2>
 
 <div class="row">
 
