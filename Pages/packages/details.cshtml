@@ -9,13 +9,13 @@
 
     var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
 
-    var namespaces = types.Where(x => x.IsPublic).GroupBy(x => x.Namespace).OrderBy(x => x.Key).ToList();
+    var namespaces = types.GroupBy(x => x.Namespace).OrderBy(x => x.Key).Where(x => !string.IsNullOrEmpty(x.Key)).ToList();
 
     var inputNamespace = (RouteData.Values["namespace"] ?? "").ToString().Trim();
 
     var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
     if (ns == null) {
-        ns = namespaces.FirstOrDefault ();
+        ns = namespaces.OrderByDescending(x => x.Count()).FirstOrDefault ();
     }
 
     var size = framework != null ? framework.SizeInBytes : package.SizeInBytes;
@@ -55,13 +55,14 @@
 <div class="row">
 
 @if (framework != null) {
-<div class="col-xs-6 col-sm-4">
+<div class="col-xs-12 col-sm-4">
     <h3>Assemblies</h3>
     <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
-    @foreach (var a in framework.Assemblies) {
+    @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
         var bold = a.FileName == asm?.FileName ? "bold" : "normal";
+        var color = bold == "bold" ? "#000" : "#666";
         <li>
-            <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight: @bold"
+            <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
                 href="/packages/@package.Id/@package.Version/@framework.Moniker/@a.FileName">@a.FileName</a>
         </li>
     }
@@ -70,13 +71,14 @@
 }
 
 @if (asmDef != null) {
-    <div class="col-xs-6 col-sm-4">
+    <div class="col-xs-12 col-sm-4">
         <h3>Namespaces</h3>
         <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var n in namespaces) {
             var bold = n.Key == ns?.Key ? "bold" : "normal";
+            var color = bold == "bold" ? "#000" : "#666";
             <li>
-                <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight: @bold"
+                <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
                     href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@n.Key">@n.Key</a>
             </li>
         }
@@ -85,13 +87,14 @@
 }
 
 @if (ns != null) {
-    <div class="col-xs-6 col-sm-4">
+    <div class="col-xs-12 col-sm-4">
         <h3>Types</h3>
         <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
-        @foreach (var t in ns) {
+        @foreach (var t in ns.OrderBy(x => x.Name)) {
             var bold = t.Name == ns.Key ? "bold" : "normal";
+            var color = t.IsPublic ? "#666" : "#CCC";
             <li>
-                <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>&nbsp;<a style="font-weight: @bold"
+                <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
                     href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@ns.Key/@t.Name">@t.Name</a>
             </li>
         }
