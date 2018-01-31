@@ -73,7 +73,7 @@ namespace FuGetGallery
                 var xdoc = System.Xml.Linq.XDocument.Load (stream);
                 var ns = xdoc.Root.Name.Namespace;
                 Id = xdoc.Root.Element(ns + "metadata").Element(ns + "id").Value.Trim();
-                Console.WriteLine (xdoc);
+                // Console.WriteLine (xdoc);
             }
         }
 
@@ -124,7 +124,10 @@ namespace FuGetGallery
         public string FileName => ArchiveEntry?.Name;
         public long SizeInBytes => ArchiveEntry != null ? ArchiveEntry.Length : 0;
 
+        static readonly DefaultAssemblyResolver assemblyResolver = new DefaultAssemblyResolver ();
+
         readonly Lazy<AssemblyDefinition> definition;
+        readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
 
         public AssemblyDefinition Definition => definition.Value;
 
@@ -138,8 +141,33 @@ namespace FuGetGallery
                     es.CopyTo (ms);
                     ms.Position = 0;
                 }
-                return AssemblyDefinition.ReadAssembly (ms);
+                return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
+                    AssemblyResolver = assemblyResolver,
+                });
             }, true);
+            decompiler = new Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> (() => {
+                var m = Definition?.MainModule;
+                if (m == null)
+                    return null;
+                return new ICSharpCode.Decompiler.CSharp.CSharpDecompiler (m, new ICSharpCode.Decompiler.DecompilerSettings {
+                    ShowXmlDocumentation = true,
+                    ThrowOnAssemblyResolveErrors = false,
+                    CSharpFormattingOptions = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono (),
+                });
+            }, true);
+        }
+
+        public string DecompileType (TypeDefinition type)
+        {
+            try {
+                var d = decompiler.Value;
+                if (d == null)
+                    return "// No decompiler available";
+                return d.DecompileTypeAsString (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
+            }
+            catch (Exception e) {
+                return "/* " + e.Message + " */";
+            }
         }
     }
 }

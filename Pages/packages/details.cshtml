@@ -63,7 +63,7 @@
 @if (framework != null) {
 <div class="col-xs-12 col-sm-4">
     <h3>Assemblies</h3>
-    <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
         var bold = a.FileName == asm?.FileName ? "bold" : "normal";
         var color = bold == "bold" ? "#000" : "#666";
@@ -79,7 +79,7 @@
 @if (asmDef != null) {
     <div class="col-xs-12 col-sm-4">
         <h3>Namespaces</h3>
-        <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+        <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var n in namespaces) {
             var bold = n.Key == ns?.Key ? "bold" : "normal";
             var isPublic = n.Any(x => x.IsPublic);
@@ -96,18 +96,24 @@
 @if (ns != null) {
     <div class="col-xs-12 col-sm-4">
         <h3>Types</h3>
-        <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+        <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var t in ns.OrderBy(x => x.Name)) {
             var bold = t.Name == typ?.Name ? "bold" : "normal";
             var isPublic = t.IsPublic;
             var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
             <li>
                 <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                    href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@ns.Key/@t.Name">@t.Name</a>
+                    href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@ns.Key/@t.Name#code">@t.Name</a>
             </li>
         }
         </ul>
     </div>
+}
+
+@if (typ != null) {
+<div id="code" style="clear: both">
+    <pre style="tab-size: 4;line-height:1.2em;"><code class="csharp" style="background-color:transparent">@asm.DecompileType(typ)</code></pre>
+</div>
 }
 
 </div>
