@@ -2,31 +2,52 @@
 @{    
     var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"]);
 
+    var framework = package.GetTargetFramework (RouteData.Values["targetFramework"]);
+
+    var size = framework != null ? framework.SizeInBytes : package.SizeInBytes;
+
+    var nupkgName = package.Id + "." + package.Version + ".nupkg";
+
     ViewData["Title"] = package.Id;
 }
 
-<h1>@package.Id @package.Version</h1>
+<h1>@package.Id <small>@package.Version</small></h1>
 
-<p>Download Url: <a href="@package.DownloadUrl">@package.DownloadUrl</a></p>
+<p>
+<a href="@package.DownloadUrl" type="button" class="btn btn-default btn-default">
+  <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
+</a>
+</p>
 
-<p>Size: @package.SizeInBytes.ToString("#,0") bytes</p>
+<pre>&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</pre>
 
 @if (package.Error != null) {
     <p>Error: @package.Error</p>
 }
 
-<table class="table table-hover">
+
+<h2 style="margin-top:1em;">Assemblies <small>@size.ToString("#,0") bytes</small></h2>
+
+<nav style="margin-top:0em;line-height:3em;">
 @foreach (var tf in package.TargetFrameworks) {
-    <tr>
-    <th>@tf.Moniker</th>
-    <td>
-        <ul>
-        @foreach (var asm in tf.Assemblies) {
-            <li><a href="/packages/@package.Id/@tf.Moniker/lib/@asm.FileName">@asm.FileName</a> (@asm.SizeInBytes.ToString("#,0") bytes)</li>
-        }
-        </ul>
-    </td>
-    </tr>
+    var active = tf.Moniker == framework.Moniker ? "active" : "";
+    var color = tf.Moniker.StartsWith("netstandard") ? "success" : 
+                (tf.Moniker.StartsWith("net") ? "info" :
+                 (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
+    <a class="btn btn-@color btn-sm @active" role="button" href="/packages/@package.Id/@package.Version/@tf.Moniker">@tf.Moniker</a>
 }
-</table>
+</nav>
+
+<div style="margin-top:1em;max-height: 15em; overflow: scroll">
+@if (framework != null) {
+        <table class="table">
+        @foreach (var asm in framework.Assemblies) {
+            <tr>
+                <td><a href="/packages/@package.Id/@framework.Moniker/lib/@asm.FileName">@asm.FileName</a></td>
+                <td>@asm.SizeInBytes.ToString("#,0") bytes</td>
+            </tr>
+        }
+        </table>
+}
+</div>
 

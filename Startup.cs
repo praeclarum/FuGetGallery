@@ -23,8 +23,10 @@ namespace FuGetGallery
         {
             services.AddMvc().AddRazorPagesOptions(options =>
             {
-                options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version?}");
-                options.Conventions.AddPageRoute("/packages/code", "packages/{id}/{version}/lib/{targetFramework}/{assemblyName}/{memberId}");
+                options.Conventions.AddPageRoute("/packages/details", "packages/{id}");
+                options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}");
+                options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{targetFramework}");
+                options.Conventions.AddPageRoute("/packages/code", "packages/{id}/{version}/{targetFramework}/lib/{assemblyName}/{memberId}");
             });
         }
 

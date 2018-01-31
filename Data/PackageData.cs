@@ -29,6 +29,15 @@ namespace FuGetGallery
             return cache.GetAsync (cleanId, cleanVersion);
         }
 
+        public PackageTargetFramework GetTargetFramework (object inputTargetFramework)
+        {
+            var moniker = (inputTargetFramework ?? "").ToString().Trim().ToLowerInvariant();
+            var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == moniker);
+            if (tf == null)
+                tf = TargetFrameworks.FirstOrDefault ();
+            return tf;
+        }
+
         void Read (byte[] bytes)
         {
             SizeInBytes = bytes.LongLength;
@@ -96,6 +105,7 @@ namespace FuGetGallery
     {
         public string Moniker { get; set; } = "";
         public List<PackageAssembly> Assemblies { get; set; } = new List<PackageAssembly> ();
+        public long SizeInBytes => Assemblies.Sum (x => x.SizeInBytes);
     }
 
     public class PackageAssembly
