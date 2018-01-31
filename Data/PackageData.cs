@@ -58,7 +58,7 @@ namespace FuGetGallery
                             };
                             TargetFrameworks.Add (tf);
                         }
-                        tf.Assemblies.Add (new PackageAssembly { ArchiveEntry = e });
+                        tf.Assemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));
                     }
                 }
                 else if (n.EndsWith (".nuspec", StringComparison.InvariantCultureIgnoreCase)) {
@@ -105,8 +105,15 @@ namespace FuGetGallery
     public class PackageTargetFramework
     {
         public string Moniker { get; set; } = "";
-        public List<PackageAssembly> Assemblies { get; set; } = new List<PackageAssembly> ();
+        public List<PackageAssembly> Assemblies { get; } = new List<PackageAssembly> ();
         public long SizeInBytes => Assemblies.Sum (x => x.SizeInBytes);
+
+        public PackageAssemblyResolver AssemblyResolver { get; }
+
+        public PackageTargetFramework()
+        {
+            AssemblyResolver = new PackageAssemblyResolver (this);
+        }
 
         public PackageAssembly GetAssembly (object inputName)
         {
@@ -116,23 +123,45 @@ namespace FuGetGallery
             }
             return Assemblies.FirstOrDefault (x => x.FileName == cleanName);
         }
+
+        public class PackageAssemblyResolver : DefaultAssemblyResolver
+        {
+            readonly PackageTargetFramework packageTargetFramework;
+            public PackageAssemblyResolver (PackageTargetFramework packageTargetFramework)
+            {
+                this.packageTargetFramework = packageTargetFramework;
+            }
+            public override AssemblyDefinition Resolve (AssemblyNameReference name)
+            {
+                var a = packageTargetFramework.Assemblies.FirstOrDefault(x => {
+                    // System.Console.WriteLine("HOW ABOUT? " + x.Definition.Name);
+                    return x.Definition.Name.Name == name.Name;
+                });
+                if (a != null) {
+                    // System.Console.WriteLine("RESOLVED " + name);
+                    return a.Definition;
+                }                
+                return base.Resolve (name);
+            }
+        }
     }
 
     public class PackageAssembly
     {
-        public ZipArchiveEntry ArchiveEntry { get; set; }
+        public ZipArchiveEntry ArchiveEntry { get; }
         public string FileName => ArchiveEntry?.Name;
         public long SizeInBytes => ArchiveEntry != null ? ArchiveEntry.Length : 0;
 
-        static readonly DefaultAssemblyResolver assemblyResolver = new DefaultAssemblyResolver ();
-
         readonly Lazy<AssemblyDefinition> definition;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
+        private readonly IAssemblyResolver resolver;
 
         public AssemblyDefinition Definition => definition.Value;
 
-        public PackageAssembly ()
+        public PackageAssembly (ZipArchiveEntry entry, IAssemblyResolver resolver)
         {
+            ArchiveEntry = entry;
+            this.resolver = resolver;
             definition = new Lazy<AssemblyDefinition> (() => {
                 if (ArchiveEntry == null)
                     return null;
@@ -142,7 +171,7 @@ namespace FuGetGallery
                     ms.Position = 0;
                 }
                 return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
-                    AssemblyResolver = assemblyResolver,
+                    AssemblyResolver = resolver,
                 });
             }, true);
             decompiler = new Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> (() => {
