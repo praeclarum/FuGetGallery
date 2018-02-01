@@ -15,7 +15,7 @@
 
     var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
     if (ns == null) {
-        ns = namespaces.OrderByDescending(x => x.Count()).FirstOrDefault ();
+        ns = namespaces.FirstOrDefault ();
     }
 
     var inputTypeName = (RouteData.Values["typeName"] ?? "").ToString().Trim();
@@ -52,7 +52,9 @@
     var color = tf.Moniker.StartsWith("netstandard") ? "success" : 
                 (tf.Moniker.StartsWith("net") ? "info" :
                  (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
-    <a class="btn btn-@color btn-sm @active" role="button" href="/packages/@package.Id/@package.Version/@tf.Moniker">@tf.Moniker</a>
+    var bold = active == "active" ? "bold" : "normal";
+    var tcolor = active == "active" ? "color:#fff" : "";
+    <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(@tf.Moniker)">@tf.Moniker</a>
 }
 </nav>
 
@@ -69,7 +71,7 @@
         var color = bold == "bold" ? "#000" : "#666";
         <li>
             <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                href="/packages/@package.Id/@package.Version/@framework.Moniker/@a.FileName">@a.FileName</a>
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
         </li>
     }
     </ul>
@@ -86,7 +88,7 @@
             var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
             <li>
                 <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                    href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@n.Key">@n.Key</a>
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">@n.Key</a>
             </li>
         }
         </ul>
@@ -104,7 +106,7 @@
         var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
         var active = bold == "bold" ? "active" : "";
         <a type="button" class="btn btn-default btn-sm @active" style="font-weight:@bold;color:@color;"
-           href="/packages/@package.Id/@package.Version/@framework.Moniker/@asm.FileName/@ns.Key/@t.Name#code">@t.Name</a>
+           href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#code">@t.Name</a>
     }
     </div>
 }
