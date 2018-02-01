@@ -23,11 +23,14 @@ namespace FuGetGallery
 
         static readonly PackageDataCache cache = new PackageDataCache ();
 
-        public static Task<PackageData> GetAsync (object inputId, object inputVersion)
+        public static async Task<PackageData> GetAsync (object inputId, object inputVersion)
         {
             var cleanId = (inputId ?? "").ToString().Trim().ToLowerInvariant();
-            var cleanVersion = (inputVersion ?? "").ToString().Trim().ToLowerInvariant();
-            return cache.GetAsync (cleanId, cleanVersion);
+
+            var versions = await PackageVersions.GetAsync (inputId).ConfigureAwait (false);
+            var version = versions.GetVersion (inputVersion);
+
+            return await cache.GetAsync (versions.LowerId, version.Version).ConfigureAwait (false);
         }
 
         public PackageTargetFramework GetTargetFramework (object inputTargetFramework)
