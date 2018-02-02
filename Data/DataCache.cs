@@ -14,12 +14,17 @@ namespace FuGetGallery
 {
     public abstract class DataCacheBase
     {
-        protected readonly MemoryCache cache = new MemoryCache (new MemoryCacheOptions {            
+        protected readonly MemoryCache cache = new MemoryCache (new MemoryCacheOptions {
         });
     }
 
     public abstract class DataCache<TResult> : DataCacheBase
     {
+        readonly TimeSpan expireAfter;
+        public DataCache (TimeSpan expireAfter)
+        {
+            this.expireAfter = expireAfter;
+        }
         public Task<TResult> GetAsync ()
         {
             var key = "";
@@ -28,7 +33,7 @@ namespace FuGetGallery
             }
             return GetValueAsync ().ContinueWith (t => {
                 var rt = t.Result;
-                cache.Set (key, rt);
+                cache.Set (key, rt, expireAfter);
                 return rt;
             });
         }
@@ -37,6 +42,11 @@ namespace FuGetGallery
 
     public abstract class DataCache<TArg, TResult> : DataCacheBase
     {
+        readonly TimeSpan expireAfter;
+        public DataCache (TimeSpan expireAfter)
+        {
+            this.expireAfter = expireAfter;
+        }
         public Task<TResult> GetAsync (TArg arg)
         {
             var key = arg;
@@ -45,7 +55,7 @@ namespace FuGetGallery
             }
             return GetValueAsync (arg).ContinueWith (t => {
                 var rt = t.Result;
-                cache.Set (key, rt);
+                cache.Set (key, rt, expireAfter);
                 return rt;
             });
         }
@@ -54,6 +64,11 @@ namespace FuGetGallery
 
     public abstract class DataCache<TArg0, TArg1, TResult> : DataCacheBase
     {
+        readonly TimeSpan expireAfter;
+        public DataCache (TimeSpan expireAfter)
+        {
+            this.expireAfter = expireAfter;
+        }
         public Task<TResult> GetAsync (TArg0 arg0, TArg1 arg1)
         {
             var key = Tuple.Create (arg0, arg1);
@@ -62,7 +77,7 @@ namespace FuGetGallery
             }
             return GetValueAsync (arg0, arg1).ContinueWith (t => {
                 var rt = t.Result;
-                cache.Set (key, rt);
+                cache.Set (key, rt, expireAfter);
                 return rt;
             });
         }

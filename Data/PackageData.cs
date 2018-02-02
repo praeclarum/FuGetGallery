@@ -82,6 +82,7 @@ namespace FuGetGallery
 
         class PackageDataCache : DataCache<string, string, PackageData>
         {
+            public PackageDataCache () : base (TimeSpan.FromDays (365)) { }
             readonly HttpClient httpClient = new HttpClient ();
             protected override async Task<PackageData> GetValueAsync(string id, string version)
             {

@@ -52,6 +52,7 @@ namespace FuGetGallery
 
         class PackageVersionsCache : DataCache<string, PackageVersions>
         {
+            public PackageVersionsCache () : base (TimeSpan.FromMinutes (20)) { }
             readonly HttpClient httpClient = new HttpClient ();
             protected override async Task<PackageVersions> GetValueAsync(string lowerId)
             {
