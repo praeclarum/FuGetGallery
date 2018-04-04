@@ -81,7 +81,11 @@ namespace FuGetGallery
                             TargetFrameworks.Add (tf);
                         }
                         if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
-                            tf.AssemblyXmlDocs.Add (new PackageAssemblyXmlDocs (e));
+                            var docs = new PackageAssemblyXmlDocs (e);
+                            if (string.IsNullOrEmpty (docs.Error)) {
+                                // System.Console.WriteLine(docs.AssemblyName);
+                                tf.AssemblyXmlDocs[docs.AssemblyName] = docs;
+                            }
                         }
                         else {
                             tf.Assemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));

@@ -8,7 +8,7 @@ namespace FuGetGallery
     {
         public string Moniker { get; set; } = "";
         public List<PackageAssembly> Assemblies { get; } = new List<PackageAssembly> ();
-        public List<PackageAssemblyXmlDocs> AssemblyXmlDocs { get; } = new List<PackageAssemblyXmlDocs> ();
+        public Dictionary<string, PackageAssemblyXmlDocs> AssemblyXmlDocs { get; } = new Dictionary<string, PackageAssemblyXmlDocs> ();
         public long SizeInBytes => Assemblies.Sum (x => x.SizeInBytes);
 
         public PackageAssemblyResolver AssemblyResolver { get; }

@@ -13,6 +13,8 @@ namespace FuGetGallery
 
         public string Error { get; }
 
+        public string AssemblyName { get; }
+
         public Dictionary<string, MemberXmlDocs> MemberDocs { get; } = new Dictionary<string, MemberXmlDocs> ();
 
         public PackageAssemblyXmlDocs (ZipArchiveEntry entry)
@@ -21,6 +23,8 @@ namespace FuGetGallery
                 using (var s = entry.Open ()) {
                     doc = XDocument.Load (s);
                     var ns = doc.Root.Name.Namespace;
+                    AssemblyName = doc.Root.Element(ns + "assembly").Value.Trim();
+                    // System.Console.WriteLine(AssemblyName);
                     foreach (var me in doc.Root.Element (ns + "members").Elements (ns + "member")) {
                         var m = new MemberXmlDocs (me);
                         // System.Console.WriteLine(m.Name);
@@ -33,7 +37,8 @@ namespace FuGetGallery
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine (ex);
+                // System.Console.WriteLine (ex);
+                // if (doc != null) System.Console.WriteLine(doc);
                 Error = ex.Message;
             }
         }
