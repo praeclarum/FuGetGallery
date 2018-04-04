@@ -63,7 +63,7 @@
 <div class="row">
 
 @if (framework != null) {
-<div class="col-xs-12 col-sm-4">
+<div class="col-xs-12 col-sm-3">
     <h3>Assemblies</h3>
     <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
@@ -79,7 +79,7 @@
 }
 
 @if (asmDef != null) {
-    <div class="col-xs-12 col-sm-8">
+    <div class="col-xs-12 col-sm-9">
         <h3>Namespaces</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var n in namespaces) {
@@ -97,29 +97,39 @@
 
 </div>
 
+<div class="row">
+
 @if (ns != null) {
-    <h3 id="types">Types</h3>
-    <div style="line-height: 2.5em;">
-    @foreach (var t in ns.OrderBy(x => x.Name)) {
-        var bold = t.Name == typ?.Name ? "bold" : "normal";
-        var isPublic = t.IsPublic;
-        var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
-        var active = bold == "bold" ? "active" : "";
-        <a type="button" class="btn btn-default btn-sm @active" style="font-weight:@bold;color:@color;"
-           href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#code">@t.Name</a>
-    }
+    <div class="col-xs-12 col-sm-3">
+        <h3 id="types" style="margin-top:2em;">Types</h3>
+        <ul style="list-style-type:none;padding:0;white-space:nowrap">
+        @foreach (var t in ns.OrderBy(x => x.Name)) {
+            var bold = t.Name == typ?.Name ? "bold" : "normal";
+            var isPublic = t.IsPublic;
+            var isEnum = t.IsEnum;
+            var isDel = !isEnum && t.IsDelegate();
+            var icon = isEnum ? "menu-hamburger" : (isDel ? "flash" : "unchecked");
+            var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
+            var active = bold == "bold" ? "active" : "";
+            <li>
+            <a class="@active" style="font-weight:@bold;color:@color;"
+            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#code">
+            <span class="glyphicon glyphicon-@icon" aria-hidden="true"></span>&nbsp;@t.Name</a>
+            </li>
+        }
+        </ul>
     </div>
 }
 
 
 
 @if (typ != null) {
-<div id="code" style="margin-top:2em">
-    <pre style="tab-size: 4;line-height:1.2em;"><code class="csharp" style="background-color:transparent">@asm.DecompileType(typ)</code></pre>
-</div>
+    <div class="col-xs-12 col-sm-9" id="code" style="margin-top:5em">
+        <pre style="tab-size: 4;line-height:1.2em;"><code class="csharp" style="background-color:transparent">@asm.DecompileType(typ)</code></pre>
+    </div>
 }
 
-
+</div>
 
 
 
