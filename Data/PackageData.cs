@@ -64,10 +64,12 @@ namespace FuGetGallery
             SizeInBytes = bytes.LongLength;
             Archive = new ZipArchive (new MemoryStream (bytes), ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
+            ZipArchiveEntry nuspecEntry = null;
             foreach (var e in Archive.Entries.OrderBy (x => x.FullName)) {
                 var n = e.FullName;
                 if (n.StartsWith ("lib/") && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
-                                              n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase))) {
+                                              n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase) ||
+                                              n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase))) {
                     var parts = n.Split ('/', StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length >= 3) {
                         var tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
@@ -78,12 +80,20 @@ namespace FuGetGallery
                             };
                             TargetFrameworks.Add (tf);
                         }
-                        tf.Assemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));
+                        if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
+                            tf.AssemblyXmlDocs.Add (new PackageAssemblyXmlDocs (e));
+                        }
+                        else {
+                            tf.Assemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));
+                        }
                     }
                 }
                 else if (n.EndsWith (".nuspec", StringComparison.InvariantCultureIgnoreCase)) {
-                    ReadNuspec (e);
+                    nuspecEntry = e;
                 }
+            }
+            if (nuspecEntry != null) {
+                ReadNuspec (nuspecEntry);
             }
         }
 
@@ -128,104 +138,6 @@ namespace FuGetGallery
                 }
 
                 return package;
-            }
-        }
-    }
-
-    public class PackageTargetFramework
-    {
-        public string Moniker { get; set; } = "";
-        public List<PackageAssembly> Assemblies { get; } = new List<PackageAssembly> ();
-        public long SizeInBytes => Assemblies.Sum (x => x.SizeInBytes);
-
-        public PackageAssemblyResolver AssemblyResolver { get; }
-
-        public PackageTargetFramework()
-        {
-            AssemblyResolver = new PackageAssemblyResolver (this);
-        }
-
-        public PackageAssembly GetAssembly (object inputName)
-        {
-            var cleanName = (inputName ?? "").ToString().Trim();
-            if (cleanName.Length == 0) {
-                return Assemblies.OrderByDescending(x=>x.SizeInBytes).FirstOrDefault();
-            }
-            return Assemblies.FirstOrDefault (x => x.FileName == cleanName);
-        }
-
-        public class PackageAssemblyResolver : DefaultAssemblyResolver
-        {
-            readonly PackageTargetFramework packageTargetFramework;
-            public PackageAssemblyResolver (PackageTargetFramework packageTargetFramework)
-            {
-                this.packageTargetFramework = packageTargetFramework;
-            }
-            public override AssemblyDefinition Resolve (AssemblyNameReference name)
-            {
-                var a = packageTargetFramework.Assemblies.FirstOrDefault(x => {
-                    // System.Console.WriteLine("HOW ABOUT? " + x.Definition.Name);
-                    return x.Definition.Name.Name == name.Name;
-                });
-                if (a != null) {
-                    // System.Console.WriteLine("RESOLVED " + name);
-                    return a.Definition;
-                }                
-                return base.Resolve (name);
-            }
-        }
-    }
-
-    public class PackageAssembly
-    {
-        public ZipArchiveEntry ArchiveEntry { get; }
-        public string FileName => ArchiveEntry?.Name;
-        public long SizeInBytes => ArchiveEntry != null ? ArchiveEntry.Length : 0;
-
-        readonly Lazy<AssemblyDefinition> definition;
-        readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
-        private readonly IAssemblyResolver resolver;
-
-        public AssemblyDefinition Definition => definition.Value;
-
-        public PackageAssembly (ZipArchiveEntry entry, IAssemblyResolver resolver)
-        {
-            ArchiveEntry = entry;
-            this.resolver = resolver;
-            definition = new Lazy<AssemblyDefinition> (() => {
-                if (ArchiveEntry == null)
-                    return null;
-                var ms = new MemoryStream ((int)ArchiveEntry.Length);
-                using (var es = ArchiveEntry.Open ()) {
-                    es.CopyTo (ms);
-                    ms.Position = 0;
-                }
-                return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
-                    AssemblyResolver = resolver,
-                });
-            }, true);
-            decompiler = new Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> (() => {
-                var m = Definition?.MainModule;
-                if (m == null)
-                    return null;
-                return new ICSharpCode.Decompiler.CSharp.CSharpDecompiler (m, new ICSharpCode.Decompiler.DecompilerSettings {
-                    ShowXmlDocumentation = true,
-                    ThrowOnAssemblyResolveErrors = false,
-                    CSharpFormattingOptions = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono (),
-                });
-            }, true);
-        }
-
-        public string DecompileType (TypeDefinition type)
-        {
-            try {
-                var d = decompiler.Value;
-                if (d == null)
-                    return "// No decompiler available";
-                return d.DecompileTypeAsString (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
-            }
-            catch (Exception e) {
-                return "/* " + e.Message + " */";
             }
         }
     }
