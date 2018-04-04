@@ -8,6 +8,7 @@ namespace FuGetGallery
     public class PackageTargetFramework
     {
         public string Moniker { get; set; } = "";
+        public List<PackageDependency> Dependencies { get; } = new List<PackageDependency> ();
         public List<PackageAssembly> Assemblies { get; } = new List<PackageAssembly> ();
         public List<PackageAssembly> BuildAssemblies { get; } = new List<PackageAssembly> ();
         public Dictionary<string, PackageAssemblyXmlDocs> AssemblyXmlDocs { get; } = new Dictionary<string, PackageAssemblyXmlDocs> ();
@@ -44,6 +45,14 @@ namespace FuGetGallery
             docs = new TypeDocumentation (typeDefinition, xmlDocs);
             typeDocs.TryAdd (typeDefinition, docs);
             return docs;
+        }
+
+        public void AddDependency (PackageDependency d)
+        {
+            var existing = Dependencies.FirstOrDefault (x => x.PackageId == d.PackageId);
+            if (existing == null) {
+                Dependencies.Add (d);
+            }
         }
 
         public class PackageAssemblyResolver : DefaultAssemblyResolver

@@ -3,7 +3,7 @@
     var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"]);
     var authors = package.AuthorsOrOwners;
 
-    var framework = package.GetTargetFramework (RouteData.Values["targetFramework"]);
+    var framework = package.FindClosestTargetFramework (RouteData.Values["targetFramework"]);
     var asm = framework?.GetAssembly (RouteData.Values["dir"], RouteData.Values["assemblyName"]);
     var isBuildAsm = "build".Equals(RouteData.Values["dir"]);
     var dir = isBuildAsm ? "build" : "lib";
@@ -79,9 +79,21 @@
                  (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
     var bold = active == "active" ? "bold" : "normal";
     var tcolor = active == "active" ? "color:#fff" : "";
-    <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(@tf.Moniker)">@tf.Moniker</a>
+    <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(@tf.Moniker)">@tf.Moniker</a>
 }
 </nav>
+
+@if (framework != null && framework.Dependencies.Count > 0) {
+    <h3>Dependencies</h3>
+    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
+        <li>
+            <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;<a style="color:#000"
+                href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">@d.PackageId</a>
+        </li>
+    }
+    </ul>
+}
 
 <h2 id="api" style="margin-top:1.25em;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.IO.Compression;
+using System.Xml.Linq;
 using Mono.Cecil;
 
 namespace FuGetGallery
@@ -41,7 +42,7 @@ namespace FuGetGallery
             return await cache.GetAsync (versions.LowerId, version.Version).ConfigureAwait (false);
         }
 
-        public PackageTargetFramework GetTargetFramework (object inputTargetFramework)
+        public PackageTargetFramework FindClosestTargetFramework (object inputTargetFramework)
         {
             var moniker = (inputTargetFramework ?? "").ToString().Trim().ToLowerInvariant();
             
@@ -57,6 +58,11 @@ namespace FuGetGallery
             if (tf == null)
                 tf = TargetFrameworks.FirstOrDefault ();
             return tf;
+        }
+
+        public PackageTargetFramework FindExactTargetFramework (string moniker)
+        {
+            return TargetFrameworks.FirstOrDefault (x => x.Moniker == moniker);
         }
 
         void Read (byte[] bytes)
@@ -107,12 +113,13 @@ namespace FuGetGallery
             if (nuspecEntry != null) {
                 ReadNuspec (nuspecEntry);
             }
+            TargetFrameworks.Sort ((a,b) => a.Moniker.CompareTo(b.Moniker));
         }
 
         void ReadNuspec (ZipArchiveEntry entry)
         {
             using (var stream = entry.Open ()) {
-                var xdoc = System.Xml.Linq.XDocument.Load (stream);
+                var xdoc = XDocument.Load (stream);
                 var ns = xdoc.Root.Name.Namespace;
                 var meta = xdoc.Root.Element(ns + "metadata");
                 string GetS (string name, string def = "") {
@@ -125,7 +132,85 @@ namespace FuGetGallery
                 ProjectUrl = GetS ("projectUrl");
                 IconUrl = GetS ("iconUrl");
                 Description = GetS ("description");
+                var deps = meta.Element(ns + "dependencies");
+                if (deps != null) {
+                    // System.Console.WriteLine(deps);
+                    foreach (var de in deps.Elements()) {
+                        if (de.Name.LocalName == "group") {
+                            var tfa = de.Attribute("targetFramework");
+                            if (tfa != null) {
+                                var tfName = tfa.Value;
+                                var tf = FindExactTargetFramework (TargetFrameworkNameToMoniker (tfName));
+                                if (tf != null) {
+                                    foreach (var ge in de.Elements(ns + "dependency")) {
+                                        var dep = new PackageDependency (ge);
+                                        tf.AddDependency (dep);
+                                    }
+                                }
+                            }
+                        }
+                        else if (de.Name.LocalName == "dependency") {
+                            var dep = new PackageDependency (de);
+                            foreach (var tf in TargetFrameworks) {
+                                tf.AddDependency (dep);
+                            }
+                        }
+                    }
+                }
             }
+        }
+
+        static string TargetFrameworkNameToMoniker (string name)
+        {
+            var r = name.ToLowerInvariant ();
+            if (r[0] == '.')
+                r = r.Substring(1);
+            if (r.StartsWith ("netframework"))
+                r = "net" + r.Substring (12).Replace(".", "");
+            if (r.StartsWith ("windowsphoneapp"))
+                r = "wpa" + r.Substring (15).Replace(".0", "").Replace(".", "");
+            if (r.StartsWith ("windowsphone"))
+                r = "wp" + r.Substring (12).Replace(".", "");
+            if (r.StartsWith ("windows"))
+                r = "win" + r.Substring (7).Replace(".0", "").Replace(".", "");
+            if (r.StartsWith ("xamarin."))
+                r = "xamarin." + r.Substring (8).Replace(".", "");
+            if (!r.StartsWith ("uap"))
+                r = r.Replace ("0.0", "");
+            if (r.StartsWith ("netportable")) {
+                var d = r.IndexOf('-');
+                var s = r.Substring (d + 1);
+                var i = s;
+                switch (s) {
+                    case "profile7":
+                        return "netstandard1.1";
+                    case "profile31":
+                        return "netstandard1.0";
+                    case "profile32":
+                        return "netstandard1.2";
+                    case "profile44":
+                        return "netstandard1.2";
+                    case "profile49":
+                        return "netstandard1.0";
+                    case "profile78":
+                        return "netstandard1.0";
+                    case "profile84":
+                        return "netstandard1.0";
+                    case "profile111":
+                        return "netstandard1.1";
+                    case "profile151":
+                        return "netstandard1.2";
+                    case "profile157":
+                        return "netstandard1.0";
+                    case "profile259":
+                        return "netstandard1.0";
+                    case "profile328":
+                        i = "net40+sl5+win8+wp8+wpa81";
+                        break;
+                }
+                r = "portable-" + i;
+            }
+            return r;
         }
 
         class PackageDataCache : DataCache<string, string, PackageData>
