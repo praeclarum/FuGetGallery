@@ -9,6 +9,7 @@ namespace FuGetGallery
     {
         public string Moniker { get; set; } = "";
         public List<PackageAssembly> Assemblies { get; } = new List<PackageAssembly> ();
+        public List<PackageAssembly> BuildAssemblies { get; } = new List<PackageAssembly> ();
         public Dictionary<string, PackageAssemblyXmlDocs> AssemblyXmlDocs { get; } = new Dictionary<string, PackageAssemblyXmlDocs> ();
         public long SizeInBytes => Assemblies.Sum (x => x.SizeInBytes);
 
@@ -22,13 +23,15 @@ namespace FuGetGallery
             AssemblyResolver = new PackageAssemblyResolver (this);
         }
 
-        public PackageAssembly GetAssembly (object inputName)
+        public PackageAssembly GetAssembly (object inputDir, object inputName)
         {
+            var asms = "build".Equals(inputDir) ? BuildAssemblies : Assemblies;
+
             var cleanName = (inputName ?? "").ToString().Trim();
             if (cleanName.Length == 0) {
-                return Assemblies.OrderByDescending(x=>x.SizeInBytes).FirstOrDefault();
+                return asms.OrderByDescending(x=>x.SizeInBytes).FirstOrDefault();
             }
-            return Assemblies.FirstOrDefault (x => x.FileName == cleanName);
+            return asms.FirstOrDefault (x => x.FileName == cleanName);
         }
 
         public TypeDocumentation GetTypeDocumentation (TypeDefinition typeDefinition)

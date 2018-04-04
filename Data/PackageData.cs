@@ -67,9 +67,12 @@ namespace FuGetGallery
             ZipArchiveEntry nuspecEntry = null;
             foreach (var e in Archive.Entries.OrderBy (x => x.FullName)) {
                 var n = e.FullName;
-                if (n.StartsWith ("lib/") && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
-                                              n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase) ||
-                                              n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase))) {
+                var isBuild = n.StartsWith ("build/");
+                var isLib = n.StartsWith ("lib/");
+                if ((isBuild || isLib) && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
+                                           n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase) ||
+                                           n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase) ||
+                                           n.EndsWith(".targets", StringComparison.InvariantCultureIgnoreCase))) {
                     var parts = n.Split ('/', StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length >= 3) {
                         var tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
@@ -80,12 +83,17 @@ namespace FuGetGallery
                             };
                             TargetFrameworks.Add (tf);
                         }
-                        if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (n.EndsWith(".targets", StringComparison.InvariantCultureIgnoreCase)) {
+                        }
+                        else if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
                             var docs = new PackageAssemblyXmlDocs (e);
                             if (string.IsNullOrEmpty (docs.Error)) {
                                 // System.Console.WriteLine(docs.AssemblyName);
                                 tf.AssemblyXmlDocs[docs.AssemblyName] = docs;
                             }
+                        }
+                        else if (isBuild) {
+                            tf.BuildAssemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));
                         }
                         else {
                             tf.Assemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));

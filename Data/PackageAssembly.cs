@@ -21,6 +21,7 @@ namespace FuGetGallery
         {
             ArchiveEntry = entry;
             this.resolver = resolver;
+            var isBuild = entry.FullName.StartsWith ("build/");
             definition = new Lazy<AssemblyDefinition> (() => {
                 if (ArchiveEntry == null)
                     return null;

@@ -4,7 +4,9 @@
     var authors = package.AuthorsOrOwners;
 
     var framework = package.GetTargetFramework (RouteData.Values["targetFramework"]);
-    var asm = framework?.GetAssembly (RouteData.Values["assemblyName"]);
+    var asm = framework?.GetAssembly (RouteData.Values["dir"], RouteData.Values["assemblyName"]);
+    var isBuildAsm = "build".Equals(RouteData.Values["dir"]);
+    var dir = isBuildAsm ? "build" : "lib";
     var asmDef = asm?.Definition;
 
     var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
@@ -87,17 +89,32 @@
 
 @if (framework != null) {
 <div class="col-xs-12 col-sm-3">
-    <h3>Assemblies</h3>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
-    @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
-        var bold = a.FileName == asm?.FileName ? "bold" : "normal";
-        var color = bold == "bold" ? "#000" : "#777";
-        <li>
-            <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
-        </li>
+    @if (framework.Assemblies.Count > 0) {
+        <h3>Assemblies</h3>
+        <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+        @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
+            var bold = !isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
+            var color = bold == "bold" ? "#000" : "#777";
+            <li>
+                <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
+            </li>
+        }
+        </ul>
     }
-    </ul>
+    @if (framework.BuildAssemblies.Count > 0) {
+        <h3>Build Assemblies</h3>
+        <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+        @foreach (var a in framework.BuildAssemblies.OrderBy(x => x.FileName)) {
+            var bold = isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
+            var color = bold == "bold" ? "#000" : "#777";
+            <li>
+                <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
+            </li>
+        }
+        </ul>
+    }
 </div>
 }
 
@@ -111,7 +128,7 @@
             var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
             <li>
                 <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">@n.Key</a>
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">@n.Key</a>
             </li>
         }
         </ul>
@@ -138,7 +155,7 @@
             var active = bold == "bold" ? "active" : "";
             <li>
             <a class="@active" style="font-weight:@bold;color:@color;"
-            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#api">
+            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#api">
             <span class="glyphicon glyphicon-@icon" aria-hidden="true"></span>&nbsp;@t.Name</a>
             </li>
         }
