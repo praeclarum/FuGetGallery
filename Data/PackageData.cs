@@ -15,6 +15,13 @@ namespace FuGetGallery
         public string IndexId { get; set; } = "";
         public string Version { get; set; } = "";
 
+        public string Authors { get; set; } = "";
+        public string Owners { get; set; } = "";
+        public string AuthorsOrOwners => string.IsNullOrEmpty (Authors) ? Owners : Authors;
+        public string Description { get; set; } = "";
+        public string ProjectUrl { get; set; } = "";
+        public string IconUrl { get; set; } = "";
+
         public string DownloadUrl { get; set; } = "";
         public long SizeInBytes { get; set; }
         public ZipArchive Archive { get; set; }
@@ -22,6 +29,7 @@ namespace FuGetGallery
         public Exception Error { get; set; }
 
         static readonly PackageDataCache cache = new PackageDataCache ();
+
 
         public static async Task<PackageData> GetAsync (object inputId, object inputVersion)
         {
@@ -36,7 +44,16 @@ namespace FuGetGallery
         public PackageTargetFramework GetTargetFramework (object inputTargetFramework)
         {
             var moniker = (inputTargetFramework ?? "").ToString().Trim().ToLowerInvariant();
+            
             var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == moniker);
+            if (tf != null) return tf;
+            
+            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("netstandard2"));
+            if (tf != null) return tf;
+
+            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("netstandard"));
+            if (tf != null) return tf;
+            
             if (tf == null)
                 tf = TargetFrameworks.FirstOrDefault ();
             return tf;
@@ -47,7 +64,7 @@ namespace FuGetGallery
             SizeInBytes = bytes.LongLength;
             Archive = new ZipArchive (new MemoryStream (bytes), ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
-            foreach (var e in Archive.Entries) {
+            foreach (var e in Archive.Entries.OrderBy (x => x.FullName)) {
                 var n = e.FullName;
                 if (n.StartsWith ("lib/") && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
                                               n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase))) {
@@ -75,8 +92,17 @@ namespace FuGetGallery
             using (var stream = entry.Open ()) {
                 var xdoc = System.Xml.Linq.XDocument.Load (stream);
                 var ns = xdoc.Root.Name.Namespace;
-                Id = xdoc.Root.Element(ns + "metadata").Element(ns + "id").Value.Trim();
-                // Console.WriteLine (xdoc);
+                var meta = xdoc.Root.Element(ns + "metadata");
+                string GetS (string name, string def = "") {
+                    try { return meta.Element(ns + name).Value.Trim(); }
+                    catch { return def; }
+                }
+                Id = GetS ("id");
+                Authors = GetS ("authors");
+                Owners = GetS ("owners");
+                ProjectUrl = GetS ("projectUrl");
+                IconUrl = GetS ("iconUrl");
+                Description = GetS ("description");
             }
         }
 

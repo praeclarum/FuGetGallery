@@ -1,9 +1,9 @@
 @page
 @{    
     var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"]);
+    var authors = package.AuthorsOrOwners;
 
     var framework = package.GetTargetFramework (RouteData.Values["targetFramework"]);
-
     var asm = framework?.GetAssembly (RouteData.Values["assemblyName"]);
     var asmDef = asm?.Definition;
 
@@ -29,11 +29,34 @@
     ViewData["Title"] = package.Id;
 }
 
-<h1>@package.Id <small>@package.Version</small></h1>
+<h1>@if (!string.IsNullOrEmpty(package.IconUrl)) {
+        <img src="@package.IconUrl" width="64" height="64" style="margin-top:5px;margin-left:-94px;float:left" />
+    }
+    @package.Id
+    <small>@package.Version
+    @if (!string.IsNullOrEmpty(authors)) {
+        <small style="">by @authors</small>
+    }
+    </small>
+</h1>
+
+@if (!string.IsNullOrEmpty(package.Description)) {
+    <p style="font-size: 150%;color:#777;margin-top:-0.25em;margin-bottom:1.25em;">
+        @package.Description
+    </p>
+}
 
 <p>
 <a href="@package.DownloadUrl" type="button" class="btn btn-default">
   <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
+</a>
+@if (!string.IsNullOrEmpty(package.ProjectUrl)) {
+    <a href="@package.ProjectUrl" type="button" class="btn btn-default">
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> Project Site
+    </a>
+}
+<a href="https://www.nuget.org/packages/@package.Id/@package.Version" type="button" class="btn btn-default">
+    <span class="glyphicon glyphicon-link" aria-hidden="true"></span> NuGet Gallery
 </a>
 </p>
 
@@ -44,7 +67,7 @@
 }
 
 
-<h2 style="margin-top:1em;">Frameworks</h2>
+<h2 style="margin-top:1.25em;">Frameworks</h2>
 
 <nav style="margin-top:0em;line-height:2.75em;">
 @foreach (var tf in package.TargetFrameworks) {
@@ -54,11 +77,11 @@
                  (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
     var bold = active == "active" ? "bold" : "normal";
     var tcolor = active == "active" ? "color:#fff" : "";
-    <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(@tf.Moniker)">@tf.Moniker</a>
+    <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(@tf.Moniker)">@tf.Moniker</a>
 }
 </nav>
 
-<h2 style="margin-top:1em;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
+<h2 style="margin-top:1.25em;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
 
 <div class="row">
 
@@ -68,7 +91,7 @@
     <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
         var bold = a.FileName == asm?.FileName ? "bold" : "normal";
-        var color = bold == "bold" ? "#000" : "#666";
+        var color = bold == "bold" ? "#000" : "#777";
         <li>
             <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
                 href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
@@ -85,7 +108,7 @@
         @foreach (var n in namespaces) {
             var bold = n.Key == ns?.Key ? "bold" : "normal";
             var isPublic = n.Any(x => x.IsPublic);
-            var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
+            var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
             <li>
                 <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
                     href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">@n.Key</a>
@@ -109,11 +132,11 @@
             var isEnum = t.IsEnum;
             var isDel = !isEnum && t.IsDelegate();
             var icon = isEnum ? "menu-hamburger" : (isDel ? "flash" : "unchecked");
-            var color = bold == "bold" ? "#000" : (isPublic ? "#666" : "#CCC");
+            var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
             var active = bold == "bold" ? "active" : "";
             <li>
             <a class="@active" style="font-weight:@bold;color:@color;"
-            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#code">
+            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)">
             <span class="glyphicon glyphicon-@icon" aria-hidden="true"></span>&nbsp;@t.Name</a>
             </li>
         }
@@ -124,7 +147,8 @@
 
 
 @if (typ != null) {
-    <div class="col-xs-12 col-sm-9" id="code" style="margin-top:5em">
+    <div class="col-xs-12 col-sm-9" id="code">
+        <h3 id="type" style="margin-top:2em;">@typ.FullName</h3>
         <pre style="tab-size: 4;line-height:1.2em;"><code class="csharp" style="background-color:transparent">@asm.DecompileType(typ)</code></pre>
     </div>
 }
