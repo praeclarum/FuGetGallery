@@ -69,7 +69,10 @@
 <pre><code class="xml" style="background-color:transparent">&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</code></pre>
 
 @if (package.Error != null) {
-    <p>Error: @package.Error</p>
+    <div class="">
+        <h2>Error reading package</h2>
+        <pre>@package.Error</pre>
+    </div>
 }
 
 

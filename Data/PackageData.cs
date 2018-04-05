@@ -122,11 +122,14 @@ namespace FuGetGallery
                 var xdoc = XDocument.Load (stream);
                 var ns = xdoc.Root.Name.Namespace;
                 var meta = xdoc.Root.Element(ns + "metadata");
+                if (meta == null) {
+                    throw new Exception ("Failed to find metadata");
+                }
                 string GetS (string name, string def = "") {
                     try { return meta.Element(ns + name).Value.Trim(); }
                     catch { return def; }
                 }
-                Id = GetS ("id");
+                Id = GetS ("id", IndexId);
                 Authors = GetS ("authors");
                 Owners = GetS ("owners");
                 ProjectUrl = GetS ("projectUrl");

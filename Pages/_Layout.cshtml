@@ -20,12 +20,16 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a asp-page="/index" class="navbar-brand">fuget</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a asp-page="/packages/index">Packages</a></li>
-                </ul>
+                <a asp-page="/index" class="navbar-brand" style="padding-right:2em">fuget</a>
+                <form class="input-group" action="/packages" method="GET" style="margin-top:0.6em;max-width:24em">
+                    <input name="q" value="@ViewData["q"]" type="text" class="form-control" placeholder="Search Packages"
+                           style="background-color:#444;border-color:#444;color:#fff"
+                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <span class="input-group-btn">
+                        <submit class="btn btn-default" type="button"
+                                style="background-color:#666;border-color:#666;color:#ccc">Search</submit>
+                    </span>
+                </form>
             </div>
         </div>
     </nav>

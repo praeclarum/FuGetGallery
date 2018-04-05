@@ -1,20 +1,31 @@
 @page
 @{
     ViewData["Title"] = "Packages";
+    var q = Request.Query["q"].FirstOrDefault() ?? "";
+    var hasq = !string.IsNullOrEmpty (q);
+    var results = await PackageSearchResults.GetAsync (q);
+    ViewData["q"] = q;
 }
 
 <h1>Packages</h1>
 
-
-<ul>
-<li><a href="/packages/System.Memory">System.Memory</a></li>
-<li><a href="/packages/Newtonsoft.Json">Newtonsoft.Json</a></li>
-<li><a href="/packages/ICSharpCode.Decompiler/3.0.2.3465">ICSharpCode.Decompiler 3.0.2.3465</a></li>
-<li><a href="/packages/Xamarin.Forms">Xamarin.Forms</a></li>
-<li><a href="/packages/CLanguage">CLanguage</a></li>
-<li><a href="/packages/Ooui">Ooui</a></li>
-<li><a href="/packages/Ooui.Forms">Ooui.Forms</a></li>
-<li><a href="/packages/Ooui.AspNetCore">Ooui.AspNetCore</a></li>
-<li><a href="/packages/Ooui.Wasm">Ooui.Wasm</a></li>
-<li><a href="/packages/sqlite-net-pcl">sqlite-net-pcl</a></li>
-</ul>
+@if (results != null) {
+    if (results.Error != null) {
+        <p>@results.Error</p>
+    }
+    <ul class="media-list">
+    @foreach (var r in results.Results) {
+        <li class="media">
+            <div class="media-left">
+                <a href="/packages/@Uri.EscapeDataString(@r.PackageId)">
+                    <img src="@r.IconUrl" width="64" height="64" />
+                </a>
+            </div>
+            <div class="media-body">
+                <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a> by @r.Authors</h4>
+                <p style="max-height:3em;overflow:scroll">@r.Description</p>
+            </div>
+        </li>
+    }
+    </ul>
+}
