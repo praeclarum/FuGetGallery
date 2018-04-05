@@ -61,7 +61,7 @@
 </h1>
 
 @if (!string.IsNullOrEmpty(package.Description)) {
-    <pre style="max-height:10em;font-size:120%;color:#777;margin-top:-0.25em;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@package.Description</pre>
+    <p style="white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;color:#777;margin-top:-0.25em;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@package.Description</p>
 }
 
 <p>
@@ -190,7 +190,7 @@
     @if (typ != null) {    
         <h2 id="type">@typ.FullName</h2>
         <p>@docs.SummaryText</p>
-        <pre style="tab-size: 4;line-height:1.3em;"><code class="csharp" style="white-space: pre;word-wrap: normal;background-color:transparent">@asm.DecompileType(typ)</code></pre>
+        <pre style="tab-size: 4;line-height:1.3em;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent">@asm.DecompileType(typ)</code></pre>
     }
     </div>
     </div>
