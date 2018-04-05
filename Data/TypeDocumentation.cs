@@ -21,7 +21,7 @@ namespace FuGetGallery
             if (xmlDocs != null) {
                 var tn = GetXmlName (typeDefinition);
                 if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {
-                    SummaryText = td.SummaryText;
+                    SummaryText = td.SummaryText.Trim ();
                     if (SummaryText == "To be added.")
                         SummaryText = "";
                 }

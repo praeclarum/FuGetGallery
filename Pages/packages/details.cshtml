@@ -27,12 +27,14 @@
     var inputTypeName = (RouteData.Values["typeName"] ?? "").ToString().Trim();
 
     var typ = ns?.FirstOrDefault(x => x.Name == inputTypeName);
+    var docs = typ != null ? framework?.GetTypeDocumentation(typ) : null;
 
     var size = framework != null ? framework.SizeInBytes : package.SizeInBytes;
 
     var nupkgName = package.Id + "." + package.Version + ".nupkg";
 
-    ViewData["Title"] = package.Id;
+    var title = typ != null ? typ.FullName : package.Id + " " + package.Version;
+    ViewData["Title"] = title;
 
     var q = Request.Query["q"].FirstOrDefault() ?? "";
     var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
@@ -41,8 +43,8 @@
     ViewData["meta"] = new Dictionary<string, string> {
         { "twitter:card", "summary" },
         { "og:url", Request.GetEncodedUrl () },
-        { "og:title", package.Id + " " + package.Version },
-        { "og:description", package.Description },
+        { "og:title", title },
+        { "og:description", docs != null ? docs.SummaryText : package.Description },
         { "og:image", package.IconUrl },
     };
 }
@@ -196,8 +198,7 @@
 
 
 
-@if (typ != null) {
-    var docs = framework.GetTypeDocumentation(typ);
+@if (typ != null) {    
     <div class="col-xs-12 col-sm-9" id="code">
         <h3 id="type" style="margin-top:2em;">@typ.FullName</h3>
         <p>@docs.SummaryText</p>
