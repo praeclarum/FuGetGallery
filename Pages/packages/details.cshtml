@@ -17,7 +17,11 @@
 
     var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
     if (ns == null) {
-        ns = namespaces.FirstOrDefault ();
+        var publicNamespaces = namespaces.Where(n => n.Any(x => x.IsPublic)).OrderByDescending(n => n.Count(x => x.IsPublic));
+        ns = publicNamespaces.FirstOrDefault ();
+        if (ns == null) {
+            ns = namespaces.FirstOrDefault ();
+        }
     }
 
     var inputTypeName = (RouteData.Values["typeName"] ?? "").ToString().Trim();
