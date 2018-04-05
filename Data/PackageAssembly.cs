@@ -13,6 +13,7 @@ namespace FuGetGallery
 
         readonly Lazy<AssemblyDefinition> definition;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
+        readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler;
         private readonly IAssemblyResolver resolver;
 
         public AssemblyDefinition Definition => definition.Value;
@@ -34,14 +35,36 @@ namespace FuGetGallery
                     AssemblyResolver = resolver,
                 });
             }, true);
+            var format = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono ();
+            format.SpaceBeforeMethodCallParentheses = false;
+            format.SpaceBeforeMethodDeclarationParentheses = false;
+            format.SpaceBeforeConstructorDeclarationParentheses = false;
+            idecompiler = new Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> (() => {
+                var m = Definition?.MainModule;
+                if (m == null)
+                    return null;
+                return new ICSharpCode.Decompiler.CSharp.CSharpDecompiler (m, new ICSharpCode.Decompiler.DecompilerSettings {
+                    ShowXmlDocumentation = false,
+                    ThrowOnAssemblyResolveErrors = false,
+                    AlwaysUseBraces = false,
+                    CSharpFormattingOptions = format,
+                    ExpandMemberDefinitions = false,
+                    DecompileMemberBodies = false,
+                    UseExpressionBodyForCalculatedGetterOnlyProperties = true,
+                });
+            }, true);
             decompiler = new Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> (() => {
                 var m = Definition?.MainModule;
                 if (m == null)
                     return null;
                 return new ICSharpCode.Decompiler.CSharp.CSharpDecompiler (m, new ICSharpCode.Decompiler.DecompilerSettings {
-                    ShowXmlDocumentation = true,
+                    ShowXmlDocumentation = false,
                     ThrowOnAssemblyResolveErrors = false,
-                    CSharpFormattingOptions = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono (),
+                    AlwaysUseBraces = false,
+                    CSharpFormattingOptions = format,
+                    ExpandMemberDefinitions = true,
+                    DecompileMemberBodies = true,
+                    UseExpressionBodyForCalculatedGetterOnlyProperties = true,
                 });
             }, true);
         }
