@@ -2,9 +2,9 @@
 @{
     ViewData["Title"] = "Packages";
     var q = Request.Query["q"].FirstOrDefault() ?? "";
-    var hasq = !string.IsNullOrEmpty (q);
-    var results = await PackageSearchResults.GetAsync (q);
+    var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
     ViewData["q"] = q;
+    var results = await PackageSearchResults.GetAsync (q);
 }
 
 <h1>Packages</h1>
@@ -22,7 +22,7 @@
                 </a>
             </div>
             <div class="media-body">
-                <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a> by @r.Authors</h4>
+                <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)@eq">@r.PackageId</a> by @r.Authors</h4>
                 <p style="max-height:3em;overflow:scroll">@r.Description</p>
             </div>
         </li>

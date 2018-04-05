@@ -33,6 +33,10 @@
     var nupkgName = package.Id + "." + package.Version + ".nupkg";
 
     ViewData["Title"] = package.Id;
+
+    var q = Request.Query["q"].FirstOrDefault() ?? "";
+    var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
+    ViewData["q"] = q;
 }
 
 <h1>@if (!string.IsNullOrEmpty(package.IconUrl)) {
@@ -86,7 +90,7 @@
                  (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
     var bold = active == "active" ? "bold" : "normal";
     var tcolor = active == "active" ? "color:#fff" : "";
-    <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(@tf.Moniker)">@tf.Moniker</a>
+    <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(@tf.Moniker)@eq">@tf.Moniker</a>
 }
 </nav>
 
@@ -96,7 +100,7 @@
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
         <li>
             <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;<a style="color:#000"
-                href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">@d.PackageId</a>
+                href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">@d.PackageId</a>
         </li>
     }
     </ul>
@@ -116,7 +120,7 @@
             var color = bold == "bold" ? "#000" : "#777";
             <li>
                 <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq">@a.FileName</a>
             </li>
         }
         </ul>
@@ -129,7 +133,7 @@
             var color = bold == "bold" ? "#000" : "#777";
             <li>
                 <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">@a.FileName</a>
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq">@a.FileName</a>
             </li>
         }
         </ul>
@@ -147,7 +151,7 @@
             var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
             <li>
                 <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;<a style="font-weight:@bold;color:@color;"
-                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">@n.Key</a>
+                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)@eq">@n.Key</a>
             </li>
         }
         </ul>
@@ -174,7 +178,7 @@
             var active = bold == "bold" ? "active" : "";
             <li>
             <a class="@active" style="font-weight:@bold;color:@color;"
-            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)#api">
+            href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)@eq#api">
             <span class="glyphicon glyphicon-@icon" aria-hidden="true"></span>&nbsp;@t.Name</a>
             </li>
         }

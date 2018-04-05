@@ -14,13 +14,13 @@
     <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <!-- <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
-                </button>
-                <a asp-page="/index" class="navbar-brand" style="padding-right:2em">fuget</a>
+                </button> -->
+                <a href="/packages?q=@Uri.EscapeDataString((ViewData["q"] ?? "").ToString())" class="navbar-brand" style="padding-right:2em">fuget</a>
                 <form class="input-group" action="/packages" method="GET" style="margin-top:0.6em;max-width:24em">
                     <input name="q" value="@ViewData["q"]" type="text" class="form-control" placeholder="Search Packages"
                            style="background-color:#444;border-color:#444;color:#fff"
