@@ -37,6 +37,14 @@
     var q = Request.Query["q"].FirstOrDefault() ?? "";
     var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
     ViewData["q"] = q;
+
+    ViewData["meta"] = new Dictionary<string, string> {
+        { "twitter:card", "summary" },
+        { "og:url", Request.GetEncodedUrl () },
+        { "og:title", package.Id + " " + package.Version },
+        { "og:description", package.Description },
+        { "og:image", package.IconUrl },
+    };
 }
 
 <h1>@if (!string.IsNullOrEmpty(package.IconUrl)) {
