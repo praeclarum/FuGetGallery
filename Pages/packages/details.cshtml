@@ -29,7 +29,7 @@
     var typ = ns?.FirstOrDefault(x => x.Name == inputTypeName);
     var docs = typ != null ? framework?.GetTypeDocumentation(typ) : null;
 
-    var size = framework != null ? framework.SizeInBytes : package.SizeInBytes;
+    var size = framework != null ? framework.SizeInBytes : 0;
 
     var nupkgName = package.Id + "." + package.Version + ".nupkg";
 
