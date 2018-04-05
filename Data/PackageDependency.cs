@@ -9,8 +9,12 @@ namespace FuGetGallery
 {
     public class PackageDependency
     {
-        public string PackageId { get; }
-        public string VersionSpec { get; }
+        public string PackageId { get; set; } = "";
+        public string VersionSpec { get; set; } = "";
+
+        public PackageDependency ()
+        {
+        }
 
         public PackageDependency (XElement element)
         {

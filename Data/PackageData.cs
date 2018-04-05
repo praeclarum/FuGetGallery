@@ -84,7 +84,7 @@ namespace FuGetGallery
                         var tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
                         var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == tfm);
                         if (tf == null) {
-                            tf = new PackageTargetFramework {
+                            tf = new PackageTargetFramework (Id.ToLowerInvariant ()) {
                                 Moniker = tfm,
                             };
                             TargetFrameworks.Add (tf);
@@ -227,6 +227,7 @@ namespace FuGetGallery
                     DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version)}",
                 };
                 try {
+                    // System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
                     var data = await httpClient.GetByteArrayAsync (package.DownloadUrl).ConfigureAwait (false);
                     package.Read (data);
                 }
