@@ -61,9 +61,7 @@
 </h1>
 
 @if (!string.IsNullOrEmpty(package.Description)) {
-    <p style="font-size: 150%;color:#777;margin-top:-0.25em;margin-bottom:1.25em;">
-        @package.Description
-    </p>
+    <pre style="max-height:10em;font-size:120%;color:#777;margin-top:-0.25em;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@package.Description</pre>
 }
 
 <p>
