@@ -93,8 +93,9 @@ namespace FuGetGallery
                 //
                 // No? OK, maybe it's in the dependencies
                 //
-                System.Console.WriteLine("!!! FAILED TO RESOLVE " + name);
-                throw new Exception ("Failed to resolve: " + name);
+                // System.Console.WriteLine("!!! FAILED TO RESOLVE " + name);
+                return null;
+                // throw new Exception ("Failed to resolve: " + name);
             }
 
             PackageAssembly TryResolveInFramework (AssemblyNameReference name, PackageTargetFramework packageTargetFramework, HashSet<string> searchedPackages)
