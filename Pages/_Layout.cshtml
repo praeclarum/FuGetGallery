@@ -21,14 +21,10 @@
                     <span class="icon-bar"></span>
                 </button> -->
                 <a href="/packages?q=@Uri.EscapeDataString((ViewData["q"] ?? "").ToString())" class="navbar-brand" style="padding-right:2em">fuget</a>
-                <form class="input-group" action="/packages" method="GET" style="margin-top:0.6em;max-width:24em">
+                <form id="searchForm" class="input-group" action="/packages" method="GET" style="margin-top:0.6em;width:20em">
                     <input name="q" value="@ViewData["q"]" type="text" class="form-control" placeholder="Search Packages"
-                           style="background-color:#444;border-color:#444;color:#fff"
-                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                    <span class="input-group-btn">
-                        <submit class="btn btn-default" type="button"
-                                style="background-color:#666;border-color:#666;color:#ccc">Search</submit>
-                    </span>
+                           style="background-color:#444;border-color:#444;color:#fff;border-radius:0.5em;outline:none;box-shadow:none;"
+                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
                 </form>
             </div>
         </div>
@@ -42,16 +38,16 @@
         </footer>
     </div>
 
-    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"
+    <!-- <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.2.0.min.js"
             crossorigin="anonymous"
             integrity="sha384-K+ctZQ+LL8q6tP7I94W+qzQsfRV2a+AfHIi9k8z8l9ggpc8X+Ytst4yBo/hH+8Fk">
-    </script>
-    <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
+    </script> -->
+    <!-- <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
             crossorigin="anonymous"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa">
-    </script>
+    </script> -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- <script src="~/js/site.js" asp-append-version="true"></script> -->
     <script>hljs.initHighlightingOnLoad();</script>
 
     @RenderSection("Scripts", required: false)
