@@ -87,20 +87,21 @@
     </div>
 }
 
+@if (package.TargetFrameworks.Count > 0) {
+    <h2 style="margin-top:1.25em;">Frameworks</h2>
 
-<h2 style="margin-top:1.25em;">Frameworks</h2>
-
-<nav style="margin-top:0em;line-height:2.75em;">
-@foreach (var tf in package.TargetFrameworks) {
-    var active = tf.Moniker == framework.Moniker ? "active" : "";
-    var color = tf.Moniker.StartsWith("netstandard") ? "success" : 
-                (tf.Moniker.StartsWith("net") ? "info" :
-                 (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
-    var bold = active == "active" ? "bold" : "normal";
-    var tcolor = active == "active" ? "color:#fff" : "";
-    <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(@tf.Moniker)@eq">@tf.Moniker</a>
+    <nav style="margin-top:0em;line-height:2.75em;">
+    @foreach (var tf in package.TargetFrameworks) {
+        var active = tf.Moniker == framework.Moniker ? "active" : "";
+        var color = tf.Moniker.StartsWith("netstandard") ? "success" : 
+                    (tf.Moniker.StartsWith("net") ? "info" :
+                    (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
+        var bold = active == "active" ? "bold" : "normal";
+        var tcolor = active == "active" ? "color:#fff" : "";
+        <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button" href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(@tf.Moniker)@eq">@tf.Moniker</a>
+    }
+    </nav>
 }
-</nav>
 
 @if (framework != null && framework.Dependencies.Count > 0) {
     <h3>Dependencies</h3>
@@ -114,11 +115,10 @@
     </ul>
 }
 
-<p id="api">&nbsp;</p>
-<h2 style="margin-top:0em;padding-top:1em;border-top:#ccc solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
+@if (framework != null && (framework.Assemblies.Count + framework.BuildAssemblies.Count > 0)) {
+    <p id="api">&nbsp;</p>
+    <h2 style="margin-top:0em;padding-top:1em;border-top:#ccc solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
 
-
-@if (framework != null) {
     <div class="row">
     <div class="col-xs-12 col-sm-3">
     @if (framework.Assemblies.Count > 0) {
