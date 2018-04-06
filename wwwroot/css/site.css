@@ -9,3 +9,6 @@ body {
     padding-left: 15px;
     padding-right: 15px;
 }
+
+h1 a { color: inherit; }
+h1 a:hover { color: inherit; text-decoration: none; }
