@@ -44,7 +44,7 @@
 
     if (typ != null) {    
         title = typ.FullName;
-        description = $"Type with {typ.Properties.Count} properties and {typ.Methods.Count} methods";
+        description = $"Type with {typ.Fields.Count} fields and {typ.Methods.Count} methods";
         if (docs != null && !string.IsNullOrEmpty (docs.SummaryText)) {
             description += "\n\n" + docs.SummaryText;
         }
