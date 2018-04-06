@@ -3,8 +3,11 @@
     var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"]);
     var authors = package.AuthorsOrOwners;
 
-    var framework = package.FindClosestTargetFramework (RouteData.Values["targetFramework"]);
-    var asm = framework?.GetAssembly (RouteData.Values["dir"], RouteData.Values["assemblyName"]);
+    var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
+    var framework = package.FindClosestTargetFramework (inputTargetFramework);
+
+    var inputAssemblyName = (RouteData.Values["assemblyName"] ?? "").ToString().Trim();
+    var asm = framework?.GetAssembly (RouteData.Values["dir"], inputAssemblyName);
     var isBuildAsm = "build".Equals(RouteData.Values["dir"]);
     var dir = isBuildAsm ? "build" : "lib";
     var asmDef = asm?.Definition;
@@ -29,22 +32,63 @@
     var typ = ns?.FirstOrDefault(x => x.Name == inputTypeName);
     var docs = typ != null ? framework?.GetTypeDocumentation(typ) : null;
 
+    var q = Request.Query["q"].FirstOrDefault() ?? "";
+    var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
+
     var size = framework != null ? framework.SizeInBytes : 0;
 
     var nupkgName = package.Id + "." + package.Version + ".nupkg";
 
     var title = typ != null ? typ.FullName : package.Id + " " + package.Version;
-    ViewData["Title"] = title;
+    var description = package.Description;
 
-    var q = Request.Query["q"].FirstOrDefault() ?? "";
-    var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
+    if (typ != null) {    
+        title = typ.FullName;
+        description = $"Type with {typ.Properties.Count} properties and {typ.Methods.Count} methods";
+        if (docs != null && !string.IsNullOrEmpty (docs.SummaryText)) {
+            description += "\n\n" + docs.SummaryText;
+        }
+    }
+    else if (ns != null && inputNamespace.Length > 0) {
+        title = ns.Key;
+        description = $"Namespace with {ns.Count():#,0} types";
+    }
+    else if (asmDef != null && inputAssemblyName.Length > 0) {
+        title = asm.FileName ?? asmDef.Name.Name;
+        description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
+    }
+
+    string GetIcon(object o) {
+        if (o == null) return "";
+        if (o is PackageAssembly) return "file";
+        if (o is Mono.Cecil.TypeDefinition t) {
+            var isPublic = t.IsPublic;
+            var isEnum = t.IsEnum;
+            var isStruct = !isEnum && t.IsValueType;
+            var isDel = !(isEnum || isStruct) && t.IsDelegate();
+            var isIface = !(isEnum || isStruct || isDel) && (t.IsInterface || t.IsAbstract);
+            return isEnum ? "menu-hamburger" : (isDel ? "flash" : (isStruct ? "unchecked" : (isIface ? "star-empty" : "star")));
+        }
+        if (o is System.Linq.IGrouping<string, Mono.Cecil.TypeDefinition> g) {
+            return "book";
+        }
+        if (o is PackageDependency d) {
+            return "briefcase";
+        }
+        if (o is PackageData p) {
+            return "briefcase";
+        }
+        return "";
+    }
+
+    ViewData["Title"] = title;
     ViewData["q"] = q;
 
     ViewData["meta"] = new Dictionary<string, string> {
         { "twitter:card", "summary" },
         { "og:url", Request.GetEncodedUrl () },
         { "og:title", title },
-        { "og:description", docs != null ? docs.SummaryText : package.Description },
+        { "og:description", description },
         { "og:image", package.IconUrl },
     };
 }
@@ -108,7 +152,7 @@
     <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
         <li>
-            <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;<a style="color:#000"
+            <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;<a style="color:#000"
                 href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">@d.PackageId</a>
         </li>
     }
@@ -130,7 +174,7 @@
             <li>
                 <a style="font-weight:@bold;color:@color;"
                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq#api">
-                    <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;@a.FileName</a>
+                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
             </li>
         }
         </ul>
@@ -144,12 +188,12 @@
             <li>
                 <a style="font-weight:@bold;color:@color;"
                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq#api">
-                   <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;@a.FileName</a>
+                   <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
             </li>
         }
         </ul>
     }
-    @if (asmDef != null) {
+    @if (asmDef != null && namespaces != null && namespaces.Count > 0) {
         <h3 style="color:#444;">Namespaces</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var n in namespaces) {
@@ -159,7 +203,7 @@
             <li>
                 <a style="font-weight:@bold;color:@color;"
                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)@eq#api">
-                    <span class="glyphicon glyphicon-book" aria-hidden="true"></span>&nbsp;@n.Key</a>
+                    <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
             </li>
         }
         </ul>
@@ -168,19 +212,13 @@
         <h3 id="types" style="color:#444;">Types</h3>
         <ul style="list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var t in ns.OrderBy(x => x.Name)) {
-            var bold = t.Name == typ?.Name ? "bold" : "normal";
-            var isPublic = t.IsPublic;
-            var isEnum = t.IsEnum;
-            var isStruct = !isEnum && t.IsValueType;
-            var isDel = !(isEnum || isStruct) && t.IsDelegate();
-            var isIface = !(isEnum || isStruct || isDel) && (t.IsInterface || t.IsAbstract);
-            var icon = isEnum ? "menu-hamburger" : (isDel ? "flash" : (isStruct ? "unchecked" : (isIface ? "star-empty" : "star")));
-            var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
+            var bold = t.Name == typ?.Name ? "bold" : "normal";            
+            var color = bold == "bold" ? "#000" : (t.IsPublic ? "#777" : "#CCC");
             var active = bold == "bold" ? "active" : "";
             <li>
                 <a class="@active" style="font-weight:@bold;color:@color;"
                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@dir/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(ns.Key)/@Uri.EscapeDataString(t.Name)@eq#api">
-                    <span class="glyphicon glyphicon-@icon" aria-hidden="true"></span>&nbsp;@t.Name</a>
+                    <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.Name</a>
             </li>
         }
         </ul>
@@ -188,13 +226,25 @@
     </div>
     <div class="col-xs-12 col-sm-9" id="code">
     @if (typ != null) {    
-        <h2 id="type">@typ.FullName</h2>
-        <p>@docs.SummaryText</p>
+        <h2 id="type"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.FullName</h2>
+        <p style="white-space:pre-wrap;word-wrap:normal;">@description</p>
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation"><a href="#home" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
             <li role="presentation" class="active"><a href="#profile" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
         </ul>
         <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;padding-left:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@asm.DecompileType(typ)</code></pre>
+    }
+    else if (ns != null && inputNamespace.Length > 0) {
+        <h2 id="namespace"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h2>
+        <p>@description</p>
+    }
+    else if (asmDef != null && inputAssemblyName.Length > 0) {
+        <h2 id="assembly"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h2>
+        <p>@description</p>
+    }
+    else {
+        <h2 id="assembly"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h2>
+        <p>@description</p>
     }
     </div>
     </div>
