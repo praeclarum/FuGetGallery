@@ -281,7 +281,7 @@
             <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")#api" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
             <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")#api" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
         </ul>
-        if (code) {
+        if (true) {
             <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@asm.DecompileType(typ)</code></pre>
         }
     }
