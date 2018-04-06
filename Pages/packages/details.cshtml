@@ -78,7 +78,7 @@
 </a>
 </p>
 
-<pre><code class="xml" style="background-color:transparent">&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</code></pre>
+<pre style="border:none"><code class="xml" style="background-color:transparent">&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</code></pre>
 
 @if (package.Error != null) {
     <div class="">
@@ -117,7 +117,7 @@
 
 @if (framework != null && (framework.Assemblies.Count + framework.BuildAssemblies.Count > 0)) {
     <p id="api">&nbsp;</p>
-    <h2 style="margin-top:0em;padding-top:1em;border-top:#ccc solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
+    <h2 style="margin-top:0em;padding-top:1em;border-top:#ddd solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
 
     <div class="row">
     <div class="col-xs-12 col-sm-3">
@@ -190,7 +190,11 @@
     @if (typ != null) {    
         <h2 id="type">@typ.FullName</h2>
         <p>@docs.SummaryText</p>
-        <pre style="tab-size:4;line-height:1.3em;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent">@asm.DecompileType(typ)</code></pre>
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation"><a href="#home" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
+            <li role="presentation" class="active"><a href="#profile" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
+        </ul>
+        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;padding-left:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@asm.DecompileType(typ)</code></pre>
     }
     </div>
     </div>
