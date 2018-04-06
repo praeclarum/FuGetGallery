@@ -180,7 +180,7 @@
 }
 
 @if (package.TargetFrameworks.Count > 0) {
-    <h2 style="margin-top:1.25em;">Frameworks</h2>
+    <h3 style="margin-top:1.25em;color:#555;">Frameworks</h3>
 
     <nav style="margin-top:0em;line-height:2.75em;">
     @foreach (var tf in package.TargetFrameworks) {
@@ -197,7 +197,7 @@
 }
 
 @if (framework != null && framework.Dependencies.Count > 0) {
-    <h3>Dependencies</h3>
+    <h3 style="color:#555;">Dependencies</h3>
     <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
         <li>
@@ -210,12 +210,12 @@
 
 @if (framework != null && (framework.Assemblies.Count + framework.BuildAssemblies.Count > 0)) {
     <p id="api">&nbsp;</p>
-    <h2 style="margin-top:0em;padding-top:1em;border-top:#ddd solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
+    <h2 style="color:#555;margin-top:0em;padding-top:1em;border-top:#ddd solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
 
     <div class="row">
     <div class="col-xs-12 col-sm-3">
     @if (framework.Assemblies.Count > 0) {
-        <h3 style="color:#444;">Assemblies</h3>
+        <h3 style="color:#555;">Assemblies</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
             var bold = !isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
@@ -229,7 +229,7 @@
         </ul>
     }
     @if (framework.BuildAssemblies.Count > 0) {
-        <h3 style="color:#444;">Build Assemblies</h3>
+        <h3 style="color:#555;">Build Assemblies</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var a in framework.BuildAssemblies.OrderBy(x => x.FileName)) {
             var bold = isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
@@ -243,7 +243,7 @@
         </ul>
     }
     @if (asmDef != null && namespaces != null && namespaces.Count > 0) {
-        <h3 style="color:#444;">Namespaces</h3>
+        <h3 style="color:#555;">Namespaces</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var n in namespaces) {
             var bold = n.Key == ns?.Key ? "bold" : "normal";
