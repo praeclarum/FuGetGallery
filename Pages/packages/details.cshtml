@@ -180,7 +180,7 @@
 }
 
 @if (package.TargetFrameworks.Count > 0) {
-    <h3 style="margin-top:1.25em;color:#555;">Frameworks</h3>
+    <h3 style="margin-top:1.25em;color:#777;">Frameworks</h3>
 
     <nav style="margin-top:0em;line-height:2.75em;">
     @foreach (var tf in package.TargetFrameworks) {
@@ -197,12 +197,13 @@
 }
 
 @if (framework != null && framework.Dependencies.Count > 0) {
-    <h3 style="color:#555;">Dependencies</h3>
+    <h3 style="color:#777;">Dependencies</h3>
     <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
         <li>
-            <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;<a style="color:#000"
-                href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">@d.PackageId</a>
+            <a style="color:#777"
+               href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">
+                <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId</a>
         </li>
     }
     </ul>
@@ -210,12 +211,12 @@
 
 @if (framework != null && (framework.Assemblies.Count + framework.BuildAssemblies.Count > 0)) {
     <p id="api">&nbsp;</p>
-    <h2 style="color:#555;margin-top:0em;padding-top:1em;border-top:#ddd solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
+    <h2 style="color:#777;margin-top:0em;padding-top:1em;border-top:#ddd solid 1px;margin-bottom:0em">API <small>@size.ToString("#,0") bytes</small></h2>
 
     <div class="row">
     <div class="col-xs-12 col-sm-3">
     @if (framework.Assemblies.Count > 0) {
-        <h3 style="color:#555;">Assemblies</h3>
+        <h3 style="color:#777;">Assemblies</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
             var bold = !isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
@@ -229,7 +230,7 @@
         </ul>
     }
     @if (framework.BuildAssemblies.Count > 0) {
-        <h3 style="color:#555;">Build Assemblies</h3>
+        <h3 style="color:#777;">Build Assemblies</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var a in framework.BuildAssemblies.OrderBy(x => x.FileName)) {
             var bold = isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
@@ -243,7 +244,7 @@
         </ul>
     }
     @if (asmDef != null && namespaces != null && namespaces.Count > 0) {
-        <h3 style="color:#555;">Namespaces</h3>
+        <h3 style="color:#777;">Namespaces</h3>
         <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var n in namespaces) {
             var bold = n.Key == ns?.Key ? "bold" : "normal";
@@ -258,8 +259,8 @@
         </ul>
     }
     @if (ns != null) {
-        <h3 id="types" style="color:#444;">Types</h3>
-        <ul style="list-style-type:none;padding:0;white-space:nowrap">
+        <h3 id="types" style="color:#777;">Types</h3>
+        <ul style="overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
         @foreach (var t in ns.OrderBy(x => x.Name)) {
             var bold = t.Name == typ?.Name ? "bold" : "normal";            
             var color = bold == "bold" ? "#000" : (t.IsPublic ? "#777" : "#CCC");
@@ -274,8 +275,9 @@
     }
     </div>
     <div class="col-xs-12 col-sm-9" id="code">
+    <article>
     @if (showKlass == "type") {
-        <h2 id="type"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.FullName</h2>
+        <h1 id="type"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
         <p style="white-space:pre-wrap;word-wrap:normal;">@description</p>
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")#api" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
@@ -286,17 +288,18 @@
         }
     }
     else if (showKlass == "namespace") {
-        <h2 id="namespace"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h2>
+        <h1 id="namespace"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
         <p>@description</p>
     }
     else if (showKlass == "assembly") {
-        <h2 id="assembly"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h2>
+        <h1 id="assembly"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
         <p>@description</p>
     }
     else {
-        <h2 id="assembly"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h2>
+        <h1 id="assembly"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
         <p>@description</p>
     }
+    </article>
     </div>
     </div>
 }
