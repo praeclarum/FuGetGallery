@@ -180,9 +180,8 @@
 }
 
 @if (package.TargetFrameworks.Count > 0) {
-    <h3 style="margin-top:1.25em;color:#777;">Frameworks</h3>
-
-    <nav style="margin-top:0em;line-height:2.75em;">
+    <nav style="margin-top:0em;line-height:2.75em;display:inline-block">
+        <h3 style="margin-top:1.25em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h3>
     @foreach (var tf in package.TargetFrameworks) {
         var active = tf.Moniker == framework.Moniker ? "active" : "";
         var color = tf.Moniker.StartsWith("netstandard") ? "success" : 
