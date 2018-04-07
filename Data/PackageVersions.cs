@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace FuGetGallery
 {
@@ -16,10 +17,10 @@ namespace FuGetGallery
 
         static readonly PackageVersionsCache cache = new PackageVersionsCache ();
 
-        public static Task<PackageVersions> GetAsync (object inputId)
+        public static Task<PackageVersions> GetAsync (object inputId, CancellationToken token)
         {
             var cleanId = (inputId ?? "").ToString().Trim().ToLowerInvariant();
-            return cache.GetAsync (cleanId);
+            return cache.GetAsync (cleanId, token);
         }
 
         public PackageVersion GetVersion (object inputVersion)
@@ -54,7 +55,7 @@ namespace FuGetGallery
         {
             public PackageVersionsCache () : base (TimeSpan.FromMinutes (20)) { }
             readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageVersions> GetValueAsync(string lowerId)
+            protected override async Task<PackageVersions> GetValueAsync(string lowerId, CancellationToken token)
             {
                 var package = new PackageVersions {
                     LowerId = lowerId,

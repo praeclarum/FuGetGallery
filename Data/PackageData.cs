@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.IO.Compression;
 using System.Xml.Linq;
 using Mono.Cecil;
+using System.Threading;
 
 namespace FuGetGallery
 {
@@ -32,14 +33,16 @@ namespace FuGetGallery
         static readonly PackageDataCache cache = new PackageDataCache ();
 
 
-        public static async Task<PackageData> GetAsync (object inputId, object inputVersion)
+        public static Task<PackageData> GetAsync (object inputId, object inputVersion) => GetAsync (inputId, inputVersion, CancellationToken.None);
+
+        public static async Task<PackageData> GetAsync (object inputId, object inputVersion, CancellationToken token)
         {
             var cleanId = (inputId ?? "").ToString().Trim().ToLowerInvariant();
 
-            var versions = await PackageVersions.GetAsync (inputId).ConfigureAwait (false);
+            var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
 
-            return await cache.GetAsync (versions.LowerId, version.Version).ConfigureAwait (false);
+            return await cache.GetAsync (versions.LowerId, version.Version, token).ConfigureAwait (false);
         }
 
         public PackageTargetFramework FindClosestTargetFramework (object inputTargetFramework)
@@ -65,10 +68,10 @@ namespace FuGetGallery
             return TargetFrameworks.FirstOrDefault (x => x.Moniker == moniker);
         }
 
-        void Read (byte[] bytes)
+        void Read (MemoryStream bytes)
         {
-            SizeInBytes = bytes.LongLength;
-            Archive = new ZipArchive (new MemoryStream (bytes), ZipArchiveMode.Read);
+            SizeInBytes = bytes.Length;
+            Archive = new ZipArchive (bytes, ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
             ZipArchiveEntry nuspecEntry = null;
             foreach (var e in Archive.Entries.OrderBy (x => x.FullName)) {
@@ -220,7 +223,7 @@ namespace FuGetGallery
         {
             public PackageDataCache () : base (TimeSpan.FromDays (365)) { }
             readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageData> GetValueAsync(string id, string version)
+            protected override async Task<PackageData> GetValueAsync(string id, string version, CancellationToken token)
             {
                 var package = new PackageData {
                     Id = id,
@@ -229,10 +232,16 @@ namespace FuGetGallery
                     SizeInBytes = 0,
                     DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version)}",
                 };
+                token.ThrowIfCancellationRequested();
                 try {
-                    // System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
-                    var data = await httpClient.GetByteArrayAsync (package.DownloadUrl).ConfigureAwait (false);
-                    package.Read (data);
+                    // System.Console.WriteLine($"DOWNLOADING {token.IsCancellationRequested} {package.DownloadUrl}");
+                    var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
+                    var data = new MemoryStream ();
+                    using (var s = await r.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
+                        await s.CopyToAsync (data, 16*1024, token).ConfigureAwait(false);
+                    }
+                    data.Position = 0;
+                    await Task.Run (() => package.Read (data)).ConfigureAwait (false);
                 }
                 catch (Exception ex) {
                     package.Error = ex;

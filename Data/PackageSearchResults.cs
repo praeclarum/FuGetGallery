@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Mono.Cecil;
 
@@ -54,7 +55,7 @@ namespace FuGetGallery
         {
             public ResultsCache () : base (TimeSpan.FromMinutes (15)) { }
             readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageSearchResults> GetValueAsync (string q)
+            protected override async Task<PackageSearchResults> GetValueAsync (string q, CancellationToken token)
             {
                 var results = new PackageSearchResults {
                     Query = q,

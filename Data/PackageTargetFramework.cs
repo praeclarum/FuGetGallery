@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System.Threading;
 using Mono.Cecil;
 
 namespace FuGetGallery
@@ -80,10 +82,11 @@ namespace FuGetGallery
                 //
                 // Try to find it in this package or one of its dependencies
                 //
-                var s = new HashSet<string> ();
-                s.Add (packageId);
+                var s = new ConcurrentDictionary<string, bool> ();
+                var cts = new CancellationTokenSource ();
+                s.TryAdd (packageId, true);
                 
-                var a = TryResolveInFramework (name, packageTargetFramework, s);
+                var a = TryResolveInFrameworkAsync (name, packageTargetFramework, s, cts).Result;
 
                 if (a != null) {
                     // System.Console.WriteLine("    RESOLVED " + name);
@@ -98,43 +101,55 @@ namespace FuGetGallery
                 // throw new Exception ("Failed to resolve: " + name);
             }
 
-            PackageAssembly TryResolveInFramework (AssemblyNameReference name, PackageTargetFramework packageTargetFramework, HashSet<string> searchedPackages)
+            Task<PackageAssembly> TryResolveInFrameworkAsync (AssemblyNameReference name, PackageTargetFramework packageTargetFramework, ConcurrentDictionary<string, bool> searchedPackages, CancellationTokenSource cts)
             {
                 var a = packageTargetFramework.Assemblies.FirstOrDefault(x => {
                     // System.Console.WriteLine("HOW ABOUT? " + x.Definition.Name);
                     return x.Definition.Name.Name == name.Name;
                 });
+                if (a != null)
+                    return Task.FromResult (a);
 
-                if (a == null) {
-                    int Order (PackageDependency d) => d.PackageId.StartsWith("System.") ? 1 : 0;
+                int Order (PackageDependency d) => d.PackageId.StartsWith("System.") ? 1 : 0;
 
-                    foreach (var d in packageTargetFramework.Dependencies.OrderBy (Order)) {
-                        a = TryResolveInDependency (name, d, searchedPackages);
-                        if (a != null)
-                            break;
-                    }
-
-                    if (a == null) {
-                        var bud = new PackageDependency{PackageId = "Microsoft.Build.Utilities.Core", VersionSpec="15.6.82" };
-                        a = TryResolveInDependency (name, bud, searchedPackages);                        
-                    }
+                var gotResultCS = new TaskCompletionSource<PackageAssembly> ();
+                var tasks = new List<Task<PackageAssembly>> ();
+                foreach (var d in packageTargetFramework.Dependencies.OrderBy (Order)) {
+                    tasks.Add (TryResolveInDependencyAsync (name, d, searchedPackages, cts).ContinueWith(t => {
+                        if (t.IsCompletedSuccessfully && t.Result != null) {
+                            gotResultCS.TrySetResult (t.Result);
+                            cts.Cancel ();
+                            return t.Result;
+                        }
+                        return null;
+                    }));
                 }
+                var allCompleteTask = Task.WhenAll (tasks);
+                var anythingTask = Task.WhenAny (new[]{ (Task)gotResultCS.Task }.Append (allCompleteTask));
 
-                return a;
+                return anythingTask.ContinueWith (t => {
+                    // System.Console.WriteLine("DONE RESOLVING IN " + packageTargetFramework.Moniker);
+                    if (gotResultCS.Task.IsCompletedSuccessfully) {
+                        return gotResultCS.Task.Result;
+                    }
+                    return null;
+                });
             }
 
-            PackageAssembly TryResolveInDependency (AssemblyNameReference name, PackageDependency dep, HashSet<string> searchedPackages)
+            async Task<PackageAssembly> TryResolveInDependencyAsync (AssemblyNameReference name, PackageDependency dep, ConcurrentDictionary<string, bool> searchedPackages, CancellationTokenSource cts)
             {
                 var lowerPackageId = dep.PackageId.ToLowerInvariant ();
-                if (searchedPackages.Contains (lowerPackageId))
+                if (searchedPackages.ContainsKey (lowerPackageId))
                     return null;
-                searchedPackages.Add (lowerPackageId);
+                searchedPackages.TryAdd (lowerPackageId, true);
 
                 try {
-                    var package = PackageData.GetAsync(dep.PackageId, dep.VersionSpec).Result;
+                    var package = await PackageData.GetAsync(dep.PackageId, dep.VersionSpec, cts.Token).ConfigureAwait (false);
+                    if (cts.Token.IsCancellationRequested)
+                        return null;
                     var fw = package.FindClosestTargetFramework (packageTargetFramework.Moniker);
                     if (fw != null) {
-                        return TryResolveInFramework (name, fw, searchedPackages);
+                        return await TryResolveInFrameworkAsync (name, fw, searchedPackages, cts).ConfigureAwait (false);
                     }
                 }
                 catch {}

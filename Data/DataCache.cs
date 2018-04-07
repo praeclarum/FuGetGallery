@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
+using System.Threading;
 
 namespace FuGetGallery
 {
@@ -25,19 +26,20 @@ namespace FuGetGallery
         {
             this.expireAfter = expireAfter;
         }
-        public Task<TResult> GetAsync ()
+        public Task<TResult> GetAsync () => GetAsync (CancellationToken.None);
+        public Task<TResult> GetAsync (CancellationToken token)
         {
             var key = "";
             if (cache.TryGetValue (key, out var result) && result is TResult rm) {
                 return Task.FromResult (rm);
             }
-            return GetValueAsync ().ContinueWith (t => {
+            return GetValueAsync (token).ContinueWith (t => {
                 var rt = t.Result;
                 cache.Set (key, rt, expireAfter);
                 return rt;
             });
         }
-        protected abstract Task<TResult> GetValueAsync ();
+        protected abstract Task<TResult> GetValueAsync (CancellationToken token);
     }
 
     public abstract class DataCache<TArg, TResult> : DataCacheBase
@@ -47,19 +49,20 @@ namespace FuGetGallery
         {
             this.expireAfter = expireAfter;
         }
-        public Task<TResult> GetAsync (TArg arg)
+        public Task<TResult> GetAsync (TArg arg) => GetAsync (arg, CancellationToken.None);
+        public Task<TResult> GetAsync (TArg arg, CancellationToken token)
         {
             var key = arg;
             if (cache.TryGetValue (key, out var result) && result is TResult rm) {
                 return Task.FromResult (rm);
             }
-            return GetValueAsync (arg).ContinueWith (t => {
+            return GetValueAsync (arg, token).ContinueWith (t => {
                 var rt = t.Result;
                 cache.Set (key, rt, expireAfter);
                 return rt;
             });
         }
-        protected abstract Task<TResult> GetValueAsync (TArg arg);
+        protected abstract Task<TResult> GetValueAsync (TArg arg, CancellationToken token);
     }
 
     public abstract class DataCache<TArg0, TArg1, TResult> : DataCacheBase
@@ -69,18 +72,19 @@ namespace FuGetGallery
         {
             this.expireAfter = expireAfter;
         }
-        public Task<TResult> GetAsync (TArg0 arg0, TArg1 arg1)
+        public Task<TResult> GetAsync (TArg0 arg0, TArg1 arg1) => GetAsync (arg0, arg1, CancellationToken.None);
+        public Task<TResult> GetAsync (TArg0 arg0, TArg1 arg1, CancellationToken token)
         {
             var key = Tuple.Create (arg0, arg1);
             if (cache.TryGetValue (key, out var result) && result is TResult rm) {
                 return Task.FromResult (rm);
             }
-            return GetValueAsync (arg0, arg1).ContinueWith (t => {
+            return GetValueAsync (arg0, arg1, token).ContinueWith (t => {
                 var rt = t.Result;
                 cache.Set (key, rt, expireAfter);
                 return rt;
             });
         }
-        protected abstract Task<TResult> GetValueAsync (TArg0 arg0, TArg1 arg1);
+        protected abstract Task<TResult> GetValueAsync (TArg0 arg0, TArg1 arg1, CancellationToken token);
     }
 }
