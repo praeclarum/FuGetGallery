@@ -240,7 +240,7 @@ namespace FuGetGallery
                         await s.CopyToAsync (data, 16*1024, token).ConfigureAwait(false);
                     }
                     data.Position = 0;
-                    await Task.Run (() => package.Read (data)).ConfigureAwait (false);
+                    await Task.Run (() => package.Read (data), token).ConfigureAwait (false);
                 }
                 catch (OperationCanceledException) {
                     throw;
