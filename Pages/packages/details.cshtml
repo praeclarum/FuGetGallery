@@ -222,7 +222,7 @@
             var color = bold == "bold" ? "#000" : "#777";
             <li>
                 <a style="font-weight:@bold;color:@color;"
-                   href="@GetUrl(odir:"lib", oassemblyName:a.FileName)#api">
+                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq#api">
                     <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
             </li>
         }
@@ -236,7 +236,7 @@
             var color = bold == "bold" ? "#000" : "#777";
             <li>
                 <a style="font-weight:@bold;color:@color;"
-                   href="@GetUrl(odir:"build", oassemblyName:a.FileName)#api">
+                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq#api">
                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
             </li>
         }
@@ -251,7 +251,7 @@
             var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
             <li>
                 <a style="font-weight:@bold;color:@color;"
-                   href="@GetUrl(onamespace:n.Key)#api">
+                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)@eq#api">
                     <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
             </li>
         }
