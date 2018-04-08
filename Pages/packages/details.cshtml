@@ -180,7 +180,7 @@
 }
 
 @if (package.TargetFrameworks.Count > 0) {
-    <nav style="margin-top:0em;line-height:2.75em;display:inline-block">
+    <nav style="margin-top:0em;line-height:2.75em;">
         <h3 style="margin-top:1.25em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h3>
     @foreach (var tf in package.TargetFrameworks) {
         var active = tf.Moniker == framework.Moniker ? "active" : "";
@@ -196,16 +196,14 @@
 }
 
 @if (framework != null && framework.Dependencies.Count > 0) {
-    <h3 style="color:#777;">Dependencies</h3>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <nav style="margin-top:0em;line-height:2.75em;">
+        <h3 style="margin-top:1.25em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h3>
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
-        <li>
-            <a style="color:#777"
-               href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">
-                <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId</a>
-        </li>
+        <a class="btn btn-default btn-med" style="color:#777"
+            href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">
+            <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId</a>
     }
-    </ul>
+    </nav>
 }
 
 @if (framework != null && (framework.Assemblies.Count + framework.BuildAssemblies.Count > 0)) {
