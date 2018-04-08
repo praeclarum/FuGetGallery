@@ -232,7 +232,6 @@ namespace FuGetGallery
                     SizeInBytes = 0,
                     DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version)}",
                 };
-                token.ThrowIfCancellationRequested();
                 try {
                     // System.Console.WriteLine($"DOWNLOADING {token.IsCancellationRequested} {package.DownloadUrl}");
                     var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
@@ -242,6 +241,9 @@ namespace FuGetGallery
                     }
                     data.Position = 0;
                     await Task.Run (() => package.Read (data)).ConfigureAwait (false);
+                }
+                catch (OperationCanceledException) {
+                    throw;
                 }
                 catch (Exception ex) {
                     package.Error = ex;
