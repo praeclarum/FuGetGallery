@@ -16,6 +16,7 @@ namespace FuGetGallery
 {
     public class TypeDocumentation
     {
+        PackageTargetFramework framework;
         TypeDefinition typeDefinition;
         public TypeDefinition Definition => typeDefinition;
 
@@ -25,11 +26,12 @@ namespace FuGetGallery
 
         public string SummaryText { get; }
 
-        public TypeDocumentation (TypeDefinition typeDefinition, PackageAssemblyXmlDocs xmlDocs,
+        public TypeDocumentation (TypeDefinition typeDefinition, PackageTargetFramework framework, PackageAssemblyXmlDocs xmlDocs,
             Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler, Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler,
             ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format)
         {
             this.typeDefinition = typeDefinition;
+            this.framework = framework;
             this.decompiler = decompiler;
             this.idecompiler = idecompiler;
             this.format = format;
@@ -80,7 +82,7 @@ namespace FuGetGallery
                         return "// No decompiler available";
                     var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
                     syntaxTree.AcceptVisitor(new RemoveNonInterfaceSyntaxVisitor { StartTypeName = type.Name });
-                    var w = new HtmlWriter (new StringWriter());
+                    var w = new HtmlWriter (new StringWriter(), framework);
                     w.Writer.Write("<div class=\"code\">");
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
                     w.Writer.Write("</div>");
@@ -94,8 +96,10 @@ namespace FuGetGallery
 
         class HtmlWriter : ICSharpCode.Decompiler.CSharp.OutputVisitor.TokenWriter
         {
+            readonly PackageTargetFramework framework;
             readonly TextWriter w;
             public TextWriter Writer => w;
+
 
             bool needsIndent = true;
             int indentLevel = 0;
@@ -113,14 +117,27 @@ namespace FuGetGallery
                 if (n.Annotations.Count() == 0)
                     return GetClassAndLink(n.Parent, out link);
                 var t = n.Annotation<TypeResolveResult> ();
-                if (t != null)
+                if (t != null) {
+                    if (n.NodeType == NodeType.TypeDeclaration) {
+                        return "c-td";
+                    }
+                    var ns = t.Type.Namespace;
+                    var name = t.Type.Name;
+                    link = framework.FindTypeUrl (t.Type.FullName);
                     return "c-tr";
+                }
                 var u = n.Annotation<UsingScope> ();
                 if (u != null)
                     return "c-nr";
                 var m = n.Annotation<MemberResolveResult> ();
                 if (m != null) {
-                    return "c-mr";
+                    if (m.Member.SymbolKind == SymbolKind.Method)
+                        return "c-mr";
+                    if (m.Member.SymbolKind == SymbolKind.Field)
+                        return "c-fr";
+                    if (m.Member.SymbolKind == SymbolKind.Constructor)
+                        return "c-cr";
+                    return "c-pr";
                 }
                 var v = n.Annotation<ILVariableResolveResult> ();
                 if (v != null) {
@@ -138,9 +155,10 @@ namespace FuGetGallery
                 needsIndent = false;
                 w.Write(new String(' ', indentLevel * 4));
             }
-            public HtmlWriter(TextWriter w)
+            public HtmlWriter(TextWriter w, PackageTargetFramework framework)
             {
                 this.w = w;
+                this.framework = framework;
             }
             public override void StartNode(AstNode node)
             {
@@ -183,6 +201,8 @@ namespace FuGetGallery
                 if (link != null)  {
                     w.Write("<a class=\"");
                     w.Write(c);
+                    w.Write("\" href=\"");
+                    WriteEncoded(link);
                     w.Write("\">");
                     WriteEncoded(identifier.Name);
                     w.Write("</a>");

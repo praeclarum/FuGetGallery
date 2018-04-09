@@ -11,6 +11,7 @@ namespace FuGetGallery
     public class PackageTargetFramework
     {
         public string Moniker { get; set; } = "";
+        public PackageData Package { get; set; }
         public List<PackageDependency> Dependencies { get; } = new List<PackageDependency> ();
         public List<PackageAssembly> Assemblies { get; } = new List<PackageAssembly> ();
         public List<PackageAssembly> BuildAssemblies { get; } = new List<PackageAssembly> ();
@@ -19,9 +20,10 @@ namespace FuGetGallery
 
         public PackageAssemblyResolver AssemblyResolver { get; }
 
-        public PackageTargetFramework(string lowerPackageId)
+        public PackageTargetFramework(PackageData package)
         {
-            AssemblyResolver = new PackageAssemblyResolver (lowerPackageId, this);
+            Package = package;
+            AssemblyResolver = new PackageAssemblyResolver (package.IndexId, this);
         }
 
         public PackageAssembly GetAssembly (object inputDir, object inputName)
@@ -33,6 +35,19 @@ namespace FuGetGallery
                 return asms.OrderByDescending(x=>x.SizeInBytes).FirstOrDefault();
             }
             return asms.FirstOrDefault (x => x.FileName == cleanName);
+        }
+
+        public string FindTypeUrl (string typeFullName)
+        {
+            var types =
+                from a in Assemblies.Concat(BuildAssemblies)
+                from m in a.Definition.Modules
+                select new { a, t = m.GetType (typeFullName) };
+            var at = types.FirstOrDefault (x => x.t != null);
+            if (at == null)
+                return null;
+            var dir = at.a.IsBuildAssembly ? "build" : "lib";
+            return $"/packages/{Uri.EscapeDataString(Package.Id)}/{Uri.EscapeDataString(Package.Version)}/{dir}/{Uri.EscapeDataString(Moniker)}/{Uri.EscapeDataString(at.a.FileName)}/{Uri.EscapeDataString(at.t.Namespace)}/{Uri.EscapeDataString(at.t.Name)}";
         }
 
         public void AddDependency (PackageDependency d)

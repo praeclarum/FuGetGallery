@@ -88,7 +88,7 @@ namespace FuGetGallery
                         var tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
                         var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == tfm);
                         if (tf == null) {
-                            tf = new PackageTargetFramework (Id.ToLowerInvariant ()) {
+                            tf = new PackageTargetFramework (this) {
                                 Moniker = tfm,
                             };
                             TargetFrameworks.Add (tf);
@@ -101,10 +101,10 @@ namespace FuGetGallery
                             }
                         }
                         else if (isBuild) {
-                            tf.BuildAssemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));
+                            tf.BuildAssemblies.Add (new PackageAssembly (e, tf));
                         }
                         else {
-                            tf.Assemblies.Add (new PackageAssembly (e, tf.AssemblyResolver));
+                            tf.Assemblies.Add (new PackageAssembly (e, tf));
                         }
                     }
                 }

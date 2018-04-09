@@ -15,26 +15,29 @@ h1 a:hover { color: inherit; text-decoration: none; }
 
 .code {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    font-size: 12px;
-    color: #24292e;
+    font-size: 13px;
+    color: #77a;
     word-wrap: normal;
     white-space: pre;
-    margin-top: 1em;
+    padding: 16px;
+    line-height: 17px;
 }
-.c-kw { color: #00d; }
+.c-kw { color: #77a; }
 .c-co { color: #080; }
 .c-uk { color: #000; }
 .c-nl { color: #777; }
 .c-nu { color: #c60; }
 .c-st { color: #60c; }
-.c-nr { color: #08f; }
+.c-nr { color: rgb(92, 177, 250); }
 .c-nd { color: #048; font-weight: bold; }
-.c-tr { color: #f0f; }
+.c-tr { color: #f6f; }
 .c-td { color: #808; font-weight: bold; }
-.c-fr { color: #888; }
+.c-fr { color: #333; }
 .c-fd { color: #444; font-weight: bold; }
 .c-mr { color: #f00; }
 .c-md { color: #800; font-weight: bold; }
+.c-cr { color: #f00; }
+.c-cd { color: #800; font-weight: bold; }
 .c-ar { color: #88f; }
 .c-ad { color: #448; font-weight: bold; }
 .c-pr { color: #00f; }

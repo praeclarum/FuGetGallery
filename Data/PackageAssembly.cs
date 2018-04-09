@@ -11,8 +11,8 @@ namespace FuGetGallery
 {
     public class PackageAssembly : PackageFile
     {
+        readonly PackageTargetFramework framework;
         readonly Lazy<AssemblyDefinition> definition;
-        private readonly IAssemblyResolver resolver;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler;
         readonly ConcurrentDictionary<TypeDefinition, TypeDocumentation> typeDocs =
@@ -23,12 +23,13 @@ namespace FuGetGallery
         public PackageAssemblyXmlDocs XmlDocs { get; set; }
 
         public AssemblyDefinition Definition => definition.Value;
+        
+        public bool IsBuildAssembly => ArchiveEntry.FullName.StartsWith ("build/", StringComparison.InvariantCultureIgnoreCase);
 
-        public PackageAssembly (ZipArchiveEntry entry, IAssemblyResolver resolver)
+        public PackageAssembly (ZipArchiveEntry entry, PackageTargetFramework framework)
             : base (entry)
         {
-            this.resolver = resolver;
-            var isBuild = entry.FullName.StartsWith ("build/");
+            this.framework = framework;            
             definition = new Lazy<AssemblyDefinition> (() => {
                 if (ArchiveEntry == null)
                     return null;
@@ -38,7 +39,7 @@ namespace FuGetGallery
                     ms.Position = 0;
                 }
                 return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
-                    AssemblyResolver = resolver,
+                    AssemblyResolver = framework.AssemblyResolver,
                 });
             }, true);
             format = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono ();
@@ -81,7 +82,7 @@ namespace FuGetGallery
                 return docs;
             }
             var asmName = typeDefinition.Module.Assembly.Name.Name;
-            docs = new TypeDocumentation (typeDefinition, XmlDocs, decompiler, idecompiler, format);
+            docs = new TypeDocumentation (typeDefinition, framework, XmlDocs, decompiler, idecompiler, format);
             typeDocs.TryAdd (typeDefinition, docs);
             return docs;
         }
