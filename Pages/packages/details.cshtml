@@ -310,7 +310,7 @@ else if (hasFiles) {
 <article>
 @if (showKlass == "type") {
     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
-    <p style="white-space:pre-wrap;word-wrap:normal;">@description</p>
+    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
         <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
@@ -327,7 +327,7 @@ else if (showKlass == "namespace") {
     <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 else if (showKlass == "assembly") {
-    <h1 id="assembly"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
+    <h1 id="assembly" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
     <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 else {
