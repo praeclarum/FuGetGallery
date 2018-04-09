@@ -76,8 +76,8 @@ namespace FuGetGallery
             Archive = new ZipArchive (bytes, ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
             ZipArchiveEntry nuspecEntry = null;
-            foreach (var e in Archive.Entries.OrderBy (x => x.FullName)) {
-                var n = e.FullName;
+            foreach (var e in Archive.Entries.Where(x => x.Name != "_._").OrderBy (x => x.FullName)) {
+                var n = e.FullName;                
                 var isBuild = n.StartsWith ("build/", StringComparison.InvariantCultureIgnoreCase);
                 var isLib = n.StartsWith ("lib/", StringComparison.InvariantCultureIgnoreCase);
                 if ((isBuild || isLib) && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
