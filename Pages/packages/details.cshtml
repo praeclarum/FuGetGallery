@@ -141,6 +141,7 @@
     };
 }
 
+<header>
 <h1>@if (!string.IsNullOrEmpty(package.IconUrl)) {
         <a href="/packages/@Uri.EscapeDataString(package.Id)">
             <img src="@package.IconUrl" width="64" height="64" style="margin-top:5px;margin-left:-84px;float:left" />
@@ -154,25 +155,21 @@
     </small>
 </h1>
 
-@if (!string.IsNullOrEmpty(package.Description)) {
-    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;color:#777;margin-top:-0.25em;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@package.Description</p>
-}
-
-<p>
-<a href="@package.DownloadUrl" type="button" class="btn btn-default">
-  <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
-</a>
-@if (!string.IsNullOrEmpty(package.ProjectUrl)) {
-    <a href="@package.ProjectUrl" type="button" class="btn btn-default">
-        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> Project Site
+<nav>
+    <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
+    <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
     </a>
-}
-<a href="https://www.nuget.org/packages/@package.Id/@package.Version" type="button" class="btn btn-default">
-    <span class="glyphicon glyphicon-link" aria-hidden="true"></span> NuGet Gallery
-</a>
-</p>
+    @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
+        <a href="@package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
+            <span class="glyphicon glyphicon-link" aria-hidden="true"></span> Project Site
+        </a>
+    }
+    <a href="https://www.nuget.org/packages/@package.Id/@package.Version" type="button" class="btn btn-default" style="color:#777">
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> NuGet Gallery
+    </a>
+</nav>
 
-<pre style="border:none"><code class="xml" style="background-color:transparent">&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</code></pre>
+<pre style="border:none;margin-top:1em"><code class="xml" style="background-color:transparent">&lt;PackageReference Include="@package.Id" Version="@package.Version" /&gt;</code></pre>
 
 @if (package.Error != null) {
     <div class="">
@@ -183,7 +180,7 @@
 
 @if (package.TargetFrameworks.Count > 0) {
     <nav style="margin-top:0em;line-height:2.75em;">
-        <h3 style="margin-top:1.25em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h3>
+        <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h4>
     @foreach (var tf in package.TargetFrameworks) {
         var active = tf.Moniker == framework.Moniker ? "active" : "";
         var color = tf.Moniker.StartsWith("netstandard") ? "success" : 
@@ -191,7 +188,7 @@
                     (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
         var bold = active == "active" ? "bold" : "normal";
         var tcolor = active == "active" ? "color:#fff" : "color:rgba(255,255,255,0.75)";
-        <a class="btn btn-@color btn-med @active" style="font-weight:@bold;@tcolor" role="button"
+        <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button"
            href="@GetUrl(otargetFramework:tf.Moniker)">@tf.Moniker</a>
     }
     </nav>
@@ -199,25 +196,26 @@
 
 @if (framework != null && framework.Dependencies.Count > 0) {
     <nav style="margin-top:0em;line-height:2.75em;">
-        <h3 style="margin-top:1.25em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h3>
+        <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h4>
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
-        <a class="btn btn-default btn-med" style="color:#777"
+        <a class="btn btn-default btn-sm" style="color:#777"
             href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">
             <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId</a>
     }
     </nav>
 }
 
-<hr style="margin-top:3em;" />
+<hr style="margin-top:2em;" />
+</header>
 
 <div id="api" class="row" style="margin-bottom:4em;">
 <div class="col-xs-12 col-sm-3">
 @if (hasApi) {
-    <h3 style="color:#777;margin-top:0em;padding-top:1em;margin-bottom:0em">.NET API</h3>
+    <h3 style="color:#777;margin-top:0em;margin-bottom:0em">.NET API</h3>
     <small style="color:#777;">@framework.SizeInBytes.ToString("#,0") bytes</small>
 }
 else if (hasFiles) {
-    <h3 style="color:#777;margin-top:0em;padding-top:1em;margin-bottom:0em">Package Files</h3>
+    <h3 style="color:#777;margin-top:0em;margin-bottom:0em">Package Files</h3>
     <small style="color:#777;">@((package.Content.Sum(x=>x.SizeInBytes)+package.Tools.Sum(x=>x.SizeInBytes)).ToString("#,0")) bytes</small>
 }
 
@@ -322,16 +320,16 @@ else if (hasFiles) {
     }
 }
 else if (showKlass == "namespace") {
-    <h1 id="namespace"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
-    <p>@description</p>
+    <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
+    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 else if (showKlass == "assembly") {
     <h1 id="assembly"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
-    <p>@description</p>
+    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 else {
-    <h1 id="assembly"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
-    <p>@description</p>
+    <h1 id="package" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
+    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 </article>
 </div>
