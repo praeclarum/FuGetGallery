@@ -11,6 +11,7 @@ using ICSharpCode.Decompiler.Semantics;
 using ICSharpCode.Decompiler.CSharp.TypeSystem;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.IL;
+using ICSharpCode.Decompiler.CSharp.Resolver;
 
 namespace FuGetGallery
 {
@@ -157,6 +158,9 @@ namespace FuGetGallery
                         return "c-pd";
                     return "c-pr";
                 }
+                var mg = n.Annotation<MethodGroupResolveResult> ();
+                if (mg != null)
+                    return "c-mr";
                 var v = n.Annotation<ILVariableResolveResult> ();
                 if (v != null) {
                     if (v.Variable.Kind == VariableKind.Parameter)
@@ -168,7 +172,7 @@ namespace FuGetGallery
                     return "c-fr";
                 }
 
-                Console.WriteLine(n.Annotations.FirstOrDefault());
+                // Console.WriteLine(n.Annotations.FirstOrDefault());
                 return "c-uk";
             }
             void WriteIndent()
