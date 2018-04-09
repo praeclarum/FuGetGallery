@@ -309,14 +309,17 @@ else if (hasFiles) {
 <div class="col-xs-12 col-sm-9" id="code">
 <article>
 @if (showKlass == "type") {
-    <h1 id="type"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
+    <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
     <p style="white-space:pre-wrap;word-wrap:normal;">@description</p>
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
         <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
     </ul>
-    if (true) {
-        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@asm.DecompileType(typ)</code></pre>
+    if (code) {
+        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@(await asm.GetTypeCodeAsync(typ))</code></pre>
+    }
+    else {
+        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@(await asm.GetTypeInterfaceCodeAsync(typ))</code></pre>
     }
 }
 else if (showKlass == "namespace") {

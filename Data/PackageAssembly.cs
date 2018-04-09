@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading.Tasks;
 using Mono.Cecil;
 
 namespace FuGetGallery
@@ -65,17 +66,34 @@ namespace FuGetGallery
             }, true);
         }
 
-        public string DecompileType (TypeDefinition type)
+        public Task<string> GetTypeCodeAsync (TypeDefinition type)
         {
-            try {
-                var d = decompiler.Value;
-                if (d == null)
-                    return "// No decompiler available";
-                return d.DecompileTypeAsString (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
-            }
-            catch (Exception e) {
-                return "/* " + e.Message + " */";
-            }
+            return Task.Run (() => {
+                try {
+                    var d = decompiler.Value;
+                    if (d == null)
+                        return "// No decompiler available";
+                    return d.DecompileTypeAsString (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
+                }
+                catch (Exception e) {
+                    return "/* " + e.Message + " */";
+                }
+            });
+        }
+
+        public Task<string> GetTypeInterfaceCodeAsync (TypeDefinition type)
+        {
+            return Task.Run (() => {
+                try {
+                    var d = idecompiler.Value;
+                    if (d == null)
+                        return "// No decompiler available";
+                    return d.DecompileTypeAsString (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
+                }
+                catch (Exception e) {
+                    return "/* " + e.Message + " */";
+                }
+            });
         }
     }
 }
