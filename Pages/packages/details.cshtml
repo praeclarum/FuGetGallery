@@ -214,7 +214,7 @@
     <h3 style="color:#777;margin-top:0em;margin-bottom:0em">.NET API</h3>
     <small style="color:#777;">@framework.SizeInBytes.ToString("#,0") bytes</small>
 }
-else if (hasFiles) {
+else {
     <h3 style="color:#777;margin-top:0em;margin-bottom:0em">Package Files</h3>
     <small style="color:#777;">@((package.Content.Sum(x=>x.SizeInBytes)+package.Tools.Sum(x=>x.SizeInBytes)).ToString("#,0")) bytes</small>
 }

@@ -132,9 +132,9 @@ namespace FuGetGallery
             using (var stream = entry.Open ()) {
                 var xdoc = XDocument.Load (stream);
                 var ns = xdoc.Root.Name.Namespace;
-                var meta = xdoc.Root.Element(ns + "metadata");
+                var meta = xdoc.Root.Elements().FirstOrDefault(x => x.Name.LocalName == "metadata");
                 if (meta == null) {
-                    throw new Exception ("Failed to find metadata");
+                    throw new Exception ("Failed to find metadata in " + xdoc);
                 }
                 string GetS (string name, string def = "") {
                     try { return meta.Element(ns + name).Value.Trim(); }
