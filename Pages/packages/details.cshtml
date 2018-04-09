@@ -32,7 +32,7 @@
     var inputTypeName = (RouteData.Values["typeName"] ?? "").ToString().Trim();
 
     var typ = ns?.FirstOrDefault(x => x.Name == inputTypeName);
-    var docs = typ != null ? framework?.GetTypeDocumentation(typ) : null;
+    var docs = typ != null ? asm?.GetTypeDocumentation(typ) : null;
 
     var q = Request.Query["q"].FirstOrDefault() ?? "";
     var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
@@ -315,11 +315,13 @@ else {
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
         <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
     </ul>
+    if (docs != null) {
     if (code) {
-        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@(await asm.GetTypeCodeAsync(typ))</code></pre>
+        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@await docs.GetTypeCodeAsync(typ)</code></pre>
     }
     else {
-        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@(await asm.GetTypeInterfaceCodeAsync(typ))</code></pre>
+        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@await docs.GetTypeInterfaceCodeAsync(typ)</code></pre>
+    }
     }
 }
 else if (showKlass == "namespace") {

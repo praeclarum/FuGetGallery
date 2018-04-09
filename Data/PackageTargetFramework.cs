@@ -19,9 +19,6 @@ namespace FuGetGallery
 
         public PackageAssemblyResolver AssemblyResolver { get; }
 
-        readonly ConcurrentDictionary<TypeDefinition, TypeDocumentation> typeDocs =
-            new ConcurrentDictionary<TypeDefinition, TypeDocumentation> ();
-
         public PackageTargetFramework(string lowerPackageId)
         {
             AssemblyResolver = new PackageAssemblyResolver (lowerPackageId, this);
@@ -36,18 +33,6 @@ namespace FuGetGallery
                 return asms.OrderByDescending(x=>x.SizeInBytes).FirstOrDefault();
             }
             return asms.FirstOrDefault (x => x.FileName == cleanName);
-        }
-
-        public TypeDocumentation GetTypeDocumentation (TypeDefinition typeDefinition)
-        {
-            if (typeDocs.TryGetValue (typeDefinition, out var docs)) {
-                return docs;
-            }
-            var asmName = typeDefinition.Module.Assembly.Name.Name;
-            AssemblyXmlDocs.TryGetValue (asmName, out var xmlDocs);
-            docs = new TypeDocumentation (typeDefinition, xmlDocs);
-            typeDocs.TryAdd (typeDefinition, docs);
-            return docs;
         }
 
         public void AddDependency (PackageDependency d)
