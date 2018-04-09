@@ -41,7 +41,7 @@ namespace FuGetGallery
         {
             if (typeFullName.StartsWith("System.") || typeFullName.StartsWith("Microsoft.")) {
                 var slug = Uri.EscapeDataString(typeFullName).ToLowerInvariant();
-                return $"https://msdn.microsoft.com/en-us/library/{slug}(v=vs.110).aspx";
+                return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
             }
             var types =
                 from a in Assemblies.Concat(BuildAssemblies)
