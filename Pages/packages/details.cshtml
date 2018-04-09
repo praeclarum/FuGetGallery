@@ -320,7 +320,7 @@ else {
         <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@await docs.GetTypeCodeAsync(typ)</code></pre>
     }
     else {
-        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@await docs.GetTypeInterfaceCodeAsync(typ)</code></pre>
+        @Html.Raw(await docs.GetTypeInterfaceCodeAsync(typ))
     }
     }
 }

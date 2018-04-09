@@ -6,9 +6,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using ICSharpCode.Decompiler.CSharp.Syntax;
 using Mono.Cecil;
-using ICSharpCode.Decompiler.CSharp.Syntax;
 using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.Decompiler.Semantics;
+using ICSharpCode.Decompiler.CSharp.TypeSystem;
+using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.IL;
 
 namespace FuGetGallery
 {
@@ -77,15 +79,134 @@ namespace FuGetGallery
                     if (d == null)
                         return "// No decompiler available";
                     var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
-                    StringWriter w = new StringWriter();
+                    var w = new HtmlWriter (new StringWriter());
                     syntaxTree.AcceptVisitor(new RemoveNonInterfaceSyntaxVisitor { StartTypeName = type.Name });
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
-                    return w.ToString();
+                    return w.Writer.ToString();
                 }
                 catch (Exception e) {
-                    return "/* " + e.Message + " */";
+                    return "/* " + e + " */";
                 }
             });
+        }
+
+        class HtmlWriter : ICSharpCode.Decompiler.CSharp.OutputVisitor.TokenWriter
+        {
+            readonly TextWriter w;
+            public TextWriter Writer => w;
+            void WriteEncoded(string s)
+            {
+                w.Write (s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;"));
+            }
+            string GetClass(AstNode n)
+            {
+                if (n == null || n == AstNode.Null)
+                    return "c-uk";
+                if (n.Annotations.Count() == 0)
+                    return GetClass(n.Parent);
+                var t = n.Annotation<TypeResolveResult> ();
+                if (t != null)
+                    return "c-tr";
+                var u = n.Annotation<UsingScope> ();
+                if (u != null)
+                    return "c-nr";
+                var m = n.Annotation<MemberResolveResult> ();
+                if (m != null) {
+                    return "c-mr";
+                }
+                var v = n.Annotation<ILVariableResolveResult> ();
+                if (v != null) {
+                    if (v.Variable.Kind == VariableKind.Parameter)
+                        return "c-ar";
+                    return "c-uk";
+                }
+
+                Console.WriteLine(n.Annotations.FirstOrDefault());
+                return "c-uk";
+            }
+            public HtmlWriter(TextWriter w)
+            {
+                this.w = w;
+            }
+            public override void StartNode(AstNode node)
+            {
+            }
+
+            public override void EndNode(AstNode node)
+            {
+            }
+
+            public override void Indent()
+            {
+                
+            }
+
+            public override void Space()
+            {
+                w.Write(" ");
+            }
+
+            public override void NewLine()
+            {
+                w.Write("<br/>");
+            }
+
+            public override void Unindent()
+            {
+            }
+
+            public override void WriteComment(CommentType commentType, string content)
+            {                
+            }
+
+            public override void WriteIdentifier(Identifier identifier)
+            {
+                w.Write("<span class=\"");
+                w.Write(GetClass(identifier));
+                w.Write("\">");
+                WriteEncoded(identifier.Name);
+                w.Write("</span>");
+            }
+
+            public override void WriteKeyword(Role role, string keyword)
+            {
+                w.Write("<span class=\"c-kw\">");
+                WriteEncoded(keyword);
+                w.Write("</span>");
+            }
+
+            public override void WritePreProcessorDirective(PreProcessorDirectiveType type, string argument)
+            {
+            }
+
+            public override void WritePrimitiveType(string type)
+            {
+                w.Write("<span class=\"c-tr\">");
+                w.Write(type);
+                w.Write("</span>");
+            }
+
+            public override void WritePrimitiveValue(object value, string literalValue = null)
+            {
+                if (value == null) {
+                    w.Write("<span class=\"c-nl\">null</span>");
+                    return;
+                }
+                if (value is string s) {
+                    w.Write("<span class=\"c-st\">\"");
+                    WriteEncoded(s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\t", "\\t").Replace("\r", "\\r").Replace("\n", "\\n"));
+                    w.Write("\"</span>");
+                    return;
+                }
+                w.Write("<span class=\"c-nu\">");
+                w.Write(Convert.ToString (value, System.Globalization.CultureInfo.InvariantCulture));
+                w.Write("</span>");
+            }
+
+            public override void WriteToken(Role role, string token)
+            {
+                w.Write(token);
+            }
         }
 
         class RemoveNonInterfaceSyntaxVisitor : DepthFirstAstVisitor
