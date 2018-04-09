@@ -112,7 +112,18 @@ namespace FuGetGallery
 
             void WriteEncoded(string s)
             {
-                w.Write (s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;"));
+                for (var i = 0; i < s.Length; i++) {
+                    switch (s[i]) {
+                        case '&': w.Write("&amp;"); break;
+                        case '<': w.Write("&lt;"); break;
+                        case '>': w.Write("&gt;"); break;
+                        case var c when (c < ' '):
+                            w.Write("&#");
+                            w.Write((int)c);
+                            break;
+                        default: w.Write(s[i]); break;
+                    }
+                }
             }
 
             string GetClassAndLink(AstNode n, out string link)
@@ -148,6 +159,11 @@ namespace FuGetGallery
                         if (n is FieldDeclaration)
                             return "c-fd";
                         return "c-fr";
+                    }
+                    if (m.Member.SymbolKind == SymbolKind.Event) {
+                        if (n is EventDeclaration || n is CustomEventDeclaration)
+                            return "c-ed";
+                        return "c-er";
                     }
                     if (m.Member.SymbolKind == SymbolKind.Constructor) {
                         if (n is ConstructorDeclaration)
@@ -275,12 +291,42 @@ namespace FuGetGallery
                 }
                 if (value is string s) {
                     w.Write("<span class=\"c-st\">\"");
-                    WriteEncoded(s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\t", "\\t").Replace("\r", "\\r").Replace("\n", "\\n"));
+                    for (var i = 0; i < s.Length; i++) {
+                        switch (s[i]) {
+                            case '&': w.Write("&amp;"); break;
+                            case '<': w.Write("&lt;"); break;
+                            case '>': w.Write("&gt;"); break;
+                            case '\\': w.Write("\\\\"); break;
+                            case '\"': w.Write("\\\""); break;
+                            case '\n': w.Write("\\n"); break;
+                            case '\r': w.Write("\\r"); break;
+                            case '\b': w.Write("\\b"); break;
+                            case '\t': w.Write("\\t"); break;
+                            default: w.Write(s[i]); break;
+                        }
+                    }
                     w.Write("\"</span>");
                     return;
                 }
+                if (value is char c) {
+                    w.Write("<span class=\"c-st\">\'");
+                    switch (c) {
+                        case '&': w.Write("&amp;"); break;
+                        case '<': w.Write("&lt;"); break;
+                        case '>': w.Write("&gt;"); break;
+                        case '\\': w.Write("\\\\"); break;
+                        case '\'': w.Write("\\\'"); break;
+                        case '\n': w.Write("\\n"); break;
+                        case '\r': w.Write("\\r"); break;
+                        case '\b': w.Write("\\b"); break;
+                        case '\t': w.Write("\\t"); break;
+                        default: w.Write(c); break;
+                    }
+                    w.Write("\'</span>");
+                    return;                    
+                }
                 w.Write("<span class=\"c-nu\">");
-                w.Write(Convert.ToString (value, System.Globalization.CultureInfo.InvariantCulture));
+                WriteEncoded(Convert.ToString (value, System.Globalization.CultureInfo.InvariantCulture));
                 w.Write("</span>");
             }
 
