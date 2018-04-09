@@ -65,7 +65,12 @@ namespace FuGetGallery
                     var d = decompiler.Value;
                     if (d == null)
                         return "// No decompiler available";
-                    return d.DecompileTypeAsString (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
+                    var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
+                    var w = new HtmlWriter (new StringWriter(), framework);
+                    w.Writer.Write("<div class=\"code\">");
+                    syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
+                    w.Writer.Write("</div>");
+                    return w.Writer.ToString();
                 }
                 catch (Exception e) {
                     return "/* " + e.Message + " */";
@@ -114,8 +119,10 @@ namespace FuGetGallery
                 link = null;
                 if (n == null || n == AstNode.Null)
                     return "c-uk";
-                if (n.Annotations.Count() == 0)
-                    return GetClassAndLink(n.Parent, out link);
+                while (n != null && n.Annotations.Count() == 0)
+                    n = n.Parent;
+                if (n == null || n == AstNode.Null)
+                    return "c-uk";
                 var t = n.Annotation<TypeResolveResult> ();
                 if (t != null) {
                     if (n.NodeType == NodeType.TypeDeclaration) {
@@ -131,12 +138,23 @@ namespace FuGetGallery
                     return "c-nr";
                 var m = n.Annotation<MemberResolveResult> ();
                 if (m != null) {
-                    if (m.Member.SymbolKind == SymbolKind.Method)
+                    if (m.Member.SymbolKind == SymbolKind.Method) {
+                        if (n is MethodDeclaration)
+                            return "c-md";
                         return "c-mr";
-                    if (m.Member.SymbolKind == SymbolKind.Field)
+                    }
+                    if (m.Member.SymbolKind == SymbolKind.Field) {
+                        if (n is FieldDeclaration)
+                            return "c-fd";
                         return "c-fr";
-                    if (m.Member.SymbolKind == SymbolKind.Constructor)
+                    }
+                    if (m.Member.SymbolKind == SymbolKind.Constructor) {
+                        if (n is ConstructorDeclaration)
+                            return "c-cd";
                         return "c-cr";
+                    }
+                    if (n is PropertyDeclaration)
+                        return "c-pd";
                     return "c-pr";
                 }
                 var v = n.Annotation<ILVariableResolveResult> ();
@@ -144,6 +162,10 @@ namespace FuGetGallery
                     if (v.Variable.Kind == VariableKind.Parameter)
                         return "c-ar";
                     return "c-uk";
+                }
+                var c = n.Annotation<ConstantResolveResult> ();
+                if (c != null) {
+                    return "c-fr";
                 }
 
                 Console.WriteLine(n.Annotations.FirstOrDefault());
@@ -243,6 +265,10 @@ namespace FuGetGallery
                     w.Write("<span class=\"c-nl\">null</span>");
                     return;
                 }
+                if (value is bool b) {
+                    w.Write(b ? "<span class=\"c-nl\">true</span>" : "<span class=\"c-nl\">false</span>");
+                    return;
+                }
                 if (value is string s) {
                     w.Write("<span class=\"c-st\">\"");
                     WriteEncoded(s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\t", "\\t").Replace("\r", "\\r").Replace("\n", "\\n"));
@@ -268,9 +294,12 @@ namespace FuGetGallery
                 "CLSCompliant",
                 "CompilerGenerated",
                 "EditorBrowsable",
+                "DebuggerDisplay",
             };
             void RemoveAttributes (IEnumerable<ICSharpCode.Decompiler.CSharp.Syntax.AttributeSection> attrs)
             {
+                if (attrs == null)
+                    return;
                 foreach (var s in attrs.ToList ()) {
                     var toRemove = s.Attributes.Where (x => x.Type is SimpleType t && skipAttrs.Contains(t.Identifier)).ToList();
                     foreach (var a in toRemove) {
@@ -348,6 +377,18 @@ namespace FuGetGallery
                 else {
                     RemoveAttributes (d.Attributes);
                     base.VisitEventDeclaration(d);
+                }
+            }
+            public override void VisitCustomEventDeclaration(CustomEventDeclaration d)
+            {
+                if (d.Modifiers.HasFlag(Modifiers.Private) || d.Modifiers.HasFlag(Modifiers.Internal)) {
+                    d.Remove();
+                }
+                else {
+                    RemoveAttributes (d.Attributes);
+                    RemoveAttributes (d.AddAccessor?.Attributes);
+                    RemoveAttributes (d.RemoveAccessor?.Attributes);
+                    base.VisitCustomEventDeclaration(d);
                 }
             }
             public override void VisitTypeDeclaration(TypeDeclaration d)

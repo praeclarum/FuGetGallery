@@ -317,7 +317,7 @@ else {
     </ul>
     if (docs != null) {
     if (code) {
-        <pre style="tab-size:4;line-height:1.3em;border:none;border-radius:0;"><code class="csharp" style="white-space:pre;word-wrap:normal;background-color:transparent;border:none;">@await docs.GetTypeCodeAsync(typ)</code></pre>
+        @Html.Raw(await docs.GetTypeCodeAsync(typ))
     }
     else {
         @Html.Raw(await docs.GetTypeInterfaceCodeAsync(typ))
