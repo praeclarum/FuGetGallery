@@ -395,6 +395,7 @@ namespace FuGetGallery
             public override void VisitPropertyDeclaration(PropertyDeclaration d)
             {
                 if (d.Modifiers.HasFlag(Modifiers.Private) || d.Modifiers.HasFlag(Modifiers.Internal)
+                    || d.Modifiers.HasFlag(Modifiers.Override)
                     || d.PrivateImplementationType != AstType.Null) {
                     d.Remove();
                 }
@@ -421,7 +422,8 @@ namespace FuGetGallery
             }
             public override void VisitEventDeclaration(EventDeclaration d)
             {
-                if (d.Modifiers.HasFlag(Modifiers.Private) || d.Modifiers.HasFlag(Modifiers.Internal)) {
+                if (d.Modifiers.HasFlag(Modifiers.Private) || d.Modifiers.HasFlag(Modifiers.Internal)
+                    || d.Modifiers.HasFlag(Modifiers.Override)) {
                     d.Remove();
                 }
                 else {
