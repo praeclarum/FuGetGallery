@@ -79,9 +79,11 @@ namespace FuGetGallery
                     if (d == null)
                         return "// No decompiler available";
                     var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
-                    var w = new HtmlWriter (new StringWriter());
                     syntaxTree.AcceptVisitor(new RemoveNonInterfaceSyntaxVisitor { StartTypeName = type.Name });
+                    var w = new HtmlWriter (new StringWriter());
+                    w.Writer.Write("<div class=\"code\">");
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
+                    w.Writer.Write("</div>");
                     return w.Writer.ToString();
                 }
                 catch (Exception e) {
@@ -94,16 +96,22 @@ namespace FuGetGallery
         {
             readonly TextWriter w;
             public TextWriter Writer => w;
+
+            bool needsIndent = true;
+            int indentLevel = 0;
+
             void WriteEncoded(string s)
             {
                 w.Write (s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;"));
             }
-            string GetClass(AstNode n)
+
+            string GetClassAndLink(AstNode n, out string link)
             {
+                link = null;
                 if (n == null || n == AstNode.Null)
                     return "c-uk";
                 if (n.Annotations.Count() == 0)
-                    return GetClass(n.Parent);
+                    return GetClassAndLink(n.Parent, out link);
                 var t = n.Annotation<TypeResolveResult> ();
                 if (t != null)
                     return "c-tr";
@@ -124,6 +132,12 @@ namespace FuGetGallery
                 Console.WriteLine(n.Annotations.FirstOrDefault());
                 return "c-uk";
             }
+            void WriteIndent()
+            {
+                if (!needsIndent) return;
+                needsIndent = false;
+                w.Write(new String(' ', indentLevel * 4));
+            }
             public HtmlWriter(TextWriter w)
             {
                 this.w = w;
@@ -138,38 +152,53 @@ namespace FuGetGallery
 
             public override void Indent()
             {
-                
+                indentLevel++;                
             }
 
             public override void Space()
             {
+                WriteIndent ();
                 w.Write(" ");
             }
 
             public override void NewLine()
             {
-                w.Write("<br/>");
+                w.WriteLine();
+                needsIndent = true;
             }
 
             public override void Unindent()
             {
+                indentLevel--;
             }
 
             public override void WriteComment(CommentType commentType, string content)
-            {                
+            {
             }
 
             public override void WriteIdentifier(Identifier identifier)
             {
-                w.Write("<span class=\"");
-                w.Write(GetClass(identifier));
-                w.Write("\">");
-                WriteEncoded(identifier.Name);
-                w.Write("</span>");
+                WriteIndent ();
+                var c = GetClassAndLink(identifier, out var link);
+                if (link != null)  {
+                    w.Write("<a class=\"");
+                    w.Write(c);
+                    w.Write("\">");
+                    WriteEncoded(identifier.Name);
+                    w.Write("</a>");
+                }
+                else {
+                    w.Write("<span class=\"");
+                    w.Write(c);
+                    w.Write("\">");
+                    WriteEncoded(identifier.Name);
+                    w.Write("</span>");
+                }
             }
 
             public override void WriteKeyword(Role role, string keyword)
             {
+                WriteIndent ();
                 w.Write("<span class=\"c-kw\">");
                 WriteEncoded(keyword);
                 w.Write("</span>");
@@ -181,6 +210,7 @@ namespace FuGetGallery
 
             public override void WritePrimitiveType(string type)
             {
+                WriteIndent ();
                 w.Write("<span class=\"c-tr\">");
                 w.Write(type);
                 w.Write("</span>");
@@ -188,6 +218,7 @@ namespace FuGetGallery
 
             public override void WritePrimitiveValue(object value, string literalValue = null)
             {
+                WriteIndent ();
                 if (value == null) {
                     w.Write("<span class=\"c-nl\">null</span>");
                     return;
@@ -205,6 +236,7 @@ namespace FuGetGallery
 
             public override void WriteToken(Role role, string token)
             {
+                WriteIndent ();
                 w.Write(token);
             }
         }
