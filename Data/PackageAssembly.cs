@@ -5,12 +5,8 @@ using Mono.Cecil;
 
 namespace FuGetGallery
 {
-    public class PackageAssembly
+    public class PackageAssembly : PackageFile
     {
-        public ZipArchiveEntry ArchiveEntry { get; }
-        public string FileName => ArchiveEntry?.Name;
-        public long SizeInBytes => ArchiveEntry != null ? ArchiveEntry.Length : 0;
-
         readonly Lazy<AssemblyDefinition> definition;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler;
@@ -19,8 +15,8 @@ namespace FuGetGallery
         public AssemblyDefinition Definition => definition.Value;
 
         public PackageAssembly (ZipArchiveEntry entry, IAssemblyResolver resolver)
+            : base (entry)
         {
-            ArchiveEntry = entry;
             this.resolver = resolver;
             var isBuild = entry.FullName.StartsWith ("build/");
             definition = new Lazy<AssemblyDefinition> (() => {

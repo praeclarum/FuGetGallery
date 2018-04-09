@@ -28,6 +28,8 @@ namespace FuGetGallery
         public long SizeInBytes { get; set; }
         public ZipArchive Archive { get; set; }
         public List<PackageTargetFramework> TargetFrameworks { get; set; } = new List<PackageTargetFramework> ();
+        public List<PackageFile> Content { get; } = new List<PackageFile> ();
+        public List<PackageFile> Tools { get; } = new List<PackageFile> ();
         public Exception Error { get; set; }
 
         static readonly PackageDataCache cache = new PackageDataCache ();
@@ -76,12 +78,11 @@ namespace FuGetGallery
             ZipArchiveEntry nuspecEntry = null;
             foreach (var e in Archive.Entries.OrderBy (x => x.FullName)) {
                 var n = e.FullName;
-                var isBuild = n.StartsWith ("build/");
-                var isLib = n.StartsWith ("lib/");
+                var isBuild = n.StartsWith ("build/", StringComparison.InvariantCultureIgnoreCase);
+                var isLib = n.StartsWith ("lib/", StringComparison.InvariantCultureIgnoreCase);
                 if ((isBuild || isLib) && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
                                            n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase) ||
-                                           n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase) ||
-                                           n.EndsWith(".targets", StringComparison.InvariantCultureIgnoreCase))) {
+                                           n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase))) {
                     var parts = n.Split ('/', StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length >= 3) {
                         var tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
@@ -92,9 +93,7 @@ namespace FuGetGallery
                             };
                             TargetFrameworks.Add (tf);
                         }
-                        if (n.EndsWith(".targets", StringComparison.InvariantCultureIgnoreCase)) {
-                        }
-                        else if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
                             var docs = new PackageAssemblyXmlDocs (e);
                             if (string.IsNullOrEmpty (docs.Error)) {
                                 // System.Console.WriteLine(docs.AssemblyName);
@@ -111,6 +110,15 @@ namespace FuGetGallery
                 }
                 else if (n.EndsWith (".nuspec", StringComparison.InvariantCultureIgnoreCase)) {
                     nuspecEntry = e;
+                }
+                else if (n.StartsWith ("content/", StringComparison.InvariantCultureIgnoreCase)) {
+                    Content.Add (new PackageFile (e));
+                }
+                else if (n.StartsWith ("tools/", StringComparison.InvariantCultureIgnoreCase)) {
+                    Tools.Add (new PackageFile (e));
+                }
+                else {
+                    // System.Console.WriteLine(e);
                 }
             }
             if (nuspecEntry != null) {
