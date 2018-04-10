@@ -257,7 +257,7 @@ else {
 }
 @if (asmDef != null && namespaces != null && namespaces.Count > 0) {
     <h4>Namespaces</h4>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var n in namespaces) {
         var bold = n.Key == ns?.Key ? "bold" : "normal";
         var isPublic = n.Any(x => x.IsPublic);
@@ -287,7 +287,7 @@ else {
 }
 @if (package != null && package.Content.Count > 0) {
     <h4>Content</h4>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul style="overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
     @foreach (var a in package.Content.OrderBy(x => x.FileName)) {
         var bold = a.FileName == content?.FileName ? "bold" : "normal";
         var color = bold == "bold" ? "#000" : "#777";
