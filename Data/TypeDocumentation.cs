@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using ICSharpCode.Decompiler.CSharp.Syntax;
 using Mono.Cecil;
 using ICSharpCode.Decompiler.TypeSystem;
@@ -12,6 +13,7 @@ using ICSharpCode.Decompiler.CSharp.TypeSystem;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.CSharp.Resolver;
+using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 
 namespace FuGetGallery
 {
@@ -36,11 +38,6 @@ namespace FuGetGallery
             this.decompiler = decompiler;
             this.idecompiler = idecompiler;
             this.format = format;
-
-            format = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono ();
-            format.SpaceBeforeMethodCallParentheses = false;
-            format.SpaceBeforeMethodDeclarationParentheses = false;
-            format.SpaceBeforeConstructorDeclarationParentheses = false;
 
             SummaryText = "";
 
@@ -71,7 +68,7 @@ namespace FuGetGallery
                     w.Writer.Write("<div class=\"code\">");
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
                     w.Writer.Write("</div>");
-                    return w.Writer.ToString();
+                    return PostProcessCode (w.Writer.ToString());
                 }
                 catch (Exception e) {
                     return "/* " + e.Message + " */";
@@ -92,12 +89,24 @@ namespace FuGetGallery
                     w.Writer.Write("<div class=\"code\">");
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
                     w.Writer.Write("</div>");
-                    return w.Writer.ToString();
+                    return PostProcessCode (w.Writer.ToString());
                 }
                 catch (Exception e) {
                     return "/* " + e + " */";
                 }
             });
+        }
+
+        static readonly Regex reGS = new Regex (@"{.*\n.*get</span>;.*\n.*set</span>;.*\n.*}", System.Text.RegularExpressions.RegexOptions.Compiled);
+        static readonly Regex reG = new Regex (@"{.*\n.*get</span>;.*\n.*}", System.Text.RegularExpressions.RegexOptions.Compiled);
+        static readonly Regex reAR = new Regex (@" {.*\n.*add</span>;.*\n.*remove</span>;.*\n.*}", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        string PostProcessCode (string code)
+        {
+            code = reGS.Replace (code, "{ get; set; }");
+            code = reG.Replace (code, "{ get; }");
+            code = reAR.Replace (code, ";");
+            return code;
         }
 
         class HtmlWriter : ICSharpCode.Decompiler.CSharp.OutputVisitor.TokenWriter
@@ -351,12 +360,7 @@ namespace FuGetGallery
                 if (attrs == null)
                     return;
                 foreach (var s in attrs.ToList ()) {
-                    var toRemove = s.Attributes.Where (x => x.Type is SimpleType t && skipAttrs.Contains(t.Identifier)).ToList();
-                    foreach (var a in toRemove) {
-                        a.Remove();
-                    }
-                    if (s.Children.Count() == 0)
-                        s.Remove();
+                    s.Remove();
                 }
             }
             public override void VisitMethodDeclaration(MethodDeclaration d)
@@ -453,6 +457,17 @@ namespace FuGetGallery
                     RemoveAttributes (d.Attributes);
                     base.VisitTypeDeclaration(d);
                 }
+            }
+
+            public override void VisitParameterDeclaration(ParameterDeclaration d)
+            {
+                RemoveAttributes (d.Attributes);
+                base.VisitParameterDeclaration(d);
+            }
+
+            public override void VisitUsingDeclaration(UsingDeclaration d)
+            {
+                d.Remove();
             }
         }
     }
