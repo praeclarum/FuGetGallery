@@ -64,8 +64,7 @@ namespace FuGetGallery
 
         public void Search (string query, PackageSearchResults r)
         {
-            var asms = Assemblies.Concat(BuildAssemblies).ToList ();
-            Parallel.ForEach (asms, a => {
+            Parallel.ForEach (Assemblies, a => {
                 a.Search (query, r);
             });
         }
