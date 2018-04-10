@@ -4,7 +4,7 @@
     var q = Request.Query["q"].FirstOrDefault() ?? "";
     var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
     ViewData["q"] = q;
-    var results = await PackageSearchResults.GetAsync (q);
+    var results = await PackagesSearchResults.GetAsync (q);
 }
 
 <h1>Packages</h1>

@@ -60,6 +60,9 @@ namespace FuGetGallery
             tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("netstandard"));
             if (tf != null) return tf;
             
+            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("net"));
+            if (tf != null) return tf;
+            
             if (tf == null)
                 tf = TargetFrameworks.FirstOrDefault ();
             return tf;
@@ -68,6 +71,19 @@ namespace FuGetGallery
         public PackageTargetFramework FindExactTargetFramework (string moniker)
         {
             return TargetFrameworks.FirstOrDefault (x => x.Moniker == moniker);
+        }
+
+        public PackageSearchResults Search (string framework, string query)
+        {
+            var r = new PackageSearchResults (this) {
+                Query = query,
+            };
+
+            var f = FindClosestTargetFramework(framework);
+            if (f != null)
+                f.Search (query, r);
+
+            return r;
         }
 
         void Read (MemoryStream bytes)

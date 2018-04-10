@@ -39,7 +39,7 @@ namespace FuGetGallery
 
         public string FindTypeUrl (string typeFullName)
         {
-            if (typeFullName.StartsWith("System.") || typeFullName.StartsWith("Microsoft.")) {
+            if (typeFullName.StartsWith("System.")) {
                 var slug = Uri.EscapeDataString(typeFullName).ToLowerInvariant();
                 return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
             }
@@ -60,6 +60,14 @@ namespace FuGetGallery
             if (existing == null) {
                 Dependencies.Add (d);
             }
+        }
+
+        public void Search (string query, PackageSearchResults r)
+        {
+            var asms = Assemblies.Concat(BuildAssemblies).ToList ();
+            Parallel.ForEach (asms, a => {
+                a.Search (query, r);
+            });
         }
 
         public class PackageAssemblyResolver : DefaultAssemblyResolver
