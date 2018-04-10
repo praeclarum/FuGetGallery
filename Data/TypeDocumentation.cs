@@ -447,7 +447,7 @@ namespace FuGetGallery
             public override void VisitTypeDeclaration(TypeDeclaration d)
             {
                 if (d.Name != StartTypeName &&
-                    (d.Modifiers.HasFlag(Modifiers.Private))) {
+                    (d.Modifiers.HasFlag(Modifiers.Private) || d.Modifiers.HasFlag(Modifiers.Internal))) {
                     d.Remove();
                 }
                 else {
