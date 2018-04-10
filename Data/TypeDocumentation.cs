@@ -149,9 +149,12 @@ namespace FuGetGallery
                     if (n.NodeType == NodeType.TypeDeclaration) {
                         return "c-td";
                     }
-                    var ns = t.Type.Namespace;
-                    var name = t.Type.Name;
-                    link = framework.FindTypeUrl (t.Type.FullName);
+                    var name = t.Type.FullName;
+                    if (t.Type.TypeParameterCount > 0 && name.IndexOf('`') < 0)
+                        name += "`" + t.Type.TypeParameterCount;
+                    if (t.Type.Kind != TypeKind.TypeParameter) {
+                        link = framework.FindTypeUrl (name);
+                    }
                     return "c-tr";
                 }
                 var u = n.Annotation<UsingScope> ();

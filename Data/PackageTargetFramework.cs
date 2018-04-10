@@ -40,7 +40,7 @@ namespace FuGetGallery
         public string FindTypeUrl (string typeFullName)
         {
             if (typeFullName.StartsWith("System.")) {
-                var slug = Uri.EscapeDataString(typeFullName).ToLowerInvariant();
+                var slug = Uri.EscapeDataString(typeFullName.Replace('`', '-')).ToLowerInvariant();
                 return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
             }
             var types =
