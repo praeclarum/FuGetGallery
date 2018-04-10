@@ -97,9 +97,9 @@ namespace FuGetGallery
             });
         }
 
-        static readonly Regex reGS = new Regex (@"{.*\n.*get</span>;.*\n.*set</span>;.*\n.*}", System.Text.RegularExpressions.RegexOptions.Compiled);
-        static readonly Regex reG = new Regex (@"{.*\n.*get</span>;.*\n.*}", System.Text.RegularExpressions.RegexOptions.Compiled);
-        static readonly Regex reAR = new Regex (@" {.*\n.*add</span>;.*\n.*remove</span>;.*\n.*}", System.Text.RegularExpressions.RegexOptions.Compiled);
+        static readonly Regex reGS = new Regex (@"{.*\n.*get</span>;.*\n.*set</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
+        static readonly Regex reG = new Regex (@"{.*\n.*get</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
+        static readonly Regex reAR = new Regex (@" {.*\n.*add</span>;.*\n.*remove</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
 
         string PostProcessCode (string code)
         {
