@@ -349,12 +349,6 @@ namespace FuGetGallery
         class RemoveNonInterfaceSyntaxVisitor : DepthFirstAstVisitor
         {
             public string StartTypeName;
-            readonly HashSet<string> skipAttrs = new HashSet<string> {
-                "CLSCompliant",
-                "CompilerGenerated",
-                "EditorBrowsable",
-                "DebuggerDisplay",
-            };
             void RemoveAttributes (IEnumerable<ICSharpCode.Decompiler.CSharp.Syntax.AttributeSection> attrs)
             {
                 if (attrs == null)
