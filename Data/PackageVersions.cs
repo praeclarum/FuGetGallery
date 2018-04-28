@@ -96,6 +96,7 @@ namespace FuGetGallery
         public int Major { get; private set; }
         public int Minor { get; private set; }
         public int Patch { get; private set; }
+        public int Build { get; private set; }
         public string Rest { get; private set; } = "";
 
         public string VersionString { 
@@ -104,18 +105,22 @@ namespace FuGetGallery
                 if (versionString == value || string.IsNullOrEmpty (value))
                     return;
                 versionString = value;
-                var parts = versionString.Split ('.');
+                var di = value.IndexOf ('-');
+                var vpart = di > 0 ? value.Substring (0, di) : value;
+                var rest = di > 0 ? value.Substring (di) : "";
+                var parts = vpart.Split ('.');
                 var maj = 0;
                 var min = 0;
                 var patch = 0;
-                var rest = "";
+                var build = 0;
                 if (parts.Length > 0) int.TryParse(parts[0], out maj);
                 if (parts.Length > 1) int.TryParse(parts[1], out min);
                 if (parts.Length > 2) int.TryParse(parts[2], out patch);
-                if (parts.Length > 3) rest = parts[3];
+                if (parts.Length > 3) int.TryParse (parts[3], out build);
                 Major = maj;
                 Minor = min;
                 Patch = patch;
+                Build = build;
                 Rest = rest;
             }
         }
@@ -127,6 +132,8 @@ namespace FuGetGallery
             c = Minor.CompareTo(other.Minor);
             if (c != 0) return c;
             c = Patch.CompareTo(other.Patch);
+            if (c != 0) return c;
+            c = Build.CompareTo (other.Build);
             if (c != 0) return c;
             return string.Compare(Rest, other.Rest, StringComparison.Ordinal);
         }
