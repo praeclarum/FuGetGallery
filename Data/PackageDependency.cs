@@ -19,7 +19,7 @@ namespace FuGetGallery
         public PackageDependency (XElement element)
         {
             PackageId = element.Attribute("id").Value;
-            VersionSpec = element.Attribute("version").Value;
+            VersionSpec = element.Attribute("version")?.Value ?? "0";
         }
     }
 }
