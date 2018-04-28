@@ -382,8 +382,8 @@ else {
     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
     <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
     <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab" data-toggle="tab">Documentation</a></li>
-        <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab" data-toggle="tab">Code</a></li>
+        <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab">Documentation</a></li>
+        <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab">Code</a></li>
     </ul>
     if (docs != null) {
     if (code) {
