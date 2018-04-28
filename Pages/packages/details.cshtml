@@ -4,22 +4,31 @@
     var authors = package.AuthorsOrOwners;
 
     var versions = await PackageVersions.GetAsync (RouteData.Values["id"], HttpContext.RequestAborted);
+    var versionSpec = new PackageVersion { VersionString = package.Version };
 
     var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
     var framework = package.FindClosestTargetFramework (inputTargetFramework);
 
     var content = default(PackageFile);
     var inputAssemblyName = (RouteData.Values["assemblyName"] ?? "").ToString().Trim();
-    var asm = framework?.GetAssembly (RouteData.Values["dir"], inputAssemblyName);
+    var inputNamespace = (RouteData.Values["namespace"] ?? "").ToString().Trim();
     var isBuildAsm = "build".Equals(RouteData.Values["dir"]);
     var dir = isBuildAsm ? "build" : "lib";
+
+    var diff = default (ApiDiff);
+    var asm = default (PackageAssembly);
+
+    if (inputAssemblyName == "diff") {
+        diff = await ApiDiff.GetAsync (package.Id, package.Version, framework.Moniker, inputNamespace, HttpContext.RequestAborted);
+    }
+    else {
+        asm = framework?.GetAssembly (dir, inputAssemblyName);
+    }
     var asmDef = asm?.Definition;
 
     var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
 
     var namespaces = types.GroupBy(x => x.Namespace).OrderBy(x => x.Key).Where(x => !string.IsNullOrEmpty(x.Key)).ToList();
-
-    var inputNamespace = (RouteData.Values["namespace"] ?? "").ToString().Trim();
 
     var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
     if (ns == null) {
@@ -96,7 +105,7 @@
         oversion = (oversion ?? package?.Version) ?? RouteData.Values["version"];
         otargetFramework = (otargetFramework ?? framework?.Moniker) ?? RouteData.Values["targetFramework"];
         odir = (odir ?? dir) ?? RouteData.Values["dir"];
-        oassemblyName = (oassemblyName ?? asm?.FileName) ?? RouteData.Values["assemblyName"];
+        oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals (RouteData.Values["assemblyName"]) ? null : RouteData.Values["assemblyName"]);
         onamespace = (onamespace ?? ns?.Key) ?? RouteData.Values["namespace"];
         otypeName = otypeName ?? RouteData.Values["typeName"];
         ocode = ocode ?? Request.Query["code"].FirstOrDefault();
@@ -167,8 +176,19 @@
         {
             <li><a href="@GetUrl(oversion:v.VersionString)">@v</a></li>
         }
-        <li role="separator" class="divider"></li>
-        <li><a href="#">Separated link</a></li>
+        </ul>
+    </div>
+    <div class="btn-group" style="display: inline-block">
+        <button type="button" class="btn btn-default">API Diff</button>
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="caret"></span>
+            <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu">
+        @foreach (var v in versions.Versions.Where (x => x.CompareTo (versionSpec) < 0).OrderByDescending (x => x))
+        {
+            <li><a href="@GetUrl(oversion:package.Version, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")">@v</a></li>
+        }
         </ul>
     </div>
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
@@ -179,7 +199,7 @@
             <span class="glyphicon glyphicon-link" aria-hidden="true"></span> Project Site
         </a>
     }
-    <a href="https://www.nuget.org/packages/@package.Id/@package.Version" type="button" class="btn btn-default" style="color:#777">
+    <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)" type="button" class="btn btn-default" style="color:#777">
         <span class="glyphicon glyphicon-link" aria-hidden="true"></span> NuGet Gallery
     </a>
 </nav>
@@ -222,6 +242,31 @@
 
 <hr style="margin-top:2em;" />
 </header>
+
+@if (diff != null) {
+
+    <h2>Diff between @diff.Package.Version and @diff.OtherPackage.Version</h2>
+    <ul>
+    @foreach (var ni in diff.Namespaces) {
+        <li>
+            @ni.Action @ni.Namespace
+            <ul>
+            @foreach (var ti in ni.Types) {
+                <li>
+                    @ti.Action @ti.Type.Name
+                    <ul>
+                    @foreach (var mi in ti.Members) {
+                        <li>@mi.Action @mi.Member.FullName</li>
+                    }
+                    </ul>
+                </li>
+            }
+            </ul>
+        </li>
+    }
+    </ul>
+}
+else {
 
 <div id="api" class="row" style="margin-bottom:4em;">
 <div class="col-xs-12 col-sm-3 sidenav">
@@ -363,6 +408,7 @@ else {
 </article>
 </div>
 </div>
+}
 <script>
     var asearch = document.getElementById("asearch");
     var anav = document.getElementById("anav");

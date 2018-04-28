@@ -20,6 +20,8 @@ namespace FuGetGallery
 
         public PackageAssemblyResolver AssemblyResolver { get; }
 
+        public IEnumerable<PackageAssembly> PublicAssemblies => Assemblies.Where (x => x.IsPublic).OrderBy (x => x.Definition.Name.Name);
+
         public PackageTargetFramework(PackageData package)
         {
             Package = package;

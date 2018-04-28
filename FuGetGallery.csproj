@@ -12,8 +12,12 @@
     <PackageReference Include="System.IO.Ports" Version="4.4.0" />
     <PackageReference Include="System.Security.Permissions" Version="4.4.1" />
     <PackageReference Include="System.Threading.AccessControl" Version="4.4.0" />
+    <PackageReference Include="ListDiff" Version="1.0.7" />
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Pages\_PackageHeader.cshtml" />
   </ItemGroup>
 </Project>
