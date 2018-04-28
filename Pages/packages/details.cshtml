@@ -158,11 +158,7 @@
         </a>
     }
     <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
-    <small>@package.Version
-    @if (!string.IsNullOrEmpty(authors)) {
-        <small style="">by @authors</small>
-    }
-    </small>
+    <small>by @authors</small>
 </h1>
 <nav>
     <div class="btn-group" style="display: inline-block">
@@ -179,7 +175,12 @@
         </ul>
     </div>
     <div class="btn-group" style="display: inline-block">
-        <button type="button" class="btn btn-default">API Diff</button>
+        <button type="button" class="btn btn-default">
+            API Diff
+            @if (diff != null) {
+                <span>with @diff.OtherPackage.Version</span>
+            }
+        </button>
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="caret"></span>
             <span class="sr-only">Toggle Dropdown</span>
@@ -246,17 +247,17 @@
 @if (diff != null) {
 
     <h2>Diff between @diff.Package.Version and @diff.OtherPackage.Version</h2>
-    <ul>
+    <ul class="inline-code">
     @foreach (var ni in diff.Namespaces) {
-        <li>
-            @ni.Action @ni.Namespace
+        <li class="diff-@ni.Action">
+            <span class="c-kw">namespace</span> <span class="c-nd">@ni.Namespace</span>
             <ul>
             @foreach (var ti in ni.Types) {
-                <li>
-                    @ti.Action @ti.Type.Name
+                <li class="diff-@ti.Action">
+                    @Html.Raw(ti.Type.GetPrototypeHtml())
                     <ul>
-                    @foreach (var mi in ti.Members) {
-                        <li>@mi.Action @mi.Member.FullName</li>
+                    @foreach (var mi in ti.Members) {                        
+                        <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml())</li>
                     }
                     </ul>
                 </li>
