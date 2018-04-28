@@ -198,7 +198,7 @@
     </a>
 </nav>
 
-<div class="code" style="background-color:#f5f5f5;border-radius:0.5em;margin-top:1em;margin-bottom:1em;">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
+<div class="code" style="font-size:14px;background-color:#fafafa;border-radius:4px;margin-top:1em;margin-bottom:1em;">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
 
 @if (package.Error != null) {
     <div style="margin-top:2em">
@@ -373,17 +373,25 @@ else {
 <article>
 @if (showKlass == "type") {
     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
-    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
+        @if (docs != null) {
+        @Html.Raw(docs.SummaryHtml)
+        }
+        else {
+        @description
+        }
+    </p>
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab">Documentation</a></li>
         <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab">Code</a></li>
     </ul>
     if (docs != null) {
     if (code) {
-        @Html.Raw(await docs.GetTypeCodeAsync(typ))
+        @Html.Raw(await docs.GetTypeCodeAsync())
     }
     else {
-        @Html.Raw(await docs.GetTypeInterfaceCodeAsync(typ))
+        @Html.Raw(docs.DocumentationHtml)
+        @Html.Raw(await docs.GetTypeInterfaceCodeAsync())
     }
     }
 }

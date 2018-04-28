@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System;
+using System.Text;
 
 namespace FuGetGallery
 {
@@ -27,6 +28,59 @@ namespace FuGetGallery
             var events = type.Events.Where (x => x.AddMethod != null && x.AddMethod.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
             var types = type.NestedTypes.Where (x => x.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
             return fields.Concat (properties).Concat (events).Concat (methods).Concat (types);
+        }
+
+        static string GetXmlType (this TypeDefinition type)
+        {
+            return type.FullName;
+        }
+
+        static string GetXmlTypeRef (this TypeReference type)
+        {
+            return type.FullName;
+        }
+
+        public static string GetXmlName (this FieldDefinition d)
+        {
+            return "F:" + GetXmlType (d.DeclaringType) + "." + d.Name;
+        }
+
+        public static string GetXmlName (this MethodDefinition d)
+        {
+            var name = d.IsConstructor ? d.Name.Replace ('.', '#') : d.Name.Replace ("`", "``");
+
+            var b = new StringBuilder ("M:");
+            b.Append (GetXmlType (d.DeclaringType));
+            b.Append (".");
+            b.Append (name);
+            return b.ToString ();
+        }
+
+        public static string GetXmlName (this PropertyDefinition d)
+        {
+            return "P:" + GetXmlType (d.DeclaringType) + "." + d.Name;
+        }
+
+        public static string GetXmlName (this EventDefinition d)
+        {
+            return "E:" + GetXmlType (d.DeclaringType) + "." + d.Name;
+        }
+
+        public static string GetXmlName (this TypeDefinition d)
+        {
+            return "T:" + GetXmlType (d);
+        }
+
+        public static string GetXmlName (this IMemberDefinition member)
+        {
+            switch (member) {
+                case FieldDefinition t: return GetXmlName (t);
+                case MethodDefinition t: return GetXmlName (t);
+                case PropertyDefinition t: return GetXmlName (t);
+                case EventDefinition t: return GetXmlName (t);
+                case TypeDefinition t: return GetXmlName (t);
+                default: throw new NotSupportedException (member.GetType () + " " + member.FullName);
+            }
         }
 
         static void WriteEncoded (string s, TextWriter w)
@@ -95,13 +149,22 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this FieldDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
-            if (member.IsStatic && !member.DeclaringType.IsEnum) {
-                w.Write ("<span class=\"c-kw\">static</span> ");
+            if (!member.DeclaringType.IsEnum) {
+                if (member.IsStatic) {
+                    w.Write ("<span class=\"c-kw\">static</span> ");
+                }
+                WriteReferenceHtml (member.FieldType, w);
+                w.Write (" ");
             }
-            WriteReferenceHtml (member.FieldType, w);
-            w.Write (" <span class=\"c-fd\">");
+            w.Write ("<span class=\"c-fd\">");
             WriteEncoded (member.Name, w);
             w.Write ("</span>");
+            if (member.Constant != null) {
+                w.Write (" = ");
+                w.Write ("<span class=\"c-st\">");
+                WriteEncoded (member.Constant.ToString (), w);
+                w.Write ("</span>");
+            }
         }
 
         public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
@@ -174,7 +237,7 @@ namespace FuGetGallery
             w.Write ("</span>");
         }
 
-        public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
+        public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageAssembly assembly = null, PackageTargetFramework framework = null, PackageData package = null)
         {
             switch (member) {
                 case FieldDefinition t: WritePrototypeHtml (t, w, assembly, framework, package); break;

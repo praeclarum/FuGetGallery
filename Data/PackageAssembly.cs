@@ -20,7 +20,12 @@ namespace FuGetGallery
 
         readonly ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format;
 
-        public PackageAssemblyXmlDocs XmlDocs { get; set; }
+        public PackageAssemblyXmlDocs XmlDocs {
+            get {
+                framework.AssemblyXmlDocs.TryGetValue (Definition.Name.Name, out var docs);
+                return docs;
+            }
+        }
 
         public AssemblyDefinition Definition => definition.Value;
         

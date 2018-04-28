@@ -14,6 +14,7 @@ using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.CSharp.Resolver;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
+using System.Xml.Linq;
 
 namespace FuGetGallery
 {
@@ -28,42 +29,103 @@ namespace FuGetGallery
         readonly ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format;
 
         public string SummaryText { get; }
+        public string SummaryHtml { get; }
+        public string DocumentationHtml { get; }
+
+        readonly PackageAssemblyXmlDocs xmlDocs;
 
         public TypeDocumentation (TypeDefinition typeDefinition, PackageTargetFramework framework, PackageAssemblyXmlDocs xmlDocs,
             Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler, Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler,
             ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format)
         {
+            this.xmlDocs = xmlDocs;
             this.typeDefinition = typeDefinition;
             this.framework = framework;
             this.decompiler = decompiler;
             this.idecompiler = idecompiler;
             this.format = format;
 
+            SummaryHtml = "";
             SummaryText = "";
+            DocumentationHtml = "";
 
             if (xmlDocs != null) {
-                var tn = GetXmlName (typeDefinition);
-                if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {
-                    SummaryText = td.SummaryText.Trim ();
-                    if (SummaryText == "To be added.")
-                        SummaryText = "";
+                var tn = typeDefinition.GetXmlName ();
+                if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {                    
+                    SummaryHtml = XmlToHtml (td.SummaryXml);
+                    SummaryText = XmlToText (td.SummaryXml);
+                    if (SummaryHtml == "To be added.")
+                        SummaryHtml = "";
+                }
+            }
+
+            var w = new StringWriter ();
+            WriteDocumentation (w);
+            DocumentationHtml = w.ToString ();
+        }
+
+        void WriteDocumentation (TextWriter w)
+        {
+            var members = typeDefinition.GetPublicMembers ();
+            foreach (var m in members) {
+
+                var xmlName = m.GetXmlName ();
+                MemberXmlDocs docs = null;
+                xmlDocs?.MemberDocs.TryGetValue (xmlName, out docs);
+
+                w.WriteLine ("<div class='member-code'>");
+                m.WritePrototypeHtml (w, framework: framework);
+                w.WriteLine ("</div>");
+
+                if (docs != null) {
+                    w.WriteLine ("<p>");
+                    XmlToHtml (docs?.SummaryXml, w);
+                    w.WriteLine ("</p>");
+                }
+                else {
+                    w.WriteLine ("<p><b>");
+                    WriteEncodedHtml (xmlName, w);
+                    w.WriteLine ("</b></p>");
                 }
             }
         }
 
-        string GetXmlName (TypeDefinition d)
+        void XmlToText (XElement x, TextWriter w)
         {
-            return "T:" + d.FullName;
+            if (x == null) return;
+            w.Write (x.Value.Trim ());
         }
 
-        public Task<string> GetTypeCodeAsync (TypeDefinition type)
+        string XmlToText (XElement x)
+        {
+            using (var w = new StringWriter ()) {
+                XmlToText (x, w);
+                return w.ToString ();
+            }
+        }
+
+        void XmlToHtml (XElement x, TextWriter w)
+        {
+            if (x == null) return;
+            WriteEncodedHtml (x.Value.Trim (), w);
+        }
+
+        string XmlToHtml (XElement x)
+        {
+            using (var w = new StringWriter ()) {
+                XmlToHtml (x, w);
+                return w.ToString ();
+            }
+        }
+
+        public Task<string> GetTypeCodeAsync ()
         {
             return Task.Run (() => {
                 try {
                     var d = decompiler.Value;
                     if (d == null)
                         return "// No decompiler available";
-                    var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
+                    var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (typeDefinition.FullName));
                     var w = new HtmlWriter (new StringWriter(), framework);
                     w.Writer.Write("<div class=\"code\">");
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
@@ -76,15 +138,15 @@ namespace FuGetGallery
             });
         }
 
-        public Task<string> GetTypeInterfaceCodeAsync (TypeDefinition type)
+        public Task<string> GetTypeInterfaceCodeAsync ()
         {
             return Task.Run (() => {
                 try {
                     var d = idecompiler.Value;
                     if (d == null)
                         return "// No decompiler available";
-                    var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (type.FullName));
-                    syntaxTree.AcceptVisitor(new RemoveNonInterfaceSyntaxVisitor { StartTypeName = type.Name });
+                    var syntaxTree = d.DecompileType (new ICSharpCode.Decompiler.TypeSystem.FullTypeName (typeDefinition.FullName));
+                    syntaxTree.AcceptVisitor(new RemoveNonInterfaceSyntaxVisitor { StartTypeName = typeDefinition.Name });
                     var w = new HtmlWriter (new StringWriter(), framework);
                     w.Writer.Write("<div class=\"code\">");
                     syntaxTree.AcceptVisitor(new ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpOutputVisitor(w, format));
@@ -95,6 +157,23 @@ namespace FuGetGallery
                     return "/* " + e + " */";
                 }
             });
+        }
+
+        public static void WriteEncodedHtml (string s, TextWriter w)
+        {
+            if (s == null) return;
+            for (var i = 0; i < s.Length; i++) {
+                switch (s[i]) {
+                    case '&': w.Write ("&amp;"); break;
+                    case '<': w.Write ("&lt;"); break;
+                    case '>': w.Write ("&gt;"); break;
+                    case var c when (c < ' '):
+                        w.Write ("&#");
+                        w.Write ((int)c);
+                        break;
+                    default: w.Write (s[i]); break;
+                }
+            }
         }
 
         static readonly Regex reGS = new Regex (@"{.*\n.*get</span>;.*\n.*set</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
@@ -119,21 +198,7 @@ namespace FuGetGallery
             bool needsIndent = true;
             int indentLevel = 0;
 
-            void WriteEncoded(string s)
-            {
-                for (var i = 0; i < s.Length; i++) {
-                    switch (s[i]) {
-                        case '&': w.Write("&amp;"); break;
-                        case '<': w.Write("&lt;"); break;
-                        case '>': w.Write("&gt;"); break;
-                        case var c when (c < ' '):
-                            w.Write("&#");
-                            w.Write((int)c);
-                            break;
-                        default: w.Write(s[i]); break;
-                    }
-                }
-            }
+            void WriteEncoded (string s) => WriteEncodedHtml (s, w);
 
             string GetClassAndLink(AstNode n, out string link)
             {

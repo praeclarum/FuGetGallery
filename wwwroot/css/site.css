@@ -44,6 +44,19 @@ footer { margin-top: 10em; }
     color: #777;
 }
 
+.member-code {
+    font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 14px;
+    color: #777;
+    word-wrap: normal;
+    padding: 8px;
+    line-height: 20px;
+    background-color: #fafafa;
+    border-radius: 4px;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
 .code {
     font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
     font-size: 13px;
