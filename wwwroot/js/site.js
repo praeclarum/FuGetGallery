@@ -10,14 +10,71 @@ function deparam(querystring) {
     return params;
 };
 
-function addPackageToMru(id, iconUrl)
+function addPackageToMru()
 {
+    if (typeof packageId === "undefined") return;
+    var mru = (localStorage.getItem("mru") !== null) ? JSON.parse(localStorage["mru"]) : {};
+    if (typeof mru !== "object") mru = {};
+    var p;
+    if (mru.hasOwnProperty(packageId)) {
+        p = mru[packageId];
+    }
+    else {
+        p = {id: packageId, count: 0, lastTime: new Date()};
+        mru[packageId] = p;
+    }
+    if (mru["__lastPackageId"] !== packageId) {
+        p.count++;
+        p.lastTime = new Date();
+        p.iconUrl = packageIconUrl;
+        p.authors = packageAuthors;
+        p.description = packageDescription;
+        mru["__lastPackageId"] = packageId;
+        localStorage["mru"] = JSON.stringify(mru);
+    }
+}
+
+function renderMru()
+{
+    var $mru = $("#mru");
+    if ($mru.length === 0) return;
+
+    var i;
+    var mru = (localStorage.getItem("mru") !== null) ? JSON.parse(localStorage["mru"]) : {};
+    var mrus = [];
+    for (i in mru) {
+        if (i === "__lastPackageId" || !mru.hasOwnProperty(i)) continue;
+        if (mrus.length >= 10) break;
+        mrus.push(mru[i]);
+    }
+    mrus.sort(function(x,y) { return y.count - x.count; });
+
+    $mru.append("<h3 style=\"margin-top:2em;margin-bottom:1em;\">Your Most Common Packages</h3>");
+    if (mrus.length === 0)
+        $mru.append("<i>The packages that you visit will be listed here. Try searching at the top to get started.</i>");
+    var $ul = $("<ul class='media-list'></ul>");
+    $mru.append($ul);
+    for (i = 0; i < mrus.length; i++) {
+        var p = mrus[i];
+        var $li = $("<li class='media'></li>");
+        var $left = $("<div class=\"media-left\"/>");
+        $left.append($("<a/>").attr("href", "/packages/" + encodeURIComponent(p.id)).append($("<img width='64' height='64' />").attr("src", p.iconUrl)));
+        var $body = $("<div class='media-body'></div>");
+        var $h = $("<h4></h4>");
+        $h.append($("<a/>").attr("href", "/packages/" + encodeURIComponent(p.id)).text(p.id));
+        $h.append($("<small/>").text(" by " + p.authors));
+        $body.append($h);
+        $body.append($("<p style=\"max-height:3em;overflow:scroll\">").text(p.description));
+        $li.append($left);
+        $li.append($body);
+        $ul.append($li);
+    }
 }
 
 function showLastQuery()
 {
     var ps = deparam(document.location.toString());
-    if (ps.hasOwnProperty("q")) {
+    if (ps.hasOwnProperty("q") && (""+ps["q"]).length > 0) {
         localStorage["q"] = ps["q"];
     }
     if (localStorage.hasOwnProperty("q")) {
@@ -27,8 +84,8 @@ function showLastQuery()
 
 $(function() {
     $('.dropdown-toggle').dropdown();
-
-    addPackageToMru ();
     showLastQuery ();
+    addPackageToMru ();
+    renderMru ();
 });
 

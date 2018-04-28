@@ -6,7 +6,7 @@
     ViewData["q"] = q;
 }
 
-<h1>Packages</h1>
+<h1 style="margin-top:1em;margin-bottom:1em">Packages</h1>
 
 @if (results != null) {
     if (results.Error != null) {
@@ -21,7 +21,7 @@
                 </a>
             </div>
             <div class="media-body">
-                <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a> by @r.Authors</h4>
+                <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a><small> by @r.Authors</small></h4>
                 <p style="max-height:3em;overflow:scroll">@r.Description</p>
             </div>
         </li>
