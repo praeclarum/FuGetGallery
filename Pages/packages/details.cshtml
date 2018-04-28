@@ -148,7 +148,7 @@
 <header>
 <h1>
     <a href="/packages/@Uri.EscapeDataString(package.Id)">
-        <img src="@package.SafeIconUrl" width="64" height="64" style="margin-top:5px;margin-left:-84px;float:left" />
+        <img src="@package.SafeIconUrl" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" style="margin-top:5px;margin-left:-84px;float:left" />
     </a>
     <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
     <small>by @authors</small>
@@ -239,7 +239,7 @@
 
 @if (diff != null) {
 
-    <h2>Diff between @diff.Package.Version and @diff.OtherPackage.Version</h2>
+    <h2>API Diff between @diff.Package.Version and @diff.OtherPackage.Version</h2>
     <ul class="inline-code">
     @foreach (var ni in diff.Namespaces) {
         <li class="diff-@ni.Action">
