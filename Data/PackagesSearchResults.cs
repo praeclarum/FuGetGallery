@@ -85,5 +85,7 @@ namespace FuGetGallery
         public string Authors { get; set; } = "";
 
         public override string ToString() => PackageId;
+
+        public string SafeIconUrl => string.IsNullOrEmpty (IconUrl) ? "/images/no-icon.png" : IconUrl;
     }
 }

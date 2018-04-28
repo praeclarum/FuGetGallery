@@ -141,16 +141,15 @@
         { "og:url", Request.GetEncodedUrl () },
         { "og:title", title },
         { "og:description", description },
-        { "og:image", package.IconUrl },
+        { "og:image", package.SafeIconUrl },
     };
 }
 
 <header>
-<h1>@if (!string.IsNullOrEmpty(package.IconUrl)) {
-        <a href="/packages/@Uri.EscapeDataString(package.Id)">
-            <img src="@package.IconUrl" width="64" height="64" style="margin-top:5px;margin-left:-84px;float:left" />
-        </a>
-    }
+<h1>
+    <a href="/packages/@Uri.EscapeDataString(package.Id)">
+        <img src="@package.SafeIconUrl" width="64" height="64" style="margin-top:5px;margin-left:-84px;float:left" />
+    </a>
     <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
     <small>by @authors</small>
 </h1>
@@ -406,7 +405,7 @@ else {
 }
 <script>
     var packageId = "@package.Id";
-    var packageIconUrl = "@package.IconUrl";
+    var packageIconUrl = "@package.SafeIconUrl";
     var packageAuthors = "@package.Authors";
     var packageDescription = "@package.Description";
 

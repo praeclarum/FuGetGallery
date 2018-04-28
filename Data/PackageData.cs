@@ -34,6 +34,7 @@ namespace FuGetGallery
 
         static readonly PackageDataCache cache = new PackageDataCache ();
 
+        public string SafeIconUrl => string.IsNullOrEmpty (IconUrl) ? "/images/no-icon.png" : IconUrl;
 
         public static Task<PackageData> GetAsync (object inputId, object inputVersion) => GetAsync (inputId, inputVersion, CancellationToken.None);
 
