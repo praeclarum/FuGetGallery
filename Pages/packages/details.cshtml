@@ -44,9 +44,6 @@
     var typ = ns?.FirstOrDefault(x => x.Name == inputTypeName);
     var docs = typ != null ? asm?.GetTypeDocumentation(typ) : null;
 
-    var q = Request.Query["q"].FirstOrDefault() ?? "";
-    var eq = q.Length > 0 ? "?q=" + Uri.EscapeDataString (q) : "";
-
     var inputCode = Request.Query["code"].FirstOrDefault() ?? "";
     var code = "true".Equals(inputCode);
 
@@ -131,16 +128,13 @@
                 }
             }
         }
-        r += eq;
         if ("true".Equals(ocode)) {
-            if (eq.Length > 0) r += "&code=true";
-            else r += "?code=true";
+            r += "?code=true";
         }
         return r;
     }
 
     ViewData["Title"] = title;
-    ViewData["q"] = q;
 
     ViewData["meta"] = new Dictionary<string, string> {
         { "twitter:card", "summary" },
@@ -235,7 +229,7 @@
         <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h4>
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
         <a class="btn btn-default btn-sm" style="color:#777"
-            href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)@eq">
+            href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
             <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId</a>
     }
     </nav>
@@ -296,7 +290,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -310,7 +304,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)@eq">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -325,7 +319,7 @@ else {
         var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)@eq">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
                 <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
         </li>
     }
@@ -354,7 +348,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/content/@a.ArchiveEntry.FullName.Substring(8)@eq">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/content/@a.ArchiveEntry.FullName.Substring(8)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)</a>
         </li>
     }
@@ -368,7 +362,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/tools/@a.ArchiveEntry.FullName.Substring(6)@eq">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/tools/@a.ArchiveEntry.FullName.Substring(6)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)</a>
         </li>
     }
