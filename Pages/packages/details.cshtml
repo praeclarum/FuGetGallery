@@ -3,10 +3,11 @@
     var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"]);
     var authors = package.AuthorsOrOwners;
 
+    var versions = await PackageVersions.GetAsync (RouteData.Values["id"], HttpContext.RequestAborted);
+
     var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
     var framework = package.FindClosestTargetFramework (inputTargetFramework);
 
-    var isContent = false;
     var content = default(PackageFile);
     var inputAssemblyName = (RouteData.Values["assemblyName"] ?? "").ToString().Trim();
     var asm = framework?.GetAssembly (RouteData.Values["dir"], inputAssemblyName);
@@ -154,8 +155,22 @@
     }
     </small>
 </h1>
-
 <nav>
+    <div class="btn-group" style="display: inline-block">
+        <button type="button" class="btn btn-default">@package.Version</button>
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="caret"></span>
+            <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu">
+        @foreach (var v in versions.Versions.OrderByDescending (x => x))
+        {
+            <li><a href="@GetUrl(oversion:v.VersionString)">@v</a></li>
+        }
+        <li role="separator" class="divider"></li>
+        <li><a href="#">Separated link</a></li>
+        </ul>
+    </div>
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
     <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
     </a>

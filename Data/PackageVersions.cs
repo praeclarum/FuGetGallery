@@ -26,13 +26,13 @@ namespace FuGetGallery
         public PackageVersion GetVersion (object inputVersion)
         {
             var version = (inputVersion ?? "").ToString().Trim().ToLowerInvariant();
-            var v = Versions.FirstOrDefault (x => x.Version == version);
+            var v = Versions.FirstOrDefault (x => x.VersionString == version);
             if (v == null) {
                 v = Versions.LastOrDefault ();
             }
             if (v == null) {
                 v = new PackageVersion {
-                    Version = version.Length > 0 ? version : "0",
+                    VersionString = version.Length > 0 ? version : "0",
                 };
             }
             return v;
@@ -46,7 +46,7 @@ namespace FuGetGallery
                     version = v["catalogEntry"]?["version"]?.ToString();
                 }
                 if (version != null) {
-                    Versions.Add (new PackageVersion { Version = version });
+                    Versions.Add (new PackageVersion { VersionString = version });
                 }
             }
         }
@@ -89,10 +89,48 @@ namespace FuGetGallery
         }
     }
 
-    public class PackageVersion
+    public class PackageVersion : IComparable<PackageVersion>
     {
-        public string Version { get; set; } = "";
+        string versionString = "";
 
-        public override string ToString() => Version;
+        public int Major { get; private set; }
+        public int Minor { get; private set; }
+        public int Patch { get; private set; }
+        public string Rest { get; private set; } = "";
+
+        public string VersionString { 
+            get => versionString; 
+            set {
+                if (versionString == value || string.IsNullOrEmpty (value))
+                    return;
+                versionString = value;
+                var parts = versionString.Split ('.');
+                var maj = 0;
+                var min = 0;
+                var patch = 0;
+                var rest = "";
+                if (parts.Length > 0) int.TryParse(parts[0], out maj);
+                if (parts.Length > 1) int.TryParse(parts[1], out min);
+                if (parts.Length > 2) int.TryParse(parts[2], out patch);
+                if (parts.Length > 3) rest = parts[3];
+                Major = maj;
+                Minor = min;
+                Patch = patch;
+                Rest = rest;
+            }
+        }
+
+        public int CompareTo(PackageVersion other)
+        {
+            var c = Major.CompareTo(other.Major);
+            if (c != 0) return c;
+            c = Minor.CompareTo(other.Minor);
+            if (c != 0) return c;
+            c = Patch.CompareTo(other.Patch);
+            if (c != 0) return c;
+            return string.Compare(Rest, other.Rest, StringComparison.Ordinal);
+        }
+
+        public override string ToString() => VersionString;
     }
 }

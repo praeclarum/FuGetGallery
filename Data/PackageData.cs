@@ -44,7 +44,7 @@ namespace FuGetGallery
             var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
 
-            return await cache.GetAsync (versions.LowerId, version.Version, token).ConfigureAwait (false);
+            return await cache.GetAsync (versions.LowerId, version.VersionString, token).ConfigureAwait (false);
         }
 
         public PackageTargetFramework FindClosestTargetFramework (object inputTargetFramework)
