@@ -21,11 +21,11 @@ namespace FuGetGallery
 
         public static IEnumerable<IMemberDefinition> GetPublicMembers (this TypeDefinition type)
         {
-            var fields = type.IsEnum ? type.Fields.Where (x => x.IsPublic && x.IsStatic).Cast<IMemberDefinition> () : type.Fields.Where(x => x.IsPublic).Cast<IMemberDefinition> ();
-            var methods = type.Methods.Where (x => x.IsPublic && !x.IsSpecialName).Cast<IMemberDefinition> ();
-            var properties = type.Properties.Where (x => x.GetMethod != null && x.GetMethod.IsPublic).Cast<IMemberDefinition> ();
-            var events = type.Events.Where (x => x.AddMethod != null && x.AddMethod.IsPublic).Cast<IMemberDefinition> ();
-            var types = type.NestedTypes.Where (x => x.IsPublic).Cast<IMemberDefinition> ();
+            var fields = (type.IsEnum ? type.Fields.Where (x => x.IsPublic && x.IsStatic).Cast<IMemberDefinition> () : type.Fields.Where(x => x.IsPublic).Cast<IMemberDefinition> ()).OrderBy (x => x.Name);
+            var methods = type.Methods.Where (x => x.IsPublic && !(x.IsAddOn || x.IsRemoveOn || x.IsGetter || x.IsSetter)).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
+            var properties = type.Properties.Where (x => x.GetMethod != null && x.GetMethod.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
+            var events = type.Events.Where (x => x.AddMethod != null && x.AddMethod.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
+            var types = type.NestedTypes.Where (x => x.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
             return fields.Concat (properties).Concat (events).Concat (methods).Concat (types);
         }
 
@@ -47,9 +47,31 @@ namespace FuGetGallery
 
         public static void WriteReferenceHtml (this TypeReference type, TextWriter w)
         {
-            if (type.IsGenericInstance) {
+            if (type.FullName == "System.Void") {
+                w.Write ("<span class=\"c-tr\">void</span>");
+            }
+            else if (type.FullName == "System.String") {
+                w.Write ("<span class=\"c-tr\">string</span>");
+            }
+            else if (type.FullName == "System.Object") {
+                w.Write ("<span class=\"c-tr\">object</span>");
+            }
+            else if (type.IsPrimitive) {
                 w.Write ("<span class=\"c-tr\">");
-                WriteEncoded (type.Name.Substring (0, type.Name.IndexOf('`')), w);
+                switch (type.FullName) {
+                    case "System.Byte": w.Write ("byte"); break;
+                    case "System.Boolean": w.Write ("bool"); break;
+                    case "System.Double": w.Write ("double"); break;
+                    case "System.Int32": w.Write ("int"); break;
+                    case "System.Int64": w.Write ("long"); break;
+                    case "System.Single": w.Write ("float"); break;
+                    default: WriteEncoded (type.Name, w); break;
+                }
+                w.Write ("</span>");
+            }
+            else if (type.IsGenericInstance) {
+                w.Write ("<span class=\"c-tr\">");
+                WriteEncoded (type.Name.Substring (0, type.Name.IndexOf ('`')), w);
                 w.Write ("</span>");
                 w.Write ("&lt;");
                 var head = "";
@@ -59,6 +81,10 @@ namespace FuGetGallery
                     head = ", ";
                 }
                 w.Write ("&gt;");
+            }
+            else if (type.IsByReference) {
+                w.Write ("<span class=\"c-kw\">ref</span> ");
+                WriteReferenceHtml (type.GetElementType (), w);
             }
             else {
                 w.Write ("<span class=\"c-tr\">");
@@ -83,14 +109,24 @@ namespace FuGetGallery
             if (member.IsStatic) {
                 w.Write ("<span class=\"c-kw\">static</span> ");
             }
-            WriteReferenceHtml (member.ReturnType, w);
-            w.Write (" <span class=\"c-md\">");
-            WriteEncoded (member.Name, w);
+            if (member.IsConstructor) {
+                w.Write ("<span class=\"c-cd\">");
+                WriteEncoded (member.DeclaringType.Name, w);
+            }
+            else {
+                if (member.IsVirtual) {
+                    w.Write ("<span class=\"c-kw\">virtual</span> ");
+                }
+                WriteReferenceHtml (member.ReturnType, w);
+                w.Write (" <span class=\"c-md\">");
+                WriteEncoded (member.Name, w);
+            }
             w.Write ("</span>(");
             var head = "";
             foreach (var p in member.Parameters) {
                 w.Write (head);
-                w.Write ("<span class=\"c-ar\">");
+                WriteReferenceHtml (p.ParameterType, w);
+                w.Write (" <span class=\"c-ar\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
                 head = ", ";
