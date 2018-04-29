@@ -124,7 +124,7 @@ namespace FuGetGallery
                 return;
             var ds = NameScore (d.Name, query);
             if (ds != int.MinValue)
-                r.Add (framework, this, d, d.Name, d.Namespace, "type", d.Name, d.IsPublic, ds);
+                r.Add (framework, this, d, d.GetFriendlyName(), d.Namespace, "type", d.Name, d.IsPublic, ds);
 
             foreach (var x in d.Methods)
                 SearchMethod (d, x, query, r);
