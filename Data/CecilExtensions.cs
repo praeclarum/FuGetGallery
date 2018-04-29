@@ -244,6 +244,13 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this TypeDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
+            if (member.IsSealed && member.IsAbstract)
+                w.Write ("<span class=\"c-kw\">static</span> ");
+            else if (member.IsSealed && !member.IsEnum)
+                w.Write ("<span class=\"c-kw\">sealed</span> ");
+            else if (member.IsAbstract && !member.IsInterface)
+                w.Write ("<span class=\"c-kw\">abstract</span> ");
+            
             if (member.IsEnum)
                 w.Write ("<span class=\"c-kw\">enum</span> ");
             else if (member.IsValueType)
@@ -279,7 +286,7 @@ namespace FuGetGallery
                 }
                 w.Write ("&gt;");
             }
-            var hier = ((member.BaseType != null && member.BaseType.FullName != "System.Object") ? new[] { member.BaseType } : new TypeReference[0])
+            var hier = ((!member.IsEnum && !member.IsValueType && member.BaseType != null && member.BaseType.FullName != "System.Object") ? new[] { member.BaseType } : new TypeReference[0])
                 .Concat (member.Interfaces.Select (x => x.InterfaceType)).ToList ();
             if (hier.Count > 0) {
                 w.Write (" : ");

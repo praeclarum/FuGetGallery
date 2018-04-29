@@ -240,25 +240,21 @@
 @if (diff != null) {
 
     <h2>API Diff between @diff.Package.Version and @diff.OtherPackage.Version</h2>
-    <ul class="inline-code">
     @foreach (var ni in diff.Namespaces) {
-        <li class="diff-@ni.Action">
-            <span class="c-kw">namespace</span> <span class="c-nd">@ni.Namespace</span>
-            <ul>
-            @foreach (var ti in ni.Types) {
-                <li class="diff-@ti.Action">
-                    @Html.Raw(ti.Type.GetPrototypeHtml(framework:ti.Framework))
-                    <ul>
-                    @foreach (var mi in ti.Members) {                        
-                        <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml(framework:ti.Framework))</li>
-                    }
-                    </ul>
-                </li>
-            }
-            </ul>
-        </li>
+        <h3 style="margin-bottom:0em;">@ni.Namespace</h3>
+        <ul class="inline-code" style="margin-top:0em;padding:10px 20px;">
+        @foreach (var ti in ni.Types) {
+            <li class="diff-@ti.Action">
+                @Html.Raw(ti.Type.GetPrototypeHtml(framework:ti.Framework))
+                <ul>
+                @foreach (var mi in ti.Members) {                        
+                    <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml(framework:ti.Framework))</li>
+                }
+                </ul>
+            </li>
+        }
+        </ul>
     }
-    </ul>
 }
 else {
 
