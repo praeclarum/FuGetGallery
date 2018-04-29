@@ -39,6 +39,8 @@ namespace FuGetGallery
             return asms.FirstOrDefault (x => x.FileName == cleanName);
         }
 
+        public string FindTypeUrl (TypeDefinition type) => FindTypeUrl (type.FullName);
+
         public string FindTypeUrl (string typeFullName)
         {
             if (typeFullName.StartsWith("System.")) {
