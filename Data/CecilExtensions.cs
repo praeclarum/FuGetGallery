@@ -225,15 +225,16 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
-            if (member.IsFamily || member.IsFamilyOrAssembly) {
-                w.Write ("<span class=\"c-kw\">protected</span> ");
-            }
-            else if (member.IsPublic) {
-                w.Write ("<span class=\"c-kw\">public</span> ");
-            }
-
-            if (member.IsStatic) {
-                w.Write ("<span class=\"c-kw\">static</span> ");
+            if (!member.DeclaringType.IsInterface) {
+                if (member.IsFamily || member.IsFamilyOrAssembly) {
+                    w.Write ("<span class=\"c-kw\">protected</span> ");
+                }
+                else if (member.IsPublic) {
+                    w.Write ("<span class=\"c-kw\">public</span> ");
+                }
+                if (member.IsStatic) {
+                    w.Write ("<span class=\"c-kw\">static</span> ");
+                }
             }
             var id = member.GetXmlName ();
             if (member.IsConstructor) {
@@ -244,15 +245,17 @@ namespace FuGetGallery
                 WriteEncoded (name, w);
             }
             else {
-                if (member.IsAbstract) {
-                    w.Write ("<span class=\"c-kw\">abstract</span> ");
-                }
-                else if (member.IsVirtual) {
-                    if (member.IsReuseSlot) {
-                        w.Write ("<span class=\"c-kw\">override</span> ");
+                if (!member.DeclaringType.IsInterface) {
+                    if (member.IsAbstract) {
+                        w.Write ("<span class=\"c-kw\">abstract</span> ");
                     }
-                    else if (!member.IsFinal) {
-                        w.Write ("<span class=\"c-kw\">virtual</span> ");
+                    else if (member.IsVirtual) {
+                        if (member.IsReuseSlot) {
+                            w.Write ("<span class=\"c-kw\">override</span> ");
+                        }
+                        else if (!member.IsFinal) {
+                            w.Write ("<span class=\"c-kw\">virtual</span> ");
+                        }
                     }
                 }
                 WriteReferenceHtml (member.ReturnType, w, framework);
@@ -286,7 +289,7 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this PropertyDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
-            if (member.GetMethod != null) {
+            if (member.GetMethod != null && !member.DeclaringType.IsInterface) {
                 if ((member.GetMethod.IsFamily || member.GetMethod.IsFamilyOrAssembly)) {
                     w.Write ("<span class=\"c-kw\">protected</span> ");
                 }
@@ -341,15 +344,17 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this EventDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
-            if (member.AddMethod != null && (member.AddMethod.IsFamily || member.AddMethod.IsFamilyOrAssembly)) {
-                w.Write ("<span class=\"c-kw\">protected</span> ");
-            }
-            else if (member.AddMethod != null && (member.AddMethod.IsPublic)) {
-                w.Write ("<span class=\"c-kw\">public</span> ");
-            }
+            if (!member.DeclaringType.IsInterface) {
+                if (member.AddMethod != null && (member.AddMethod.IsFamily || member.AddMethod.IsFamilyOrAssembly)) {
+                    w.Write ("<span class=\"c-kw\">protected</span> ");
+                }
+                else if (member.AddMethod != null && (member.AddMethod.IsPublic)) {
+                    w.Write ("<span class=\"c-kw\">public</span> ");
+                }
 
-            if (member.AddMethod != null && member.AddMethod.IsStatic) {
-                w.Write ("<span class=\"c-kw\">static</span> ");
+                if (member.AddMethod != null && member.AddMethod.IsStatic) {
+                    w.Write ("<span class=\"c-kw\">static</span> ");
+                }
             }
             w.Write ("<span class=\"c-kw\">event</span> ");
             WriteReferenceHtml (member.EventType, w, framework);
