@@ -39,7 +39,7 @@ namespace FuGetGallery
                     if (t.AddMethod != null && t.AddMethod.IsStatic) return 500;
                     return 600;
                 case TypeDefinition t:
-                    return 1100;
+                    return 10;
                 default: throw new NotSupportedException (member.GetType () + " " + member.FullName);
             }
         }

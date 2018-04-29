@@ -143,10 +143,7 @@ namespace FuGetGallery
             if (nd > 0 && nd + 1 < name.Length) {
                 name = name.Substring (nd + 1);
             }
-            if (name.StartsWith ("get_", StringComparison.InvariantCulture) ||
-                name.StartsWith ("set_", StringComparison.InvariantCulture) ||
-                name.StartsWith ("add_", StringComparison.InvariantCulture) ||
-                name.StartsWith ("remove_", StringComparison.InvariantCulture))
+            if (d.IsAddOn || d.IsRemoveOn || d.IsGetter || d.IsSetter)
                 return;
 
             var ds = NameScore (name, query);
