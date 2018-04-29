@@ -75,6 +75,7 @@ namespace FuGetGallery
         {
             readonly string packageId;
             readonly PackageTargetFramework packageTargetFramework;
+            readonly ConcurrentDictionary<string, AssemblyDefinition> assemblies = new ConcurrentDictionary<string, AssemblyDefinition> ();
             public PackageAssemblyResolver (string packageId, PackageTargetFramework packageTargetFramework)
             {
                 this.packageId = packageId;
@@ -82,13 +83,23 @@ namespace FuGetGallery
             }
             public override AssemblyDefinition Resolve (AssemblyNameReference name)
             {
-                // System.Console.WriteLine("RESOLVE " + name);
+                //System.Console.WriteLine("RESOLVE " + name);
+
+                //
+                // See if we already have it
+                //
+                if (assemblies.TryGetValue (name.Name, out var asm))
+                    return asm;
 
                 //
                 // See if the default resolver can find it
                 //
                 try {
-                    return base.Resolve (name);
+                    asm = base.Resolve (name);
+                    if (asm != null) {
+                        assemblies[name.Name] = asm;
+                        return asm;
+                    }
                 }
                 catch {}
 
@@ -102,14 +113,16 @@ namespace FuGetGallery
                 var a = TryResolveInFrameworkAsync (name, packageTargetFramework, s, cts).Result;
 
                 if (a != null) {
-                    // System.Console.WriteLine("    RESOLVED " + name);
+                    //System.Console.WriteLine("    RESOLVED " + name);
+                    assemblies[name.Name] = a.Definition;
                     return a.Definition;
                 }
 
                 //
                 // No? OK, maybe it's in the dependencies
                 //
-                // System.Console.WriteLine("!!! FAILED TO RESOLVE " + name);
+                //System.Console.WriteLine("!!! FAILED TO RESOLVE " + name);
+                assemblies[name.Name] = null;
                 return null;
                 // throw new Exception ("Failed to resolve: " + name);
             }
@@ -141,7 +154,7 @@ namespace FuGetGallery
                 var anythingTask = Task.WhenAny (new[]{ (Task)gotResultCS.Task }.Append (allCompleteTask));
 
                 return anythingTask.ContinueWith (t => {
-                    // System.Console.WriteLine("DONE RESOLVING IN " + packageTargetFramework.Moniker);
+                    //System.Console.WriteLine("DONE RESOLVING "+name.Name+" IN " + packageTargetFramework.Moniker);
                     if (gotResultCS.Task.IsCompletedSuccessfully) {
                         return gotResultCS.Task.Result;
                     }

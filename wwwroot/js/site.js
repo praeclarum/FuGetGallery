@@ -44,7 +44,7 @@ function renderMru()
     var mrus = [];
     for (i in mru) {
         if (i === "__lastPackageId" || !mru.hasOwnProperty(i)) continue;
-        if (mrus.length >= 10) break;
+        if (mrus.length >= 20) break;
         mrus.push(mru[i]);
     }
     mrus.sort(function(x,y) { return y.count - x.count; });

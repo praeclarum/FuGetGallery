@@ -23,7 +23,12 @@ namespace FuGetGallery
                 using (var s = entry.Open ()) {
                     doc = XDocument.Load (s);
                     var ns = doc.Root.Name.Namespace;
-                    AssemblyName = doc.Root.Element(ns + "assembly").Value.Trim();
+                    var asm = doc.Root.Element (ns + "assembly");
+                    if (asm == null) {
+                        Error = "Not an docs files";
+                        return;
+                    }
+                    AssemblyName = asm.Value.Trim();
                     // System.Console.WriteLine(AssemblyName);
                     foreach (var me in doc.Root.Element (ns + "members").Elements (ns + "member")) {
                         var m = new MemberXmlDocs (me);

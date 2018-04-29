@@ -40,15 +40,13 @@ namespace FuGetGallery
         public PackageAssembly (ZipArchiveEntry entry, PackageTargetFramework framework)
             : base (entry)
         {
-            this.framework = framework;            
+            this.framework = framework;
+            var ms = new MemoryStream ((int)ArchiveEntry.Length);
+            using (var es = entry.Open ()) {
+                es.CopyTo (ms);
+                ms.Position = 0;
+            }
             definition = new Lazy<AssemblyDefinition> (() => {
-                if (ArchiveEntry == null)
-                    return null;
-                var ms = new MemoryStream ((int)ArchiveEntry.Length);
-                using (var es = ArchiveEntry.Open ()) {
-                    es.CopyTo (ms);
-                    ms.Position = 0;
-                }
                 return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
                     AssemblyResolver = framework.AssemblyResolver,
                 });
