@@ -213,7 +213,8 @@ namespace FuGetGallery
                 WriteReferenceHtml (member.FieldType, w, framework);
                 w.Write (" ");
             }
-            w.Write ("<span class=\"c-fd\">");
+            var id = member.GetXmlName ();
+            w.Write ($"<span id=\"{id}\" class=\"c-fd\">");
             WriteEncoded (member.Name, w);
             w.Write ("</span>");
             if (member.Constant != null) {
@@ -234,8 +235,9 @@ namespace FuGetGallery
             if (member.IsStatic) {
                 w.Write ("<span class=\"c-kw\">static</span> ");
             }
+            var id = member.GetXmlName ();
             if (member.IsConstructor) {
-                w.Write ("<span class=\"c-cd\">");
+                w.Write ($"<span id=\"{id}\" class=\"c-cd\">");
                 var name = member.DeclaringType.Name;
                 var ni = name.LastIndexOf ('`');
                 if (ni > 0) name = name.Substring (0, ni);
@@ -254,7 +256,7 @@ namespace FuGetGallery
                     }
                 }
                 WriteReferenceHtml (member.ReturnType, w, framework);
-                w.Write (" <span class=\"c-md\">");
+                w.Write ($" <span id=\"{id}\" class=\"c-md\">");
                 WriteEncoded (member.Name, w);
             }
             w.Write ("</span>");
@@ -309,8 +311,9 @@ namespace FuGetGallery
             }
 
             WriteReferenceHtml (member.PropertyType, w, framework);
+            var id = member.GetXmlName ();
             if (member.GetMethod != null && member.GetMethod.Parameters.Count > 0) {
-                w.Write (" <span class=\"c-pd\">this</span>[");
+                w.Write ($" <span id=\"{id}\" class=\"c-pd\">this</span>[");
                 var head = "";
                 foreach (var p in member.GetMethod.Parameters) {
                     w.Write (head);
@@ -323,7 +326,7 @@ namespace FuGetGallery
                 w.Write ("]");
             }
             else {
-                w.Write (" <span class=\"c-pd\">");
+                w.Write ($" <span id=\"{id}\" class=\"c-pd\">");
                 WriteEncoded (member.Name, w);
                 w.Write ("</span>");
             }
@@ -350,7 +353,8 @@ namespace FuGetGallery
             }
             w.Write ("<span class=\"c-kw\">event</span> ");
             WriteReferenceHtml (member.EventType, w, framework);
-            w.Write (" <span class=\"c-ed\">");
+            var id = member.GetXmlName ();
+            w.Write ($" <span id=\"{id}\" class=\"c-ed\">");
             WriteEncoded (member.Name, w);
             w.Write ("</span>");
         }
@@ -381,18 +385,19 @@ namespace FuGetGallery
                 w.Write ("<span class=\"c-kw\">delegate</span> ");
             else
                 w.Write ("<span class=\"c-kw\">class</span> ");
-            
+
+            var id = member.GetXmlName ();
             var name = member.Name;
             var ni = name.LastIndexOf ('`');
             if (ni > 0) name = name.Substring (0, ni);
             var url = framework?.FindTypeUrl (member.FullName);
             if (url != null) {
-                w.Write ($"<a href=\"{url}\" class=\"c-td\">");
+                w.Write ($"<a id=\"{id}\" href=\"{url}\" class=\"c-td\">");
                 WriteEncoded (name, w);
                 w.Write ("</a>");
             }
             else {
-                w.Write ("<span class=\"c-td\">");
+                w.Write ($"<span id=\"{id}\" class=\"c-td\">");
                 WriteEncoded (name, w);
                 w.Write ("</span>");
             }

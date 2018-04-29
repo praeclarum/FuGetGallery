@@ -15,6 +15,7 @@ using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.CSharp.Resolver;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using System.Xml.Linq;
+using System.Text;
 
 namespace FuGetGallery
 {
@@ -116,11 +117,45 @@ namespace FuGetGallery
         {
             var kind = char.ToLowerInvariant (xmlId[0]);
             var id = xmlId.Substring (2);
-            var url = "";
-            if (kind == 't')
-                url = framework.FindTypeUrl (id) ?? "";
-            w.Write ($" <a href=\"{url}\" class=\"inline-code c-{kind}r\">");
-            WriteEncodedHtml (id, w);
+            var typeFullName = id;
+            var memberName = id;
+            var pi = memberName.IndexOf ('(');
+            if (pi > 0) {
+                memberName = memberName.Substring (0, pi);
+            }
+            var nparts = memberName.Split ('.');
+            memberName = nparts.Last ();
+            if (kind == 't' || kind == 'm') {
+                var fi = memberName.IndexOf ('`');
+                if (fi > 0) {
+                    var b = new StringBuilder (memberName.Substring (0, fi));
+                    b.Append ('<');
+                    var head = "";
+                    try {
+                        var li = memberName.LastIndexOf ('`');
+                        var n = int.Parse (memberName.Substring (li + 1));
+                        for (var i = 0; i < n; i++) {
+                            b.Append (head);
+                            b.Append ((char)('T' + i));
+                            head = ", ";
+                        }
+                    }
+                    catch { }
+                    b.Append ('>');
+                    memberName = b.ToString ();
+                }
+            }
+            if (kind != 't') {
+                typeFullName = string.Join ('.', nparts.Take (nparts.Length - 1));
+            }
+            Console.WriteLine ($"FULLNAME {typeFullName} FROM {xmlId}");
+            var url = string.IsNullOrEmpty (typeFullName) ? "" : (framework.FindTypeUrl (typeFullName) ?? "");
+            if (url.Length > 0 && kind != 't') {
+                url += "#" + Uri.EscapeDataString (xmlId);
+            }
+            var href = (url.Length > 0) ? " href=\"" + url + "\"" : "";
+            w.Write ($" <a{href} class=\"inline-code c-{kind}r\">");
+            WriteEncodedHtml (memberName, w);
             w.Write ("</a>");
         }
 
