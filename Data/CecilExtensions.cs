@@ -20,14 +20,43 @@ namespace FuGetGallery
             return false;
         }
 
+        public static int GetSortOrder (this IMemberDefinition member)
+        {
+            switch (member) {
+                case FieldDefinition t:
+                    if (t.IsStatic) return 100;
+                    return 200;
+                case MethodDefinition t when t.IsConstructor:
+                    if (t.IsStatic) return 700;
+                    return 800;
+                case MethodDefinition t:
+                    if (t.IsStatic) return 900;
+                    return 1000;
+                case PropertyDefinition t:
+                    if (t.GetMethod != null && t.GetMethod.IsStatic) return 300;
+                    return 400;
+                case EventDefinition t:
+                    if (t.AddMethod != null && t.AddMethod.IsStatic) return 500;
+                    return 600;
+                case TypeDefinition t:
+                    return 1100;
+                default: throw new NotSupportedException (member.GetType () + " " + member.FullName);
+            }
+        }
+
         public static IEnumerable<IMemberDefinition> GetPublicMembers (this TypeDefinition type)
         {
-            var fields = (type.IsEnum ? type.Fields.Where (x => x.IsPublic && x.IsStatic).Cast<IMemberDefinition> () : type.Fields.Where(x => x.IsPublic).Cast<IMemberDefinition> ()).OrderBy (x => x.Name);
-            var methods = type.Methods.Where (x => x.IsPublic && !(x.IsAddOn || x.IsRemoveOn || x.IsGetter || x.IsSetter)).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
-            var properties = type.Properties.Where (x => x.GetMethod != null && x.GetMethod.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
-            var events = type.Events.Where (x => x.AddMethod != null && x.AddMethod.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
-            var types = type.NestedTypes.Where (x => x.IsPublic).Cast<IMemberDefinition> ().OrderBy (x => x.Name);
-            return fields.Concat (properties).Concat (events).Concat (methods).Concat (types);
+            var fields = (type.IsEnum ? type.Fields.Where (x => x.IsPublic && x.IsStatic).Cast<IMemberDefinition> () :
+                          type.Fields.Where(x => (x.IsPublic || x.IsFamily)).Cast<IMemberDefinition> ());
+            var methods = type.Methods.Where (x => (x.IsPublic || x.IsFamily)
+                                              && !(x.IsAddOn || x.IsRemoveOn || x.IsGetter || x.IsSetter)
+                                              && !(x.IsVirtual && !x.IsAbstract && x.IsReuseSlot)).Cast<IMemberDefinition> ();
+            var properties = type.Properties.Where (x => x.GetMethod != null
+                                                    && (x.GetMethod.IsPublic || x.GetMethod.IsFamily)
+                                                    && !(x.GetMethod.IsVirtual && !x.GetMethod.IsAbstract && x.GetMethod.IsReuseSlot)).Cast<IMemberDefinition> ();
+            var events = type.Events.Where (x => x.AddMethod != null && (x.AddMethod.IsPublic || x.AddMethod.IsFamily)).Cast<IMemberDefinition> ();
+            var types = type.NestedTypes.Where (x => (x.IsPublic || x.IsNestedFamily || x.IsNestedPublic)).Cast<IMemberDefinition> ();
+            return fields.Concat (properties).Concat (events).Concat (methods).Concat (types).OrderBy (GetSortOrder).ThenBy (x => x.Name);
         }
 
         public static string GetXmlName (this IMemberDefinition member)
@@ -138,8 +167,18 @@ namespace FuGetGallery
         public static void WritePrototypeHtml (this FieldDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
             if (!member.DeclaringType.IsEnum) {
+                if (member.IsFamily || member.IsFamilyOrAssembly) {
+                    w.Write ("<span class=\"c-kw\">protected</span> ");
+                }
+                else if (member.IsPublic) {
+                    w.Write ("<span class=\"c-kw\">public</span> ");
+                }
+
                 if (member.IsStatic) {
                     w.Write ("<span class=\"c-kw\">static</span> ");
+                }
+                if (member.IsInitOnly) {
+                    w.Write ("<span class=\"c-kw\">readonly</span> ");
                 }
                 WriteReferenceHtml (member.FieldType, w, framework);
                 w.Write (" ");
@@ -149,14 +188,19 @@ namespace FuGetGallery
             w.Write ("</span>");
             if (member.Constant != null) {
                 w.Write (" = ");
-                w.Write ("<span class=\"c-st\">");
-                WriteEncoded (member.Constant.ToString (), w);
-                w.Write ("</span>");
+                TypeDocumentation.WritePrimitiveHtml (member.Constant, w);
             }
         }
 
         public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
+            if (member.IsFamily || member.IsFamilyOrAssembly) {
+                w.Write ("<span class=\"c-kw\">protected</span> ");
+            }
+            else if (member.IsPublic) {
+                w.Write ("<span class=\"c-kw\">public</span> ");
+            }
+
             if (member.IsStatic) {
                 w.Write ("<span class=\"c-kw\">static</span> ");
             }
@@ -168,8 +212,16 @@ namespace FuGetGallery
                 WriteEncoded (name, w);
             }
             else {
-                if (member.IsVirtual) {
-                    w.Write ("<span class=\"c-kw\">virtual</span> ");
+                if (member.IsAbstract) {
+                    w.Write ("<span class=\"c-kw\">abstract</span> ");
+                }
+                else if (member.IsVirtual) {
+                    if (member.IsReuseSlot) {
+                        w.Write ("<span class=\"c-kw\">override</span> ");
+                    }
+                    else if (!member.IsFinal) {
+                        w.Write ("<span class=\"c-kw\">virtual</span> ");
+                    }
                 }
                 WriteReferenceHtml (member.ReturnType, w, framework);
                 w.Write (" <span class=\"c-md\">");
@@ -202,9 +254,30 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this PropertyDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
-            if (member.GetMethod != null && member.GetMethod.IsStatic) {
-                w.Write ("<span class=\"c-kw\">static</span> ");
+            if (member.GetMethod != null) {
+                if ((member.GetMethod.IsFamily || member.GetMethod.IsFamilyOrAssembly)) {
+                    w.Write ("<span class=\"c-kw\">protected</span> ");
+                }
+                else if ((member.GetMethod.IsPublic)) {
+                    w.Write ("<span class=\"c-kw\">public</span> ");
+                }
+
+                if (member.GetMethod.IsStatic) {
+                    w.Write ("<span class=\"c-kw\">static</span> ");
+                }
+                else if (member.GetMethod.IsAbstract) {
+                    w.Write ("<span class=\"c-kw\">abstract</span> ");
+                }
+                else if (member.GetMethod.IsVirtual) {
+                    if (member.GetMethod.IsReuseSlot) {
+                        w.Write ("<span class=\"c-kw\">override</span> ");
+                    }
+                    else if (!member.GetMethod.IsFinal) {
+                        w.Write ("<span class=\"c-kw\">virtual</span> ");
+                    }
+                }
             }
+
             WriteReferenceHtml (member.PropertyType, w, framework);
             if (member.GetMethod != null && member.GetMethod.Parameters.Count > 0) {
                 w.Write (" <span class=\"c-pd\">this</span>[");
@@ -226,12 +299,22 @@ namespace FuGetGallery
             }
             w.Write (" {");
             if (member.GetMethod != null) w.Write (" <span class=\"c-kw\">get</span>;");
-            if (member.SetMethod != null && member.SetMethod.IsPublic) w.Write (" <span class=\"c-kw\">set</span>;");
+            if (member.SetMethod != null) {
+                if (member.SetMethod.IsPublic) w.Write (" <span class=\"c-kw\">set</span>;");
+                else if (member.SetMethod.IsFamily || member.SetMethod.IsFamilyOrAssembly) w.Write (" <span class=\"c-kw\">protected set</span>;");
+            }
             w.Write (" }");
         }
 
         public static void WritePrototypeHtml (this EventDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
+            if (member.AddMethod != null && (member.AddMethod.IsFamily || member.AddMethod.IsFamilyOrAssembly)) {
+                w.Write ("<span class=\"c-kw\">protected</span> ");
+            }
+            else if (member.AddMethod != null && (member.AddMethod.IsPublic)) {
+                w.Write ("<span class=\"c-kw\">public</span> ");
+            }
+
             if (member.AddMethod != null && member.AddMethod.IsStatic) {
                 w.Write ("<span class=\"c-kw\">static</span> ");
             }
@@ -244,6 +327,13 @@ namespace FuGetGallery
 
         public static void WritePrototypeHtml (this TypeDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
         {
+            if (member.IsNestedFamily || member.IsNestedFamilyOrAssembly) {
+                w.Write ("<span class=\"c-kw\">protected</span> ");
+            }
+            else if (member.IsPublic || member.IsNestedPublic) {
+                w.Write ("<span class=\"c-kw\">public</span> ");
+            }
+
             if (member.IsSealed && member.IsAbstract)
                 w.Write ("<span class=\"c-kw\">static</span> ");
             else if (member.IsSealed && !member.IsEnum)

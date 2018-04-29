@@ -224,6 +224,57 @@ namespace FuGetGallery
             }
         }
 
+        public static void WritePrimitiveHtml (object value, TextWriter w)
+        {
+            if (value == null) {
+                w.Write ("<span class=\"c-nl\">null</span>");
+                return;
+            }
+            if (value is bool b) {
+                w.Write (b ? "<span class=\"c-nl\">true</span>" : "<span class=\"c-nl\">false</span>");
+                return;
+            }
+            if (value is string s) {
+                w.Write ("<span class=\"c-st\">\"");
+                for (var i = 0; i < s.Length; i++) {
+                    switch (s[i]) {
+                        case '&': w.Write ("&amp;"); break;
+                        case '<': w.Write ("&lt;"); break;
+                        case '>': w.Write ("&gt;"); break;
+                        case '\\': w.Write ("\\\\"); break;
+                        case '\"': w.Write ("\\\""); break;
+                        case '\n': w.Write ("\\n"); break;
+                        case '\r': w.Write ("\\r"); break;
+                        case '\b': w.Write ("\\b"); break;
+                        case '\t': w.Write ("\\t"); break;
+                        default: w.Write (s[i]); break;
+                    }
+                }
+                w.Write ("\"</span>");
+                return;
+            }
+            if (value is char c) {
+                w.Write ("<span class=\"c-st\">\'");
+                switch (c) {
+                    case '&': w.Write ("&amp;"); break;
+                    case '<': w.Write ("&lt;"); break;
+                    case '>': w.Write ("&gt;"); break;
+                    case '\\': w.Write ("\\\\"); break;
+                    case '\'': w.Write ("\\\'"); break;
+                    case '\n': w.Write ("\\n"); break;
+                    case '\r': w.Write ("\\r"); break;
+                    case '\b': w.Write ("\\b"); break;
+                    case '\t': w.Write ("\\t"); break;
+                    default: w.Write (c); break;
+                }
+                w.Write ("\'</span>");
+                return;
+            }
+            w.Write ("<span class=\"c-nu\">");
+            WriteEncodedHtml (Convert.ToString (value, System.Globalization.CultureInfo.InvariantCulture), w);
+            w.Write ("</span>");
+        }
+
         static readonly Regex reGS = new Regex (@"{.*\n.*get</span>;.*\n.*set</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
         static readonly Regex reG = new Regex (@"{.*\n.*get</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
         static readonly Regex reAR = new Regex (@" {.*\n.*add</span>;.*\n.*remove</span>;.*\n.*}", RegexOptions.Compiled | RegexOptions.Multiline);
@@ -403,56 +454,10 @@ namespace FuGetGallery
                 w.Write("</span>");
             }
 
-            public override void WritePrimitiveValue(object value, string literalValue = null)
+            public override void WritePrimitiveValue (object value, string literalValue = null)
             {
                 WriteIndent ();
-                if (value == null) {
-                    w.Write("<span class=\"c-nl\">null</span>");
-                    return;
-                }
-                if (value is bool b) {
-                    w.Write(b ? "<span class=\"c-nl\">true</span>" : "<span class=\"c-nl\">false</span>");
-                    return;
-                }
-                if (value is string s) {
-                    w.Write("<span class=\"c-st\">\"");
-                    for (var i = 0; i < s.Length; i++) {
-                        switch (s[i]) {
-                            case '&': w.Write("&amp;"); break;
-                            case '<': w.Write("&lt;"); break;
-                            case '>': w.Write("&gt;"); break;
-                            case '\\': w.Write("\\\\"); break;
-                            case '\"': w.Write("\\\""); break;
-                            case '\n': w.Write("\\n"); break;
-                            case '\r': w.Write("\\r"); break;
-                            case '\b': w.Write("\\b"); break;
-                            case '\t': w.Write("\\t"); break;
-                            default: w.Write(s[i]); break;
-                        }
-                    }
-                    w.Write("\"</span>");
-                    return;
-                }
-                if (value is char c) {
-                    w.Write("<span class=\"c-st\">\'");
-                    switch (c) {
-                        case '&': w.Write("&amp;"); break;
-                        case '<': w.Write("&lt;"); break;
-                        case '>': w.Write("&gt;"); break;
-                        case '\\': w.Write("\\\\"); break;
-                        case '\'': w.Write("\\\'"); break;
-                        case '\n': w.Write("\\n"); break;
-                        case '\r': w.Write("\\r"); break;
-                        case '\b': w.Write("\\b"); break;
-                        case '\t': w.Write("\\t"); break;
-                        default: w.Write(c); break;
-                    }
-                    w.Write("\'</span>");
-                    return;                    
-                }
-                w.Write("<span class=\"c-nu\">");
-                WriteEncoded(Convert.ToString (value, System.Globalization.CultureInfo.InvariantCulture));
-                w.Write("</span>");
+                WritePrimitiveHtml (value, w);
             }
 
             public override void WriteToken(Role role, string token)
