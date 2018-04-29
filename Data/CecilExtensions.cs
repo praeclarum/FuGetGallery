@@ -10,15 +10,15 @@ namespace FuGetGallery
     public static class CecilExtensions
     {
         public static bool IsDelegate (this TypeDefinition type)
-		{
-			if (type.BaseType != null && type.BaseType.Namespace == "System") {
-				if (type.BaseType.Name == "MulticastDelegate")
-					return true;
-				if (type.BaseType.Name == "Delegate" && type.Name != "MulticastDelegate")
-					return true;
-			}
-			return false;
-		}
+        {
+            if (type.BaseType != null && type.BaseType.Namespace == "System") {
+                if (type.BaseType.Name == "MulticastDelegate")
+                    return true;
+                if (type.BaseType.Name == "Delegate" && type.Name != "MulticastDelegate")
+                    return true;
+            }
+            return false;
+        }
 
         public static IEnumerable<IMemberDefinition> GetPublicMembers (this TypeDefinition type)
         {
@@ -30,107 +30,9 @@ namespace FuGetGallery
             return fields.Concat (properties).Concat (events).Concat (methods).Concat (types);
         }
 
-        static string GetXmlType (this TypeDefinition type)
-        {
-            return type.FullName;
-        }
-
-        static string GetXmlTypeRef (this TypeReference type)
-        {
-            if (type.IsGenericParameter) {
-                var gp = (GenericParameter)type;
-                return (gp.Type == GenericParameterType.Method ? "``" : "`") + gp.Position;
-            }
-            if (type.IsGenericInstance) {
-                var gi = (GenericInstanceType)type;
-                var b = new StringBuilder ();
-                var head = "";
-                var et = GetXmlTypeRef (gi.ElementType);
-                var eti = et.LastIndexOf ('`');
-                et = et.Substring (0, eti);
-                b.Append (et);
-
-                b.Append ("{");
-                foreach (var a in gi.GenericArguments) {
-                    b.Append (head);
-                    b.Append (GetXmlTypeRef (a));
-                    head = ",";
-                }
-                b.Append ("}");
-                return b.ToString ();
-            }
-            return type.FullName;
-        }
-
-        public static string GetXmlName (this FieldDefinition d)
-        {
-            return "F:" + GetXmlType (d.DeclaringType) + "." + d.Name;
-        }
-
-        public static string GetXmlName (this MethodDefinition d)
-        {
-            var b = new StringBuilder ("M:");
-            b.Append (GetXmlType (d.DeclaringType));
-            if (d.IsConstructor) {
-                b.Append (".");
-                b.Append (d.Name.Replace ('.', '#'));
-            }
-            else {
-                b.Append (".");
-                b.Append (d.Name);
-            }
-            if (d.HasGenericParameters) {
-                b.Append ("``" + d.GenericParameters.Count);
-            }
-            if (d.Parameters.Count > 0) {
-                b.Append ("(");
-                var head = "";
-                foreach (var p in d.Parameters) {
-                    b.Append (head);
-                    b.Append (GetXmlTypeRef (p.ParameterType));
-                    head = ",";
-                }
-                b.Append (")");
-            }
-            return b.ToString ();
-        }
-
-        public static string GetXmlName (this PropertyDefinition d)
-        {
-            var b = new StringBuilder ("P:" + GetXmlType (d.DeclaringType) + "." + d.Name);
-            if (d.GetMethod.Parameters.Count > 0) {
-                b.Append ("(");
-                var head = "";
-                foreach (var p in d.Parameters) {
-                    b.Append (head);
-                    b.Append (GetXmlTypeRef (p.ParameterType));
-                    head = ",";
-                }
-                b.Append (")");
-            }
-            return b.ToString ();
-        }
-
-        public static string GetXmlName (this EventDefinition d)
-        {
-            return "E:" + GetXmlType (d.DeclaringType) + "." + d.Name;
-        }
-
-        public static string GetXmlName (this TypeDefinition d)
-        {
-            return "T:" + GetXmlType (d);
-        }
-
         public static string GetXmlName (this IMemberDefinition member)
         {
-            switch (member) {
-                case FieldDefinition t: return GetXmlName (t);
-                case MethodDefinition t: return GetXmlName (t);
-                case PropertyDefinition t: return GetXmlName (t);
-                case EventDefinition t: return GetXmlName (t);
-                case TypeDefinition t: return GetXmlName (t);
-                default: throw new NotSupportedException (member.GetType () + " " + member.FullName);
-            }
+            return Mono.Cecil.Rocks.DocCommentId.GetDocCommentId (member);
         }
 
         static void WriteEncoded (string s, TextWriter w)
@@ -254,7 +156,10 @@ namespace FuGetGallery
             }
             if (member.IsConstructor) {
                 w.Write ("<span class=\"c-cd\">");
-                WriteEncoded (member.DeclaringType.Name, w);
+                var name = member.DeclaringType.Name;
+                var ni = name.LastIndexOf ('`');
+                if (ni > 0) name = name.Substring (0, ni);
+                WriteEncoded (name, w);
             }
             else {
                 if (member.IsVirtual) {

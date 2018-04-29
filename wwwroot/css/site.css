@@ -62,8 +62,10 @@ footer { margin-top: 10em; }
     color: #777;
     word-wrap: normal;
     white-space: pre;
-    padding: 16px;
+    padding: 16px 0px;
     line-height: 17px;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
 }
 .c-kw { color: #777 !important; }
 .c-co { color: #909197 !important; }
@@ -87,10 +89,6 @@ footer { margin-top: 10em; }
 .c-pd { color: #0184BC !important; font-weight: bold; }
 .c-er { color: #986801 !important; }
 .c-ed { color: #986801 !important; font-weight: bold; }
-
-article .code {
-    padding: 16px 0px;
-}
 
 ul.inline-code {
     padding: 20px;
