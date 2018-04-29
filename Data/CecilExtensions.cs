@@ -80,6 +80,36 @@ namespace FuGetGallery
             }
         }
 
+        public static string GetFriendlyName (this TypeDefinition type)
+        {
+            if (type.HasGenericParameters) {
+                var name = type.Name;
+                var ni = name.LastIndexOf ('`');
+                if (ni > 0) name = name.Substring (0, ni);
+                var b = new StringBuilder (name);
+                b.Append ("<");
+                var head = "";
+                foreach (var p in type.GenericParameters) {
+                    b.Append (head);
+                    b.Append (p.Name);
+                    head = ", ";
+                }
+                b.Append (">");
+                return b.ToString ();
+            }
+            return type.Name;
+        }
+
+        public static string GetFriendlyFullName (this TypeDefinition type)
+        {
+            if (type.IsNested) {
+                var d = type.DeclaringType.GetFriendlyFullName ();
+                var n = type.GetFriendlyName ();
+                return d + "." + n;
+            }
+            return type.Namespace + "." + type.GetFriendlyName ();
+        }
+
         public static void WriteReferenceHtml (this TypeReference type, TextWriter w, PackageTargetFramework framework)
         {
             if (type.FullName == "System.Void") {

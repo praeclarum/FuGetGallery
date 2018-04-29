@@ -55,12 +55,12 @@
     var nupkgName = package.Id + "." + package.Version + ".nupkg";
 
     var showKlass = "package";
-    var title = typ != null ? typ.FullName : package.Id + " " + package.Version;
+    var title = typ != null ? typ.GetFriendlyFullName() : package.Id + " " + package.Version;
     var description = package.Description;
 
     if (typ != null && typ.Name.Equals (inputTypeName, StringComparison.InvariantCultureIgnoreCase)) {
         showKlass = "type";
-        title = typ.FullName;
+        title = typ.GetFriendlyFullName();
         description = $"Type with {typ.Fields.Count} fields and {typ.Methods.Count} methods";
         if (docs != null && !string.IsNullOrEmpty (docs.SummaryText)) {
             description += "\n\n" + docs.SummaryText;
@@ -330,7 +330,7 @@ else {
         <li>
             <a class="@active" style="font-weight:@bold;color:@color;"
                 href="@GetUrl(otypeName:t.Name)">
-                <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.Name</a>
+                <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()</a>
         </li>
     }
     </ul>
@@ -368,7 +368,7 @@ else {
 <div class="col-xs-12 col-sm-9" id="code">
 <article>
 @if (showKlass == "type") {
-    <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
+    <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
     <div class="member-code" style="font-size:120%">
         @Html.Raw(typ.GetPrototypeHtml(framework:framework))
     </div>
