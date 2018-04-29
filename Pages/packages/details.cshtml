@@ -247,10 +247,10 @@
             <ul>
             @foreach (var ti in ni.Types) {
                 <li class="diff-@ti.Action">
-                    @Html.Raw(ti.Type.GetPrototypeHtml())
+                    @Html.Raw(ti.Type.GetPrototypeHtml(framework:ti.Framework))
                     <ul>
                     @foreach (var mi in ti.Members) {                        
-                        <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml())</li>
+                        <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml(framework:ti.Framework))</li>
                     }
                     </ul>
                 </li>
@@ -373,8 +373,8 @@ else {
 <article>
 @if (showKlass == "type") {
     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
-    <div class="member-code">
-        @Html.Raw(typ.GetPrototypeHtml())
+    <div class="member-code" style="font-size:120%">
+        @Html.Raw(typ.GetPrototypeHtml(framework:framework))
     </div>
     <p style="overflow:scroll;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
         @if (docs != null) {

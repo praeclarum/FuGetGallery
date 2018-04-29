@@ -34,6 +34,7 @@ namespace FuGetGallery
         public class TypeDiffInfo : DiffInfo
         {
             public TypeDefinition Type;
+            public PackageTargetFramework Framework;
             public List<MemberDiffInfo> Members = new List<MemberDiffInfo> ();
         }
 
@@ -53,25 +54,25 @@ namespace FuGetGallery
 
             var types = new List<TypeDiffInfo> ();
             foreach (var aa in asmDiff.Actions) {
-                IEnumerable<TypeDefinition> srcTypes;
-                IEnumerable<TypeDefinition> destTypes;
+                IEnumerable<Tuple<TypeDefinition, PackageTargetFramework>> srcTypes;
+                IEnumerable<Tuple<TypeDefinition, PackageTargetFramework>> destTypes;
                 switch (aa.ActionType) {
                     case ListDiffActionType.Add:
-                        srcTypes = Enumerable.Empty<TypeDefinition> ();
-                        destTypes = aa.DestinationItem.PublicTypes;
+                        srcTypes = Enumerable.Empty<Tuple<TypeDefinition, PackageTargetFramework>> ();
+                        destTypes = aa.DestinationItem.PublicTypes.Select (x => Tuple.Create (x, Framework));
                         break;
                     case ListDiffActionType.Remove:
-                        srcTypes = aa.SourceItem.PublicTypes;
-                        destTypes = Enumerable.Empty<TypeDefinition> ();
+                        srcTypes = aa.SourceItem.PublicTypes.Select (x => Tuple.Create (x, OtherFramework));
+                        destTypes = Enumerable.Empty<Tuple<TypeDefinition, PackageTargetFramework>> ();
                         break;
                     default:
-                        srcTypes = aa.SourceItem.PublicTypes;
-                        destTypes = aa.DestinationItem.PublicTypes;
+                        srcTypes = aa.SourceItem.PublicTypes.Select (x => Tuple.Create (x, OtherFramework));
+                        destTypes = aa.DestinationItem.PublicTypes.Select (x => Tuple.Create (x, Framework));
                         break;
                 }
                 if (aa.ActionType == ListDiffActionType.Remove)
                     continue;
-                var typeDiff = srcTypes.Diff (destTypes, (x, y) => x.FullName == y.FullName);
+                var typeDiff = srcTypes.Diff (destTypes, (x, y) => x.Item1.FullName == y.Item1.FullName);
                 foreach (var ta in typeDiff.Actions) {
                     var ti = new TypeDiffInfo { Action = ta.ActionType };
 
@@ -79,19 +80,22 @@ namespace FuGetGallery
                     IEnumerable<IMemberDefinition> destMembers;
                     switch (ta.ActionType) {
                         case ListDiffActionType.Add:
-                            ti.Type = ta.DestinationItem;
+                            ti.Type = ta.DestinationItem.Item1;
+                            ti.Framework = ta.DestinationItem.Item2;
                             srcMembers = Enumerable.Empty<IMemberDefinition> ();
                             destMembers = ti.Type.GetPublicMembers ();
                             break;
                         case ListDiffActionType.Remove:
-                            ti.Type = ta.SourceItem;
+                            ti.Type = ta.SourceItem.Item1;
+                            ti.Framework = ta.SourceItem.Item2;
                             srcMembers = ti.Type.GetPublicMembers ();
                             destMembers = Enumerable.Empty<IMemberDefinition> ();
                             break;
                         default:
-                            ti.Type = ta.DestinationItem;
-                            srcMembers = ta.SourceItem.GetPublicMembers ();
-                            destMembers = ta.DestinationItem.GetPublicMembers ();
+                            ti.Type = ta.DestinationItem.Item1;
+                            ti.Framework = ta.DestinationItem.Item2;
+                            srcMembers = ta.SourceItem.Item1.GetPublicMembers ();
+                            destMembers = ta.DestinationItem.Item1.GetPublicMembers ();
                             break;
                     }
 

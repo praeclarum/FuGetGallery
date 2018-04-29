@@ -97,15 +97,21 @@ namespace FuGetGallery
             }
             else if (type.IsGenericInstance) {
                 GenericInstanceType gi = (GenericInstanceType)type;
-                WriteReferenceHtml (gi.ElementType, w, framework);
-                w.Write ("&lt;");
-                var head = "";
-                foreach (var a in gi.GenericArguments) {
-                    w.Write (head);
-                    WriteReferenceHtml (a, w, framework);
-                    head = ", ";
+                if (gi.ElementType.FullName == "System.Nullable`1") {
+                    WriteReferenceHtml (gi.GenericArguments[0], w, framework);
+                    w.Write ("?");
                 }
-                w.Write ("&gt;");
+                else {
+                    WriteReferenceHtml (gi.ElementType, w, framework);
+                    w.Write ("&lt;");
+                    var head = "";
+                    foreach (var a in gi.GenericArguments) {
+                        w.Write (head);
+                        WriteReferenceHtml (a, w, framework);
+                        head = ", ";
+                    }
+                    w.Write ("&gt;");
+                }
             }
             else if (type.IsByReference) {
                 w.Write ("<span class=\"c-kw\">ref</span> ");
@@ -172,14 +178,14 @@ namespace FuGetGallery
             w.Write ("</span>");
             var head = "";
             if (member.HasGenericParameters) {
-                w.Write ("<");
+                w.Write ("&lt;");
                 head = "";
                 foreach (var p in member.GenericParameters) {
                     w.Write (head);
                     WriteReferenceHtml (p, w, framework);
                     head = ", ";
                 }
-                w.Write (">");
+                w.Write ("&gt;");
             }
             w.Write ("(");
             head = "";
@@ -248,9 +254,42 @@ namespace FuGetGallery
                 w.Write ("<span class=\"c-kw\">delegate</span> ");
             else
                 w.Write ("<span class=\"c-kw\">class</span> ");
-            w.Write ("<span class=\"c-td\">");
-            WriteEncoded (member.Name, w);
-            w.Write ("</span>");
+            
+            var name = member.Name;
+            var ni = name.LastIndexOf ('`');
+            if (ni > 0) name = name.Substring (0, ni);
+            var url = framework?.FindTypeUrl (member.FullName);
+            if (url != null) {
+                w.Write ($"<a href=\"{url}\" class=\"c-td\">");
+                WriteEncoded (name, w);
+                w.Write ("</a>");
+            }
+            else {
+                w.Write ("<span class=\"c-td\">");
+                WriteEncoded (name, w);
+                w.Write ("</span>");
+            }
+            if (member.HasGenericParameters) {
+                w.Write ("&lt;");
+                var head = "";
+                foreach (var a in member.GenericParameters) {
+                    w.Write (head);
+                    WriteReferenceHtml (a, w, framework);
+                    head = ", ";
+                }
+                w.Write ("&gt;");
+            }
+            var hier = ((member.BaseType != null && member.BaseType.FullName != "System.Object") ? new[] { member.BaseType } : new TypeReference[0])
+                .Concat (member.Interfaces.Select (x => x.InterfaceType)).ToList ();
+            if (hier.Count > 0) {
+                w.Write (" : ");
+                var head = "";
+                foreach (var h in hier) {
+                    w.Write (head);
+                    WriteReferenceHtml (h, w, framework);
+                    head = ", ";
+                }
+            }
         }
 
         public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageAssembly assembly = null, PackageTargetFramework framework = null, PackageData package = null)
