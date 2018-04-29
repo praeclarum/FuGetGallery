@@ -54,8 +54,10 @@ namespace FuGetGallery
                 if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {                    
                     SummaryHtml = XmlToHtml (td.SummaryXml);
                     SummaryText = XmlToText (td.SummaryXml);
-                    if (SummaryHtml == "To be added.")
+                    if (ignoreSummaryTextRe.IsMatch (SummaryHtml)) {
                         SummaryHtml = "";
+                        SummaryText = "";
+                    }
                 }
             }
 
@@ -64,29 +66,35 @@ namespace FuGetGallery
             DocumentationHtml = w.ToString ();
         }
 
+        Regex ignoreSummaryTextRe = new Regex (@"To be added", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         void WriteDocumentation (TextWriter w)
         {
             var members = typeDefinition.GetPublicMembers ();
             foreach (var m in members) {
 
                 var xmlName = m.GetXmlName ();
-                MemberXmlDocs docs = null;
-                xmlDocs?.MemberDocs.TryGetValue (xmlName, out docs);
+                MemberXmlDocs mdocs = null;
+                xmlDocs?.MemberDocs.TryGetValue (xmlName, out mdocs);
 
                 w.WriteLine ("<div class='member-code'>");
                 m.WritePrototypeHtml (w, framework: framework);
                 w.WriteLine ("</div>");
 
-                if (docs != null) {
-                    w.WriteLine ("<p>");
-                    XmlToHtml (docs?.SummaryXml, w);
-                    w.WriteLine ("</p>");
+                w.WriteLine ("<p>");
+                if (mdocs != null) {
+                    var html = XmlToHtml (mdocs?.SummaryXml);
+                    if (ignoreSummaryTextRe.IsMatch (html)) {
+                        html = "";
+                    }
+                    w.Write (html);
                 }
                 else {
-                    w.WriteLine ("<p><b>");
-                    WriteEncodedHtml (xmlName, w);
-                    w.WriteLine ("</b></p>");
+                    //w.WriteLine ("<b>");
+                    //WriteEncodedHtml (xmlName, w);
+                    //w.WriteLine ("</b>");
                 }
+                w.WriteLine ("</p>");
             }
         }
 
@@ -104,10 +112,50 @@ namespace FuGetGallery
             }
         }
 
+        void WriteMemberLinkHtml (string xmlId, TextWriter w)
+        {
+            var kind = char.ToLowerInvariant (xmlId[0]);
+            var id = xmlId.Substring (2);
+            var url = "";
+            if (kind == 't')
+                url = framework.FindTypeUrl (id) ?? "";
+            w.Write ($" <a href=\"{url}\" class=\"inline-code c-{kind}r\">");
+            WriteEncodedHtml (id, w);
+            w.Write ("</a>");
+        }
+
         void XmlToHtml (XElement x, TextWriter w)
         {
             if (x == null) return;
-            WriteEncodedHtml (x.Value.Trim (), w);
+            var endTag = "";
+            switch (x.Name.LocalName) {
+                case "para":
+                    w.Write ("<p>");
+                    endTag = "</p>";
+                    break;
+                case "paramref":
+                    w.Write ("<span class=\"inline-code c-ar\">");
+                    w.Write (x.Attribute ("name")?.Value ?? "");
+                    w.Write ("</span>");
+                    break;
+                case "see": {
+                        var cref = x.Attribute ("cref");
+                        if (cref != null && cref.Value.Length > 2) {
+                            WriteMemberLinkHtml (cref.Value, w);
+                        }
+                    }
+                    break;
+                default:
+                    //WriteEncodedHtml ($"<b>{x.Name.LocalName}</b>", w);
+                    break;
+            }
+            foreach (var n in x.Nodes ()) {
+                if (n is XText t) WriteEncodedHtml (t.Value, w);
+                else if (n is XElement e) XmlToHtml (e, w);
+            }
+            if (endTag.Length > 0) {
+                w.Write (endTag);
+            }
         }
 
         string XmlToHtml (XElement x)

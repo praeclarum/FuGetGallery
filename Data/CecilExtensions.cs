@@ -37,6 +37,28 @@ namespace FuGetGallery
 
         static string GetXmlTypeRef (this TypeReference type)
         {
+            if (type.IsGenericParameter) {
+                var gp = (GenericParameter)type;
+                return (gp.Type == GenericParameterType.Method ? "``" : "`") + gp.Position;
+            }
+            if (type.IsGenericInstance) {
+                var gi = (GenericInstanceType)type;
+                var b = new StringBuilder ();
+                var head = "";
+                var et = GetXmlTypeRef (gi.ElementType);
+                var eti = et.LastIndexOf ('`');
+                et = et.Substring (0, eti);
+                b.Append (et);
+
+                b.Append ("{");
+                foreach (var a in gi.GenericArguments) {
+                    b.Append (head);
+                    b.Append (GetXmlTypeRef (a));
+                    head = ",";
+                }
+                b.Append ("}");
+                return b.ToString ();
+            }
             return type.FullName;
         }
 
@@ -47,18 +69,46 @@ namespace FuGetGallery
 
         public static string GetXmlName (this MethodDefinition d)
         {
-            var name = d.IsConstructor ? d.Name.Replace ('.', '#') : d.Name.Replace ("`", "``");
-
             var b = new StringBuilder ("M:");
             b.Append (GetXmlType (d.DeclaringType));
-            b.Append (".");
-            b.Append (name);
+            if (d.IsConstructor) {
+                b.Append (".");
+                b.Append (d.Name.Replace ('.', '#'));
+            }
+            else {
+                b.Append (".");
+                b.Append (d.Name);
+            }
+            if (d.HasGenericParameters) {
+                b.Append ("``" + d.GenericParameters.Count);
+            }
+            if (d.Parameters.Count > 0) {
+                b.Append ("(");
+                var head = "";
+                foreach (var p in d.Parameters) {
+                    b.Append (head);
+                    b.Append (GetXmlTypeRef (p.ParameterType));
+                    head = ",";
+                }
+                b.Append (")");
+            }
             return b.ToString ();
         }
 
         public static string GetXmlName (this PropertyDefinition d)
         {
-            return "P:" + GetXmlType (d.DeclaringType) + "." + d.Name;
+            var b = new StringBuilder ("P:" + GetXmlType (d.DeclaringType) + "." + d.Name);
+            if (d.GetMethod.Parameters.Count > 0) {
+                b.Append ("(");
+                var head = "";
+                foreach (var p in d.Parameters) {
+                    b.Append (head);
+                    b.Append (GetXmlTypeRef (p.ParameterType));
+                    head = ",";
+                }
+                b.Append (")");
+            }
+            return b.ToString ();
         }
 
         public static string GetXmlName (this EventDefinition d)
@@ -99,7 +149,7 @@ namespace FuGetGallery
             }
         }
 
-        public static void WriteReferenceHtml (this TypeReference type, TextWriter w)
+        public static void WriteReferenceHtml (this TypeReference type, TextWriter w, PackageTargetFramework framework)
         {
             if (type.FullName == "System.Void") {
                 w.Write ("<span class=\"c-tr\">void</span>");
@@ -110,40 +160,70 @@ namespace FuGetGallery
             else if (type.FullName == "System.Object") {
                 w.Write ("<span class=\"c-tr\">object</span>");
             }
+            else if (type.FullName == "System.Decimal") {
+                w.Write ("<span class=\"c-tr\">decimal</span>");
+            }
             else if (type.IsPrimitive) {
                 w.Write ("<span class=\"c-tr\">");
                 switch (type.FullName) {
                     case "System.Byte": w.Write ("byte"); break;
                     case "System.Boolean": w.Write ("bool"); break;
+                    case "System.Char": w.Write ("char"); break;
                     case "System.Double": w.Write ("double"); break;
+                    case "System.Int16": w.Write ("short"); break;
                     case "System.Int32": w.Write ("int"); break;
                     case "System.Int64": w.Write ("long"); break;
                     case "System.Single": w.Write ("float"); break;
+                    case "System.SByte": w.Write ("sbyte"); break;
+                    case "System.UInt16": w.Write ("ushort"); break;
+                    case "System.UInt32": w.Write ("uint"); break;
+                    case "System.UInt64": w.Write ("ulong"); break;
                     default: WriteEncoded (type.Name, w); break;
                 }
                 w.Write ("</span>");
             }
+            else if (type.IsArray) {
+                var at = (ArrayType)type;
+                WriteReferenceHtml (at.ElementType, w, framework);
+                w.Write ("[");
+                var head = "";
+                foreach (var d in at.Dimensions) {
+                    w.Write (head);
+                    head = ",";
+                }
+                w.Write ("]");
+            }
             else if (type.IsGenericInstance) {
-                w.Write ("<span class=\"c-tr\">");
-                WriteEncoded (type.Name.Substring (0, type.Name.IndexOf ('`')), w);
-                w.Write ("</span>");
+                GenericInstanceType gi = (GenericInstanceType)type;
+                WriteReferenceHtml (gi.ElementType, w, framework);
                 w.Write ("&lt;");
                 var head = "";
-                foreach (var a in ((GenericInstanceType)type).GenericArguments) {
+                foreach (var a in gi.GenericArguments) {
                     w.Write (head);
-                    WriteReferenceHtml (a, w);
+                    WriteReferenceHtml (a, w, framework);
                     head = ", ";
                 }
                 w.Write ("&gt;");
             }
             else if (type.IsByReference) {
                 w.Write ("<span class=\"c-kw\">ref</span> ");
-                WriteReferenceHtml (type.GetElementType (), w);
+                WriteReferenceHtml (type.GetElementType (), w, framework);
             }
             else {
-                w.Write ("<span class=\"c-tr\">");
-                WriteEncoded (type.Name, w);
-                w.Write ("</span>");
+                var name = type.Name;
+                var ni = name.LastIndexOf ('`');
+                if (ni > 0) name = name.Substring (0, ni);
+                var url = framework?.FindTypeUrl (type.FullName);
+                if (url != null) {
+                    w.Write ($"<a href=\"{url}\" class=\"c-tr\">");
+                    WriteEncoded (name, w);
+                    w.Write ("</a>");
+                }
+                else {
+                    w.Write ("<span class=\"c-tr\">");
+                    WriteEncoded (name, w);
+                    w.Write ("</span>");
+                }
             }
         }
 
@@ -153,7 +233,7 @@ namespace FuGetGallery
                 if (member.IsStatic) {
                     w.Write ("<span class=\"c-kw\">static</span> ");
                 }
-                WriteReferenceHtml (member.FieldType, w);
+                WriteReferenceHtml (member.FieldType, w, framework);
                 w.Write (" ");
             }
             w.Write ("<span class=\"c-fd\">");
@@ -180,15 +260,27 @@ namespace FuGetGallery
                 if (member.IsVirtual) {
                     w.Write ("<span class=\"c-kw\">virtual</span> ");
                 }
-                WriteReferenceHtml (member.ReturnType, w);
+                WriteReferenceHtml (member.ReturnType, w, framework);
                 w.Write (" <span class=\"c-md\">");
                 WriteEncoded (member.Name, w);
             }
-            w.Write ("</span>(");
+            w.Write ("</span>");
             var head = "";
+            if (member.HasGenericParameters) {
+                w.Write ("<");
+                head = "";
+                foreach (var p in member.GenericParameters) {
+                    w.Write (head);
+                    WriteReferenceHtml (p, w, framework);
+                    head = ", ";
+                }
+                w.Write (">");
+            }
+            w.Write ("(");
+            head = "";
             foreach (var p in member.Parameters) {
                 w.Write (head);
-                WriteReferenceHtml (p.ParameterType, w);
+                WriteReferenceHtml (p.ParameterType, w, framework);
                 w.Write (" <span class=\"c-ar\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
@@ -202,10 +294,29 @@ namespace FuGetGallery
             if (member.GetMethod != null && member.GetMethod.IsStatic) {
                 w.Write ("<span class=\"c-kw\">static</span> ");
             }
-            WriteReferenceHtml (member.PropertyType, w);
-            w.Write (" <span class=\"c-pd\">");
-            WriteEncoded (member.Name, w);
-            w.Write ("</span>");
+            WriteReferenceHtml (member.PropertyType, w, framework);
+            if (member.GetMethod != null && member.GetMethod.Parameters.Count > 0) {
+                w.Write (" <span class=\"c-pd\">this</span>[");
+                var head = "";
+                foreach (var p in member.GetMethod.Parameters) {
+                    w.Write (head);
+                    WriteReferenceHtml (p.ParameterType, w, framework);
+                    w.Write (" <span class=\"c-ar\">");
+                    WriteEncoded (p.Name, w);
+                    w.Write ("</span>");
+                    head = ", ";
+                }
+                w.Write ("]");
+            }
+            else {
+                w.Write (" <span class=\"c-pd\">");
+                WriteEncoded (member.Name, w);
+                w.Write ("</span>");
+            }
+            w.Write (" {");
+            if (member.GetMethod != null) w.Write (" <span class=\"c-kw\">get</span>;");
+            if (member.SetMethod != null && member.SetMethod.IsPublic) w.Write (" <span class=\"c-kw\">set</span>;");
+            w.Write (" }");
         }
 
         public static void WritePrototypeHtml (this EventDefinition member, TextWriter w, PackageAssembly assembly, PackageTargetFramework framework, PackageData package)
@@ -214,7 +325,7 @@ namespace FuGetGallery
                 w.Write ("<span class=\"c-kw\">static</span> ");
             }
             w.Write ("<span class=\"c-kw\">event</span> ");
-            WriteReferenceHtml (member.EventType, w);
+            WriteReferenceHtml (member.EventType, w, framework);
             w.Write (" <span class=\"c-ed\">");
             WriteEncoded (member.Name, w);
             w.Write ("</span>");

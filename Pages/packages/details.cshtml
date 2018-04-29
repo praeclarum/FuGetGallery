@@ -373,7 +373,10 @@ else {
 <article>
 @if (showKlass == "type") {
     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.Name</h1>
-    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
+    <div class="member-code">
+        @Html.Raw(typ.GetPrototypeHtml())
+    </div>
+    <p style="overflow:scroll;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
         @if (docs != null) {
         @Html.Raw(docs.SummaryHtml)
         }
