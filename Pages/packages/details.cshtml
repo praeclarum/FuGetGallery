@@ -375,14 +375,14 @@ else {
     <div class="member-code" style="font-size:120%">
         @Html.Raw(typ.GetPrototypeHtml(framework:framework, linkToCode:false))
     </div>
-    <p style="overflow:scroll;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
+    <div style="overflow:scroll;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
         @if (docs != null) {
         @Html.Raw(docs.SummaryHtml)
         }
         else {
         @description
         }
-    </p>
+    </div>
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab">Documentation</a></li>
         <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab">Code</a></li>

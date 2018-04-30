@@ -166,9 +166,17 @@ namespace FuGetGallery
             if (x == null) return;
             var endTag = "";
             switch (x.Name.LocalName) {
+                case "summary":
+                    w.Write ("<div style=\"padding: 0px 8px;\">");
+                    endTag = "</div>";
+                    break;
                 case "para":
                     w.Write ("<p>");
                     endTag = "</p>";
+                    break;
+                case "c":
+                    w.Write ("<span class=\"inline-code\">");
+                    endTag = "</span>";
                     break;
                 case "paramref":
                     w.Write ("<span class=\"inline-code c-ar\">");
