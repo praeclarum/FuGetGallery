@@ -220,11 +220,16 @@ namespace FuGetGallery
                     w.Write ("<span class=\"c-kw\">public</span> ");
                 }
 
-                if (member.IsStatic) {
-                    w.Write ("<span class=\"c-kw\">static</span> ");
+                if (member.HasConstant) {
+                    w.Write ("<span class=\"c-kw\">const</span> ");
                 }
-                if (member.IsInitOnly) {
-                    w.Write ("<span class=\"c-kw\">readonly</span> ");
+                else {
+                    if (member.IsStatic) {
+                        w.Write ("<span class=\"c-kw\">static</span> ");
+                    }
+                    if (member.IsInitOnly) {
+                        w.Write ("<span class=\"c-kw\">readonly</span> ");
+                    }
                 }
                 WriteReferenceHtml (member.FieldType, w, framework);
                 w.Write (" ");
@@ -234,7 +239,7 @@ namespace FuGetGallery
             w.Write ($"<a {href} id=\"{id}\" class=\"c-fd\">");
             WriteEncoded (member.Name, w);
             w.Write ("</a>");
-            if (member.Constant != null) {
+            if (member.HasConstant) {
                 w.Write (" = ");
                 TypeDocumentation.WritePrimitiveHtml (member.Constant, w);
             }
