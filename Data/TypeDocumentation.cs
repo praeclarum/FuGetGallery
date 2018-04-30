@@ -16,6 +16,8 @@ using ICSharpCode.Decompiler.CSharp.Resolver;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using System.Xml.Linq;
 using System.Text;
+using ICSharpCode.Decompiler.TypeSystem.Implementation;
+using ICSharpCode.Decompiler.Documentation;
 
 namespace FuGetGallery
 {
@@ -79,7 +81,7 @@ namespace FuGetGallery
                 xmlDocs?.MemberDocs.TryGetValue (xmlName, out mdocs);
 
                 w.WriteLine ("<div class='member-code'>");
-                m.WritePrototypeHtml (w, framework: framework);
+                m.WritePrototypeHtml (w, framework: framework, linkToCode: true);
                 w.WriteLine ("</div>");
 
                 w.WriteLine ("<p>");
@@ -334,9 +336,10 @@ namespace FuGetGallery
 
             void WriteEncoded (string s) => WriteEncodedHtml (s, w);
 
-            string GetClassAndLink(AstNode n, out string link)
+            string GetClassAndLink(AstNode n, out string link, out string id)
             {
                 link = null;
+                id = null;
                 if (n == null || n == AstNode.Null)
                     return "c-uk";
                 while (n != null && n.Annotations.Count() == 0)
@@ -362,27 +365,47 @@ namespace FuGetGallery
                 var m = n.Annotation<MemberResolveResult> ();
                 if (m != null) {
                     if (m.Member.SymbolKind == SymbolKind.Method) {
-                        if (n is MethodDeclaration)
+                        if (n is MethodDeclaration md) {
+                            if (md.GetSymbol () is DefaultResolvedMethod r)
+                                id = r.GetIdString ();
                             return "c-md";
+                        }
                         return "c-mr";
                     }
                     if (m.Member.SymbolKind == SymbolKind.Field) {
-                        if (n is FieldDeclaration)
+                        if (n is FieldDeclaration fd) {
+                            if (fd.GetSymbol () is DefaultResolvedField r)
+                                id = r.GetIdString ();
                             return "c-fd";
+                        }
                         return "c-fr";
                     }
                     if (m.Member.SymbolKind == SymbolKind.Event) {
-                        if (n is EventDeclaration || n is CustomEventDeclaration)
+                        if (n is EventDeclaration ed) {
+                            if (ed.GetSymbol () is DefaultResolvedEvent r)
+                                id = r.GetIdString ();
                             return "c-ed";
+                        }
+                        if (n is CustomEventDeclaration ed2) {
+                            if (ed2.GetSymbol () is DefaultResolvedEvent r)
+                                id = r.GetIdString ();
+                            return "c-ed";
+                        }
                         return "c-er";
                     }
                     if (m.Member.SymbolKind == SymbolKind.Constructor) {
-                        if (n is ConstructorDeclaration)
+                        if (n is ConstructorDeclaration cd) {
+                            if (cd.GetSymbol () is DefaultResolvedEvent r)
+                                id = r.GetIdString ();
                             return "c-cd";
+                        }
                         return "c-cr";
                     }
-                    if (n is PropertyDeclaration)
+                    if (n is PropertyDeclaration pd) {
+                        if (pd.GetSymbol () is DefaultResolvedProperty r)
+                            id = r.GetIdString ();
                         return "c-pd";
+                    }
                     return "c-pr";
                 }
                 var mg = n.Annotation<MethodGroupResolveResult> ();
@@ -450,9 +473,10 @@ namespace FuGetGallery
             public override void WriteIdentifier(Identifier identifier)
             {
                 WriteIndent ();
-                var c = GetClassAndLink(identifier, out var link);
+                var c = GetClassAndLink(identifier, out var link, out var id);
+                var ida = id != null ? $" id=\"{id}\"" : "";
                 if (link != null)  {
-                    w.Write("<a class=\"");
+                    w.Write($"<a{ida} class=\"");
                     w.Write(c);
                     w.Write("\" href=\"");
                     WriteEncoded(link);
@@ -461,7 +485,7 @@ namespace FuGetGallery
                     w.Write("</a>");
                 }
                 else {
-                    w.Write("<span class=\"");
+                    w.Write($"<span{ida} class=\"");
                     w.Write(c);
                     w.Write("\">");
                     WriteEncoded(identifier.Name);

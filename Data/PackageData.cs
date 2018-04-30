@@ -258,7 +258,7 @@ namespace FuGetGallery
                     DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version)}",
                 };
                 try {
-                    // System.Console.WriteLine($"DOWNLOADING {token.IsCancellationRequested} {package.DownloadUrl}");
+                    //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
                     var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
                     var data = new MemoryStream ();
                     using (var s = await r.Content.ReadAsStreamAsync().ConfigureAwait(false)) {

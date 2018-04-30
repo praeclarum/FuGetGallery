@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Mono.Cecil;
 using System.Diagnostics;
+using ICSharpCode.Decompiler.TypeSystem;
 
 namespace FuGetGallery
 {
@@ -40,6 +41,8 @@ namespace FuGetGallery
             return asms.FirstOrDefault (x => x.FileName == cleanName);
         }
 
+        public string FindTypeUrl (IType type) => FindTypeUrl (type.FullName);
+
         public string FindTypeUrl (TypeDefinition type) => FindTypeUrl (type.FullName);
 
         public string FindTypeUrl (TypeReference type) => type.IsGenericParameter ? null : FindTypeUrl (type.FullName);
@@ -50,29 +53,31 @@ namespace FuGetGallery
         {
             if (typeUrls.TryGetValue (typeFullName, out var url))
                 return url;
-            
-            if (typeFullName.StartsWith("System.", StringComparison.Ordinal)) {
-                var slug = Uri.EscapeDataString(typeFullName.Replace('`', '-')).ToLowerInvariant();
-                return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
-            }
-            if (typeFullName.StartsWith ("Windows.", StringComparison.Ordinal)) {
-                var slug = Uri.EscapeDataString (typeFullName.Replace ('`', '-')).ToLowerInvariant ();
-                return $"https://docs.microsoft.com/en-us/uwp/api/{slug}";
-            }
-            if (typeFullName.StartsWith ("Foundation.", StringComparison.Ordinal)
-                || typeFullName.StartsWith ("UIKit.", StringComparison.Ordinal)
-                || typeFullName.StartsWith ("AppKit.", StringComparison.Ordinal)
-                || typeFullName.StartsWith ("CoreGraphics.", StringComparison.Ordinal)
-                || typeFullName.StartsWith ("Android.", StringComparison.Ordinal)) {
-                var slug = Uri.EscapeDataString (typeFullName);
-                return $"https://developer.xamarin.com/api/type/{slug}";
-            }
+
             var types =
-                from a in Assemblies.Concat(BuildAssemblies)
+                from a in Assemblies.Concat (BuildAssemblies)
                 from m in a.Definition.Modules
                 select new { a, t = m.GetType (typeFullName) };
             var at = types.FirstOrDefault (x => x.t != null);
+
             if (at == null) {
+                if (typeFullName.StartsWith("System.", StringComparison.Ordinal)) {
+                    var slug = Uri.EscapeDataString(typeFullName.Replace('`', '-')).ToLowerInvariant();
+                    return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
+                }
+                if (typeFullName.StartsWith ("Windows.", StringComparison.Ordinal)) {
+                    var slug = Uri.EscapeDataString (typeFullName.Replace ('`', '-')).ToLowerInvariant ();
+                    return $"https://docs.microsoft.com/en-us/uwp/api/{slug}";
+                }
+                if (typeFullName.StartsWith ("Foundation.", StringComparison.Ordinal)
+                    || typeFullName.StartsWith ("UIKit.", StringComparison.Ordinal)
+                    || typeFullName.StartsWith ("AppKit.", StringComparison.Ordinal)
+                    || typeFullName.StartsWith ("CoreGraphics.", StringComparison.Ordinal)
+                    || typeFullName.StartsWith ("Android.", StringComparison.Ordinal)) {
+                    var slug = Uri.EscapeDataString (typeFullName);
+                    return $"https://developer.xamarin.com/api/type/{slug}";
+                }
+
                 if (!shallow) {
                     //var sw = new Stopwatch ();
                     //sw.Start ();

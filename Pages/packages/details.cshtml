@@ -248,10 +248,10 @@
         <ul class="inline-code" style="margin-top:0em;padding:10px 20px;">
         @foreach (var ti in ni.Types) {
             <li class="diff-@ti.Action">
-                @Html.Raw(ti.Type.GetPrototypeHtml(framework:ti.Framework))
+                @Html.Raw(ti.Type.GetPrototypeHtml(framework:ti.Framework, linkToCode:false))
                 <ul>
                 @foreach (var mi in ti.Members) {                        
-                    <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml(framework:ti.Framework))</li>
+                    <li class="diff-@mi.Action">@Html.Raw(mi.Member.GetPrototypeHtml(framework:ti.Framework, linkToCode:false))</li>
                 }
                 </ul>
             </li>
@@ -373,7 +373,7 @@ else {
 @if (showKlass == "type") {
     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
     <div class="member-code" style="font-size:120%">
-        @Html.Raw(typ.GetPrototypeHtml(framework:framework))
+        @Html.Raw(typ.GetPrototypeHtml(framework:framework, linkToCode:false))
     </div>
     <p style="overflow:scroll;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
         @if (docs != null) {
