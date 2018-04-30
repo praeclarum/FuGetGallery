@@ -101,28 +101,32 @@ namespace FuGetGallery
                                            n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase) ||
                                            n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase))) {
                     var parts = n.Split ('/', StringSplitOptions.RemoveEmptyEntries);
+                    string tfm;
                     if (parts.Length >= 3) {
-                        var tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
-                        var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == tfm);
-                        if (tf == null) {
-                            tf = new PackageTargetFramework (this) {
-                                Moniker = tfm,
-                            };
-                            TargetFrameworks.Add (tf);
+                        tfm = Uri.UnescapeDataString (parts[1].Trim ().ToLowerInvariant ());
+                    }
+                    else {
+                        tfm = "net";
+                    }
+                    var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == tfm);
+                    if (tf == null) {
+                        tf = new PackageTargetFramework (this) {
+                            Moniker = tfm,
+                        };
+                        TargetFrameworks.Add (tf);
+                    }
+                    if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
+                        var docs = new PackageAssemblyXmlDocs (e);
+                        if (string.IsNullOrEmpty (docs.Error)) {
+                            // System.Console.WriteLine(docs.AssemblyName);
+                            tf.AssemblyXmlDocs[docs.AssemblyName] = docs;
                         }
-                        if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
-                            var docs = new PackageAssemblyXmlDocs (e);
-                            if (string.IsNullOrEmpty (docs.Error)) {
-                                // System.Console.WriteLine(docs.AssemblyName);
-                                tf.AssemblyXmlDocs[docs.AssemblyName] = docs;
-                            }
-                        }
-                        else if (isBuild) {
-                            tf.BuildAssemblies.Add (new PackageAssembly (e, tf));
-                        }
-                        else {
-                            tf.Assemblies.Add (new PackageAssembly (e, tf));
-                        }
+                    }
+                    else if (isBuild) {
+                        tf.BuildAssemblies.Add (new PackageAssembly (e, tf));
+                    }
+                    else {
+                        tf.Assemblies.Add (new PackageAssembly (e, tf));
                     }
                 }
                 else if (n.EndsWith (".nuspec", StringComparison.InvariantCultureIgnoreCase)) {
