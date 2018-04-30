@@ -195,7 +195,7 @@ namespace FuGetGallery
                 var name = type.Name;
                 var ni = name.LastIndexOf ('`');
                 if (ni > 0) name = name.Substring (0, ni);
-                var url = framework?.FindTypeUrl (type.FullName);
+                var url = framework?.FindTypeUrl (type);
                 if (url != null) {
                     w.Write ($"<a href=\"{url}\" class=\"c-tr\">");
                     WriteEncoded (name, w);
@@ -414,7 +414,7 @@ namespace FuGetGallery
             var name = member.Name;
             var ni = name.LastIndexOf ('`');
             if (ni > 0) name = name.Substring (0, ni);
-            var url = framework?.FindTypeUrl (member.FullName);
+            var url = framework?.FindTypeUrl (member);
             if (url != null) {
                 w.Write ($"<a id=\"{id}\" href=\"{url}\" class=\"c-td\">");
                 WriteEncoded (name, w);

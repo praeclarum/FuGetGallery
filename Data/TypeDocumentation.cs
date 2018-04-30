@@ -148,7 +148,7 @@ namespace FuGetGallery
             if (kind != 't') {
                 typeFullName = string.Join ('.', nparts.Take (nparts.Length - 1));
             }
-            Console.WriteLine ($"FULLNAME {typeFullName} FROM {xmlId}");
+            //Console.WriteLine ($"FULLNAME {typeFullName} FROM {xmlId}");
             var url = string.IsNullOrEmpty (typeFullName) ? "" : (framework.FindTypeUrl (typeFullName) ?? "");
             if (url.Length > 0 && kind != 't') {
                 url += "#" + Uri.EscapeDataString (xmlId);

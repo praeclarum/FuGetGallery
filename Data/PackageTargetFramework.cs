@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Threading;
 using Mono.Cecil;
+using System.Diagnostics;
 
 namespace FuGetGallery
 {
@@ -41,9 +42,16 @@ namespace FuGetGallery
 
         public string FindTypeUrl (TypeDefinition type) => FindTypeUrl (type.FullName);
 
-        public string FindTypeUrl (string typeFullName)
+        public string FindTypeUrl (TypeReference type) => type.IsGenericParameter ? null : FindTypeUrl (type.FullName);
+
+        readonly ConcurrentDictionary<string, string> typeUrls = new ConcurrentDictionary<string, string> ();
+
+        public string FindTypeUrl (string typeFullName, bool shallow = false)
         {
-            if (typeFullName.StartsWith("System.")) {
+            if (typeUrls.TryGetValue (typeFullName, out var url))
+                return url;
+            
+            if (typeFullName.StartsWith("System.", StringComparison.Ordinal)) {
                 var slug = Uri.EscapeDataString(typeFullName.Replace('`', '-')).ToLowerInvariant();
                 return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
             }
@@ -52,10 +60,44 @@ namespace FuGetGallery
                 from m in a.Definition.Modules
                 select new { a, t = m.GetType (typeFullName) };
             var at = types.FirstOrDefault (x => x.t != null);
-            if (at == null)
+            if (at == null) {
+                if (!shallow) {
+                    //var sw = new Stopwatch ();
+                    //sw.Start ();
+                    url = DeepFindTypeUrlAsync (typeFullName, new ConcurrentDictionary<string, bool> (), new ConcurrentQueue<string> ()).Result;
+                    //sw.Stop ();
+                    //Console.WriteLine ($"RESOLVED IN {sw.ElapsedMilliseconds} millis: {typeFullName} ---> {url}");
+                    if (url != null)
+                        typeUrls.TryAdd (typeFullName, url);
+                    return url;
+                }
                 return null;
+            }
             var dir = at.a.IsBuildAssembly ? "build" : "lib";
             return $"/packages/{Uri.EscapeDataString(Package.Id)}/{Uri.EscapeDataString(Package.Version)}/{dir}/{Uri.EscapeDataString(Moniker)}/{Uri.EscapeDataString(at.a.FileName)}/{Uri.EscapeDataString(at.t.Namespace)}/{Uri.EscapeDataString(at.t.Name)}";
+        }
+
+        async Task<string> DeepFindTypeUrlAsync (string typeFullName, ConcurrentDictionary<string, bool> tried, ConcurrentQueue<string> found)
+        {
+            var url = FindTypeUrl (typeFullName, shallow: true);
+            if (url != null)
+                return url;
+
+            if (found.Count > 0) return null;
+
+            var depPackages = Dependencies.Select (async x => {
+                if (!tried.TryAdd (x.PackageId, true)) return null;
+                //Console.WriteLine ("TRY " + x.PackageId);
+                var data = await PackageData.GetAsync (x.PackageId, x.VersionSpec, CancellationToken.None).ConfigureAwait (false);
+                if (found.Count > 0) return null;
+                var fw = data.FindClosestTargetFramework (this.Moniker);
+                if (fw == null) return null;
+                var r = await fw.DeepFindTypeUrlAsync (typeFullName, tried, found).ConfigureAwait (false);
+                if (r != null) found.Enqueue (r);
+                return r;
+            });
+            var results = await Task.WhenAll (depPackages).ConfigureAwait (false);
+            return results.FirstOrDefault (x => x != null);
         }
 
         public void AddDependency (PackageDependency d)
@@ -109,7 +151,7 @@ namespace FuGetGallery
                 // Try to find it in this package or one of its dependencies
                 //
                 var s = new ConcurrentDictionary<string, bool> ();
-                var cts = new CancellationTokenSource ();
+                var cts = new ConcurrentQueue<PackageAssembly> ();
                 s.TryAdd (packageId, true);
                 
                 var a = TryResolveInFrameworkAsync (name, packageTargetFramework, s, cts).Result;
@@ -129,61 +171,57 @@ namespace FuGetGallery
                 // throw new Exception ("Failed to resolve: " + name);
             }
 
-            Task<PackageAssembly> TryResolveInFrameworkAsync (AssemblyNameReference name, PackageTargetFramework packageTargetFramework, ConcurrentDictionary<string, bool> searchedPackages, CancellationTokenSource cts)
+            async Task<PackageAssembly> TryResolveInFrameworkAsync (AssemblyNameReference name, PackageTargetFramework framework, ConcurrentDictionary<string, bool> searchedPackages, ConcurrentQueue<PackageAssembly> found)
             {
-                var a = packageTargetFramework.Assemblies.FirstOrDefault(x => {
+                var a = framework.Assemblies.FirstOrDefault(x => {
                     // System.Console.WriteLine("HOW ABOUT? " + x.Definition.Name);
                     return x.Definition.Name.Name == name.Name;
                 });
-                if (a != null)
-                    return Task.FromResult (a);
-
-                int Order (PackageDependency d) => d.PackageId.StartsWith("System.") ? 1 : 0;
-
-                var gotResultCS = new TaskCompletionSource<PackageAssembly> ();
-                var tasks = new List<Task<PackageAssembly>> ();
-                foreach (var d in packageTargetFramework.Dependencies.OrderBy (Order)) {
-                    tasks.Add (TryResolveInDependencyAsync (name, d, searchedPackages, cts).ContinueWith(t => {
-                        if (t.IsCompletedSuccessfully && t.Result != null) {
-                            gotResultCS.TrySetResult (t.Result);
-                            cts.Cancel ();
-                            return t.Result;
-                        }
-                        return null;
-                    }));
+                if (a != null) {
+                    found.Enqueue (a);
+                    return a;
                 }
-                var allCompleteTask = Task.WhenAll (tasks);
-                var anythingTask = Task.WhenAny (new[]{ (Task)gotResultCS.Task }.Append (allCompleteTask));
 
-                return anythingTask.ContinueWith (t => {
-                    //System.Console.WriteLine("DONE RESOLVING "+name.Name+" IN " + packageTargetFramework.Moniker);
-                    if (gotResultCS.Task.IsCompletedSuccessfully) {
-                        return gotResultCS.Task.Result;
-                    }
-                    return null;
-                });
+                if (found.Count > 0) return null;
+
+                var tasks = new List<Task<PackageAssembly>> ();
+                int Order (PackageDependency d) => d.PackageId.StartsWith("System.", StringComparison.Ordinal) ? 1 : 0;
+                foreach (var d in framework.Dependencies.OrderBy (Order)) {
+                    tasks.Add (TryResolveInDependencyAsync (name, d, searchedPackages, found));
+                }
+
+                if (found.Count > 0) return null;
+
+                var results = await Task.WhenAll (tasks).ConfigureAwait (false);
+
+                return results.FirstOrDefault (x => x != null);
             }
 
-            async Task<PackageAssembly> TryResolveInDependencyAsync (AssemblyNameReference name, PackageDependency dep, ConcurrentDictionary<string, bool> searchedPackages, CancellationTokenSource cts)
+            async Task<PackageAssembly> TryResolveInDependencyAsync (AssemblyNameReference name, PackageDependency dep, ConcurrentDictionary<string, bool> searchedPackages, ConcurrentQueue<PackageAssembly> found)
             {
+                if (found.Count > 0) return null;
+
                 var lowerPackageId = dep.PackageId.ToLowerInvariant ();
-                if (searchedPackages.ContainsKey (lowerPackageId))
+                if (!searchedPackages.TryAdd (lowerPackageId, true))
                     return null;
-                searchedPackages.TryAdd (lowerPackageId, true);
 
                 try {
-                    var package = await PackageData.GetAsync(dep.PackageId, dep.VersionSpec, cts.Token).ConfigureAwait (false);
-                    if (cts.Token.IsCancellationRequested)
-                        return null;
+                    var package = await PackageData.GetAsync(dep.PackageId, dep.VersionSpec, CancellationToken.None).ConfigureAwait (false);
+                    if (found.Count > 0) return null;
                     var fw = package.FindClosestTargetFramework (packageTargetFramework.Moniker);
                     if (fw != null) {
-                        return await TryResolveInFrameworkAsync (name, fw, searchedPackages, cts).ConfigureAwait (false);
+                        var r = await TryResolveInFrameworkAsync (name, fw, searchedPackages, found).ConfigureAwait (false);
+                        if (r != null) {
+                            found.Enqueue (r);
+                        }
+                        return r;
                     }
                 }
-                catch {}
+                catch (Exception ex) {
+                    Debug.WriteLine (ex);
+                }
                 return null;
             }
-
         }
     }
 }
