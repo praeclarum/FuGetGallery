@@ -300,6 +300,10 @@ namespace FuGetGallery
                 w.Write (" <span class=\"c-ar\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
+                if (p.HasConstant) {
+                    w.Write (" = ");
+                    TypeDocumentation.WritePrimitiveHtml (p.Constant, w);
+                }
                 head = ", ";
             }
             w.Write (")");
