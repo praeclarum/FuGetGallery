@@ -5,7 +5,7 @@ function deparam(querystring) {
     var params = {}, pair, d = decodeURIComponent;
     for (var i = querystring.length - 1; i >= 0; i--) {
         pair = querystring[i].split('=');
-        params[d(pair[0])] = d(pair[1] || '');
+        params[d(pair[0])] = d(pair[1] || '').replace("+", " ");
     }
     return params;
 };
