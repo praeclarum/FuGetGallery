@@ -17,6 +17,7 @@ namespace FuGetGallery
         public PackageTargetFramework Framework { get; }
         public PackageData OtherPackage { get; }
         public PackageTargetFramework OtherFramework { get; }
+        public string Error { get; } = "";
 
         public List<NamespaceDiffInfo> Namespaces { get; } = new List<NamespaceDiffInfo> ();
 
@@ -49,6 +50,11 @@ namespace FuGetGallery
             this.Framework = framework;
             this.OtherPackage = otherPackage;
             this.OtherFramework = otherFramework;
+
+            if (otherFramework == null) {
+                Error = $"Could not find framework matching \"{framework?.Moniker}\" in {otherPackage?.Id} {otherPackage?.Version}.";
+                return;
+            }
 
             var asmDiff = OtherFramework.PublicAssemblies.Diff (Framework.PublicAssemblies, (x, y) => x.Definition.Name.Name == y.Definition.Name.Name);
 

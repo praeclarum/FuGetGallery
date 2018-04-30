@@ -55,6 +55,18 @@ namespace FuGetGallery
                 var slug = Uri.EscapeDataString(typeFullName.Replace('`', '-')).ToLowerInvariant();
                 return $"https://docs.microsoft.com/en-us/dotnet/api/{slug}";
             }
+            if (typeFullName.StartsWith ("Windows.", StringComparison.Ordinal)) {
+                var slug = Uri.EscapeDataString (typeFullName.Replace ('`', '-')).ToLowerInvariant ();
+                return $"https://docs.microsoft.com/en-us/uwp/api/{slug}";
+            }
+            if (typeFullName.StartsWith ("Foundation.", StringComparison.Ordinal)
+                || typeFullName.StartsWith ("UIKit.", StringComparison.Ordinal)
+                || typeFullName.StartsWith ("AppKit.", StringComparison.Ordinal)
+                || typeFullName.StartsWith ("CoreGraphics.", StringComparison.Ordinal)
+                || typeFullName.StartsWith ("Android.", StringComparison.Ordinal)) {
+                var slug = Uri.EscapeDataString (typeFullName);
+                return $"https://developer.xamarin.com/api/type/{slug}";
+            }
             var types =
                 from a in Assemblies.Concat(BuildAssemblies)
                 from m in a.Definition.Modules
