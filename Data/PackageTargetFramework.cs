@@ -102,18 +102,31 @@ namespace FuGetGallery
 
             if (found.Count > 0) return null;
 
-            var depPackages = Dependencies.Select (async x => {
+            var depFrameworks = new List<PackageTargetFramework> ();
+
+            var shallowDepPackages = Dependencies.Select (async x => {
                 if (!tried.TryAdd (x.PackageId, true)) return null;
                 //Console.WriteLine ("TRY " + x.PackageId);
                 var data = await PackageData.GetAsync (x.PackageId, x.VersionSpec, CancellationToken.None).ConfigureAwait (false);
                 if (found.Count > 0) return null;
                 var fw = data.FindClosestTargetFramework (this.Moniker);
                 if (fw == null) return null;
+                depFrameworks.Add (fw);
+                var r = fw.FindTypeUrl (typeFullName, shallow: true);
+                if (r != null) found.Enqueue (r);
+                return r;
+            });
+            var shallowResults = await Task.WhenAll (shallowDepPackages).ConfigureAwait (false);
+            var shallowResult = shallowResults.FirstOrDefault (x => x != null);
+            if (shallowResult != null)
+                return shallowResult;
+
+            var deepDepPackages = depFrameworks.Select (async fw => {
                 var r = await fw.DeepFindTypeUrlAsync (typeFullName, tried, found).ConfigureAwait (false);
                 if (r != null) found.Enqueue (r);
                 return r;
             });
-            var results = await Task.WhenAll (depPackages).ConfigureAwait (false);
+            var results = await Task.WhenAll (deepDepPackages).ConfigureAwait (false);
             return results.FirstOrDefault (x => x != null);
         }
 
