@@ -29,6 +29,8 @@ namespace FuGetGallery
 
         public License MatchedLicense { get; set; }
 
+        public string ProjectUrlTitle => Uri.TryCreate (ProjectUrl, UriKind.Absolute, out var uri) ? uri.Host : "Project Site";
+
         public bool SourceCodeIsPublic => !string.IsNullOrEmpty (ProjectUrl) && sourceCodeUrlRes.Any (x => x.IsMatch (ProjectUrl));
 
         public bool AllowedToDecompile => SourceCodeIsPublic || (MatchedLicense != null && MatchedLicense.AllowsDecompilation);
@@ -181,6 +183,7 @@ namespace FuGetGallery
                 Owners = GetS ("owners");
                 ProjectUrl = GetUrl ("projectUrl");
                 LicenseUrl = GetUrl ("licenseUrl");
+                if (LicenseUrl == ProjectUrl) LicenseUrl = "";
                 IconUrl = GetUrl ("iconUrl");
                 Description = GetS ("description");
                 var deps = meta.Element(ns + "dependencies");
@@ -213,6 +216,7 @@ namespace FuGetGallery
 
         static readonly Regex[] sourceCodeUrlRes = {
             new Regex ("https?://github.com/[^/]+/[^/]+", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+            new Regex ("https?://bitbucket.org/[^/]+/[^/]+", RegexOptions.Compiled | RegexOptions.IgnoreCase),
         };
 
         async Task MatchLicenseAsync ()

@@ -31,6 +31,7 @@
     <EmbeddedResource Include="Resources\Licenses\GPL3.txt" />
     <EmbeddedResource Include="Resources\Licenses\MPL2.txt" />
     <EmbeddedResource Include="Resources\Licenses\MPL11.txt" />
+    <EmbeddedResource Include="Resources\Licenses\LGPL3.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Resources.resx">
@@ -56,5 +57,6 @@
     <None Remove="Resources\Licenses\GPL3.txt" />
     <None Remove="Resources\Licenses\MPL2.txt" />
     <None Remove="Resources\Licenses\MPL11.txt" />
+    <None Remove="Resources\Licenses\LGPL3.txt" />
   </ItemGroup>
 </Project>

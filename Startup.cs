@@ -26,6 +26,7 @@ namespace FuGetGallery
             {
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}");
+                options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{dir}");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{dir}/{targetFramework}");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{dir}/{targetFramework}/{assemblyName}");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{dir}/{targetFramework}/{assemblyName}/{namespace}");

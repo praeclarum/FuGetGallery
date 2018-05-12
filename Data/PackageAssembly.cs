@@ -6,6 +6,7 @@ using System.Linq;
 using Mono.Cecil;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace FuGetGallery
 {
@@ -47,9 +48,16 @@ namespace FuGetGallery
                 ms.Position = 0;
             }
             definition = new Lazy<AssemblyDefinition> (() => {
-                return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
-                    AssemblyResolver = framework.AssemblyResolver,
-                });
+                try {
+                    return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
+                        AssemblyResolver = framework.AssemblyResolver,
+                    });
+                }
+                catch (Exception ex) {
+                    Debug.WriteLine ("Failed to load assembly");
+                    Debug.WriteLine (ex);
+                    return null;
+                }
             }, true);
             format = ICSharpCode.Decompiler.CSharp.OutputVisitor.FormattingOptionsFactory.CreateMono();
             format.SpaceBeforeMethodCallParentheses = false;

@@ -10,6 +10,7 @@ namespace FuGetGallery
     {
         public string Name { get; set; } = "";
         public bool AllowsDecompilation { get; set; }
+        public List<string> KeyStrings { get; set; } = new List<string> ();
         public HashSet<string> KnownUrls { get; set; } = new HashSet<string> ();
 
         string templateName = "";
@@ -28,9 +29,16 @@ namespace FuGetGallery
         static License ()
         {
             known.Add (new License {
-                Name = "Apache License 2.0",
+                Name = "Apache License 2",
                 AllowsDecompilation = true,
+                KeyStrings = {
+                    "Apache License",
+                },
                 KnownUrls = {
+                    "http://choosealicense.com/licenses/apache/",
+                    "https://choosealicense.com/licenses/apache/",
+                    "http://choosealicense.com/licenses/apache-2.0/",
+                    "https://choosealicense.com/licenses/apache-2.0/",
                     "http://www.apache.org/licenses/LICENSE-2.0",
                     "https://www.apache.org/licenses/LICENSE-2.0",
                     "http://opensource.org/licenses/Apache-2.0",
@@ -43,6 +51,8 @@ namespace FuGetGallery
                 Name = "3-Clause BSD License",
                 AllowsDecompilation = true,
                 KnownUrls = {
+                    "http://choosealicense.com/licenses/bsd-3-clause-clear/",
+                    "https://choosealicense.com/licenses/bsd-3-clause-clear/",
                     "http://opensource.org/licenses/BSD-3-Clause",
                     "https://opensource.org/licenses/BSD-3-Clause",
                 },
@@ -52,7 +62,14 @@ namespace FuGetGallery
             known.Add (new License {
                 Name = "2-Clause BSD License",
                 AllowsDecompilation = true,
+                KeyStrings = {
+                    "BSD 2-Clause License",
+                    "2‐clause BSD License",
+                    "Simplified BSD License",
+                },
                 KnownUrls = {
+                    "http://choosealicense.com/licenses/bsd-2-clause/",
+                    "https://choosealicense.com/licenses/bsd-2-clause/",
                     "http://opensource.org/licenses/BSD-2-Clause",
                     "https://opensource.org/licenses/BSD-2-Clause",
                 },
@@ -60,9 +77,17 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "GNU General Public License 2",
+                Name = "GNU GPL 2",
                 AllowsDecompilation = true,
                 KnownUrls = {
+                    "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+                    "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+                    "http://choosealicense.com/licenses/gpl-v2/",
+                    "https://choosealicense.com/licenses/gpl-v2/",
+                    "http://choosealicense.com/licenses/gpl-2.0/",
+                    "https://choosealicense.com/licenses/gpl-2.0/",
+                    "http://www.gnu.org/licenses/gpl-2.0.txt",
+                    "https://www.gnu.org/licenses/gpl-2.0.txt",
                     "http://www.gnu.org/licenses/gpl-2.0.html",
                     "https://www.gnu.org/licenses/gpl-2.0.html",
                     "http://opensource.org/licenses/GPL-2.0",
@@ -72,9 +97,19 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "GNU General Public License 3",
+                Name = "GNU GPL 3",
                 AllowsDecompilation = true,
                 KnownUrls = {
+                    "http://choosealicense.com/licenses/gpl-v3/",
+                    "https://choosealicense.com/licenses/gpl-v3/",
+                    "http://choosealicense.com/licenses/gpl-3.0/",
+                    "https://choosealicense.com/licenses/gpl-3.0/",
+                    "http://www.gnu.org/licenses/gpl.html#content",
+                    "https://www.gnu.org/licenses/gpl.html#content",
+                    "http://www.gnu.org/licenses/gpl.html",
+                    "https://www.gnu.org/licenses/gpl.html",
+                    "http://www.gnu.org/licenses/gpl-3.0.txt",
+                    "https://www.gnu.org/licenses/gpl-3.0.txt",
                     "http://www.gnu.org/licenses/gpl-3.0.html",
                     "https://www.gnu.org/licenses/gpl-3.0.html",
                     "http://opensource.org/licenses/GPL-3.0",
@@ -84,21 +119,50 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "GNU Lesser General Public License 2.1",
+                Name = "GNU LGPL 2.1",
                 AllowsDecompilation = true,
                 KnownUrls = {
+                    "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+                    "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+                    "http://www.gnu.org/licenses/lgpl-2.1.txt",
+                    "https://www.gnu.org/licenses/lgpl-2.1.txt",
                     "http://www.gnu.org/licenses/lgpl-2.1.html",
                     "https://www.gnu.org/licenses/lgpl-2.1.html",
-                    "https://opensource.org/licenses/LGPL-2.1",
+                    "http://opensource.org/licenses/LGPL-2.1",
                     "https://opensource.org/licenses/LGPL-2.1",
                 },
                 TemplateName = "LGPL21",
             });
 
             known.Add (new License {
-                Name = "MIT License",
+                Name = "GNU LGPL 3",
                 AllowsDecompilation = true,
                 KnownUrls = {
+                    "http://www.gnu.org/licenses/lgpl.html",
+                    "https://www.gnu.org/licenses/lgpl.html",
+                    "http://choosealicense.com/licenses/lgpl-3.0/",
+                    "https://choosealicense.com/licenses/lgpl-3.0/",
+                    "http://www.gnu.org/licenses/lgpl-3.0.txt",
+                    "https://www.gnu.org/licenses/lgpl-3.0.txt",
+                    "http://www.gnu.org/licenses/lgpl-3.0.html",
+                    "https://www.gnu.org/licenses/lgpl-3.0.html",
+                    "http://opensource.org/licenses/LGPL-3.0",
+                    "https://opensource.org/licenses/LGPL-3.0",
+                },
+                TemplateName = "LGPL3",
+            });
+
+            known.Add (new License {
+                Name = "MIT License",
+                AllowsDecompilation = true,
+                KeyStrings = {
+                    "MIT License"
+                },
+                KnownUrls = {
+                    "http://choosealicense.com/licenses/mit/",
+                    "https://choosealicense.com/licenses/mit/",
+                    "http://opensource.org/licenses/mit-license.php",
+                    "https://opensource.org/licenses/mit-license.php",
                     "http://opensource.org/licenses/MIT",
                     "https://opensource.org/licenses/MIT",
                 },
@@ -109,6 +173,8 @@ namespace FuGetGallery
                 Name = "Mozilla Public License 1.1",
                 AllowsDecompilation = true,
                 KnownUrls = {
+                    "http://www.mozilla.org/MPL/1.1/",
+                    "https://www.mozilla.org/MPL/1.1/",
                     "http://www.mozilla.org/en-US/MPL/1.1/",
                     "https://www.mozilla.org/en-US/MPL/1.1/",
                     "http://opensource.org/licenses/MPL-1.1",
@@ -118,21 +184,13 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "Mozilla Public License 2.0",
+                Name = "Mozilla Public License 2",
                 AllowsDecompilation = true,
                 KnownUrls = {
-                    "http://www.mozilla.org/en-US/MPL/2.0/",
-                    "https://www.mozilla.org/en-US/MPL/2.0/",
-                    "http://opensource.org/licenses/MPL-2.0",
-                    "https://opensource.org/licenses/MPL-2.0",
-                },
-                TemplateName = "MPL2",
-            });
-
-            known.Add (new License {
-                Name = "Mozilla Public License 2.0",
-                AllowsDecompilation = true,
-                KnownUrls = {
+                    "http://www.mozilla.org/MPL/2.0/",
+                    "https://www.mozilla.org/MPL/2.0/",
+                    "http://choosealicense.com/licenses/mpl-2.0/",
+                    "https://choosealicense.com/licenses/mpl-2.0/",
                     "http://www.mozilla.org/en-US/MPL/2.0/",
                     "https://www.mozilla.org/en-US/MPL/2.0/",
                     "http://opensource.org/licenses/MPL-2.0",
@@ -147,6 +205,8 @@ namespace FuGetGallery
                 KnownUrls = {
                     "http://opensource.org/licenses/MS-PL",
                     "https://opensource.org/licenses/MS-PL",
+                    "http://opensource.org/licenses/ms-pl",
+                    "https://opensource.org/licenses/ms-pl",
                 },
                 TemplateName = "MSPL",
             });
@@ -159,6 +219,10 @@ namespace FuGetGallery
 
         public static License FindLicenseWithText (string text)
         {
+            var keyed = known.FirstOrDefault (x => x.KeyStrings.Count > 0 && x.KeyStrings.Any (s => text.Contains (s)));
+            if (keyed != null)
+                return keyed;
+
             var bigrams = BuildBigramSet (text);
             var q =
                 from l in known

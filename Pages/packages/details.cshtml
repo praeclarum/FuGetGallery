@@ -193,7 +193,7 @@
     </a>
     @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
         <a href="@package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
-            <span class="glyphicon glyphicon-link" aria-hidden="true"></span> Project Site
+            <span class="glyphicon glyphicon-link" aria-hidden="true"></span> @package.ProjectUrlTitle
         </a>
     }
     @if (!string.IsNullOrEmpty(package.LicenseUrl)) {
