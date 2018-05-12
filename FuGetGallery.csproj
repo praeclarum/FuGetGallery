@@ -28,6 +28,7 @@
     <EmbeddedResource Include="Resources\Licenses\BSD2Clause.txt" />
     <EmbeddedResource Include="Resources\Licenses\BSD3Clause.txt" />
     <EmbeddedResource Include="Resources\Licenses\LGPL21.txt" />
+    <EmbeddedResource Include="Resources\Licenses\GPL3.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Resources.resx">
@@ -50,5 +51,6 @@
     <None Remove="Resources\Licenses\BSD2Clause.txt" />
     <None Remove="Resources\Licenses\BSD3Clause.txt" />
     <None Remove="Resources\Licenses\LGPL21.txt" />
+    <None Remove="Resources\Licenses\GPL3.txt" />
   </ItemGroup>
 </Project>

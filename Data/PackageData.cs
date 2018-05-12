@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Xml.Linq;
 using Mono.Cecil;
 using System.Threading;
+using System.Diagnostics;
 
 namespace FuGetGallery
 {
@@ -201,10 +202,20 @@ namespace FuGetGallery
             }
         }
 
-        async Task LoadLicenseAsync ()
+        async Task MatchLicenseAsync ()
         {
             if (!string.IsNullOrEmpty (LicenseUrl)) {
                 MatchedLicense = License.FindLicenseWithUrl (LicenseUrl);
+
+                if (MatchedLicense == null) {
+                    try {
+                        var licenseText = await UrlExtensions.GetTextFileAsync (LicenseUrl).ConfigureAwait (false);
+                        MatchedLicense = License.FindLicenseWithText (licenseText);
+                    }
+                    catch (Exception ex) {
+                        Debug.WriteLine (ex);
+                    }
+                }
             }
         }
 
@@ -286,7 +297,7 @@ namespace FuGetGallery
                     }
                     data.Position = 0;
                     await Task.Run (() => package.Read (data), token).ConfigureAwait (false);
-                    await package.LoadLicenseAsync ().ConfigureAwait (false);
+                    await package.MatchLicenseAsync ().ConfigureAwait (false);
                 }
                 catch (OperationCanceledException) {
                     throw;

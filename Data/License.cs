@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace FuGetGallery
 {
@@ -9,14 +10,22 @@ namespace FuGetGallery
         public string Name { get; set; } = "";
         public bool AllowsDecompilation { get; set; }
         public HashSet<string> KnownUrls { get; set; } = new HashSet<string> ();
-        public string TemplateName { get; set; } = "";
+
+        string templateName = "";
+        public string TemplateName {
+            get => templateName;
+            set { templateName = value; LoadTemplate (); }
+        }
+
+        public string TemplateText { get; private set; }
+        public HashSet<string> TemplateBigrams { get; private set; }
 
         readonly static List<License> known = new List<License> ();
 
         static License ()
         {
             known.Add (new License {
-                Name = "Apache License, version 2.0",
+                Name = "Apache License 2.0",
                 AllowsDecompilation = true,
                 KnownUrls = {
                     "http://www.apache.org/licenses/LICENSE-2.0",
@@ -48,7 +57,7 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "GNU General Public License, version 2",
+                Name = "GNU General Public License 2",
                 AllowsDecompilation = true,
                 KnownUrls = {
                     "http://www.gnu.org/licenses/gpl-2.0.html",
@@ -60,7 +69,7 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "GNU General Public License, version 3",
+                Name = "GNU General Public License 3",
                 AllowsDecompilation = true,
                 KnownUrls = {
                     "http://www.gnu.org/licenses/gpl-3.0.html",
@@ -72,7 +81,7 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "GNU Lesser General Public License, version 2.1",
+                Name = "GNU Lesser General Public License 2.1",
                 AllowsDecompilation = true,
                 KnownUrls = {
                     "http://www.gnu.org/licenses/lgpl-2.1.html",
@@ -84,7 +93,7 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
-                Name = "MIT",
+                Name = "MIT License",
                 AllowsDecompilation = true,
                 KnownUrls = {
                     "http://opensource.org/licenses/MIT",
@@ -107,6 +116,55 @@ namespace FuGetGallery
         public static License FindLicenseWithUrl (string url)
         {
             return known.FirstOrDefault (x => x.KnownUrls.Contains (url));
+        }
+
+        public static License FindLicenseWithText (string text)
+        {
+            var bigrams = BuildBigramSet (text);
+            var q =
+                from l in known
+                let dice = DiceCoefficient (l.TemplateBigrams, bigrams)
+                where dice > 0.9
+                orderby dice descending
+                select Tuple.Create (dice, l);
+            var r = q.FirstOrDefault ();
+            Console.WriteLine (r);
+            return r?.Item2;
+        }
+
+        void LoadTemplate ()
+        {
+            using (var s = GetType ().Assembly.GetManifestResourceStream ($"FuGetGallery.Resources.Licenses.{TemplateName}.txt")) {
+                if (s == null) {
+                    throw new Exception ("Missing license " + TemplateName);
+                }
+                using (var r = new StreamReader (s)) {
+                    TemplateText = r.ReadToEnd ();
+                    TemplateBigrams = BuildBigramSet (TemplateText);
+                }
+            }
+        }
+
+        /// <summary>
+        /// From https://gist.github.com/ssajous/3539848
+        /// </summary>
+        static HashSet<string> BuildBigramSet (string input)
+        {
+            HashSet<string> bigrams = new HashSet<string> ();
+            for (int i = 0; i < input.Length - 1; i++) {
+                bigrams.Add (input.Substring (i, 2));
+            }
+            return bigrams;
+        }
+
+        /// <summary>
+        /// From https://gist.github.com/ssajous/3539848
+        /// </summary>
+        public static double DiceCoefficient (HashSet<string> x, HashSet<string> y)
+        {
+            HashSet<string> intersection = new HashSet<string> (x);
+            intersection.IntersectWith (y);
+            return (2.0 * intersection.Count) / (x.Count + y.Count);
         }
     }
 }
