@@ -20,4 +20,35 @@
   <ItemGroup>
     <Content Remove="Pages\_PackageHeader.cshtml" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Licenses\Apache2.txt" />
+    <EmbeddedResource Include="Resources\Licenses\GPL2.txt" />
+    <EmbeddedResource Include="Resources\Licenses\MIT.txt" />
+    <EmbeddedResource Include="Resources\Licenses\MSPL.txt" />
+    <EmbeddedResource Include="Resources\Licenses\BSD2Clause.txt" />
+    <EmbeddedResource Include="Resources\Licenses\BSD3Clause.txt" />
+    <EmbeddedResource Include="Resources\Licenses\LGPL21.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Resources.Designer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+    <Folder Include="Resources\Licenses\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\Licenses\Apache-2.0.txt" />
+    <None Remove="Resources\Licenses\GPL2.txt" />
+    <None Remove="Resources\Licenses\MIT.txt" />
+    <None Remove="Resources\Licenses\MSPL.txt" />
+    <None Remove="Resources\Licenses\BSD2Clause.txt" />
+    <None Remove="Resources\Licenses\BSD3Clause.txt" />
+    <None Remove="Resources\Licenses\LGPL21.txt" />
+  </ItemGroup>
 </Project>
