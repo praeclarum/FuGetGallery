@@ -128,7 +128,7 @@
                 }
             }
         }
-        if ("true".Equals(ocode)) {
+        if ("true".Equals(ocode) && package.AllowedToDecompile) {
             r += "?code=true";
         }
         return r;

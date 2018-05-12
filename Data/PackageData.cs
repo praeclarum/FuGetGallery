@@ -24,6 +24,8 @@ namespace FuGetGallery
         public string ProjectUrl { get; set; } = "";
         public string IconUrl { get; set; } = "";
 
+        public bool AllowedToDecompile { get; set; } = false;
+
         public string DownloadUrl { get; set; } = "";
         public long SizeInBytes { get; set; }
         public ZipArchive Archive { get; set; }
@@ -54,14 +56,14 @@ namespace FuGetGallery
             
             var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == moniker);
             if (tf != null) return tf;
-            
-            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("netstandard2"));
+
+            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith ("netstandard2", StringComparison.Ordinal));
             if (tf != null) return tf;
 
-            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("netstandard"));
+            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith ("netstandard", StringComparison.Ordinal));
             if (tf != null) return tf;
-            
-            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith("net"));
+
+            tf = TargetFrameworks.LastOrDefault (x => x.Moniker.StartsWith ("net", StringComparison.Ordinal));
             if (tf != null) return tf;
             
             if (tf == null)
@@ -145,7 +147,7 @@ namespace FuGetGallery
             if (nuspecEntry != null) {
                 ReadNuspec (nuspecEntry);
             }
-            TargetFrameworks.Sort ((a,b) => a.Moniker.CompareTo(b.Moniker));
+            TargetFrameworks.Sort ((a,b) => string.Compare (a.Moniker, b.Moniker, StringComparison.Ordinal));
         }
 
         void ReadNuspec (ZipArchiveEntry entry)
@@ -200,19 +202,19 @@ namespace FuGetGallery
             var r = name.ToLowerInvariant ();
             if (r[0] == '.')
                 r = r.Substring(1);
-            if (r.StartsWith ("netframework"))
+            if (r.StartsWith ("netframework", StringComparison.Ordinal))
                 r = "net" + r.Substring (12).Replace(".", "");
-            if (r.StartsWith ("windowsphoneapp"))
+            if (r.StartsWith ("windowsphoneapp", StringComparison.Ordinal))
                 r = "wpa" + r.Substring (15).Replace(".0", "").Replace(".", "");
-            if (r.StartsWith ("windowsphone"))
+            if (r.StartsWith ("windowsphone", StringComparison.Ordinal))
                 r = "wp" + r.Substring (12).Replace(".", "");
-            if (r.StartsWith ("windows"))
+            if (r.StartsWith ("windows", StringComparison.Ordinal))
                 r = "win" + r.Substring (7).Replace(".0", "").Replace(".", "");
-            if (r.StartsWith ("xamarin."))
+            if (r.StartsWith ("xamarin.", StringComparison.Ordinal))
                 r = "xamarin." + r.Substring (8).Replace(".", "");
-            if (!r.StartsWith ("uap"))
+            if (!r.StartsWith ("uap", StringComparison.Ordinal))
                 r = r.Replace ("0.0", "");
-            if (r.StartsWith ("netportable")) {
+            if (r.StartsWith ("netportable", StringComparison.Ordinal)) {
                 var d = r.IndexOf('-');
                 var s = r.Substring (d + 1);
                 var i = s;
@@ -252,8 +254,11 @@ namespace FuGetGallery
         {
             public PackageDataCache () : base (TimeSpan.FromDays (365)) { }
             readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageData> GetValueAsync(string id, string version, CancellationToken token)
+            protected override async Task<PackageData> GetValueAsync(string arg0, string arg1, CancellationToken token)
             {
+                var id = arg0;
+                var version = arg1;
+
                 var package = new PackageData {
                     Id = id,
                     IndexId = id,
