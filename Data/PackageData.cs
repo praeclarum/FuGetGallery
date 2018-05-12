@@ -23,8 +23,11 @@ namespace FuGetGallery
         public string Description { get; set; } = "";
         public string ProjectUrl { get; set; } = "";
         public string IconUrl { get; set; } = "";
+        public string LicenseUrl { get; set; } = "";
 
-        public bool AllowedToDecompile { get; set; } = false;
+        public License MatchedLicense { get; set; }
+
+        public bool AllowedToDecompile => MatchedLicense != null && MatchedLicense.AllowsDecompilation;
 
         public string DownloadUrl { get; set; } = "";
         public long SizeInBytes { get; set; }
@@ -167,6 +170,7 @@ namespace FuGetGallery
                 Authors = GetS ("authors");
                 Owners = GetS ("owners");
                 ProjectUrl = GetS ("projectUrl");
+                LicenseUrl = GetS ("licenseUrl");
                 IconUrl = GetS ("iconUrl");
                 Description = GetS ("description");
                 var deps = meta.Element(ns + "dependencies");
@@ -194,6 +198,13 @@ namespace FuGetGallery
                         }
                     }
                 }
+            }
+        }
+
+        async Task LoadLicenseAsync ()
+        {
+            if (!string.IsNullOrEmpty (LicenseUrl)) {
+                MatchedLicense = License.FindLicenseWithUrl (LicenseUrl);
             }
         }
 
@@ -275,6 +286,7 @@ namespace FuGetGallery
                     }
                     data.Position = 0;
                     await Task.Run (() => package.Read (data), token).ConfigureAwait (false);
+                    await package.LoadLicenseAsync ().ConfigureAwait (false);
                 }
                 catch (OperationCanceledException) {
                     throw;

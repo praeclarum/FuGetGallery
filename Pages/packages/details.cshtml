@@ -194,8 +194,13 @@
         </a>
     }
     <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)" type="button" class="btn btn-default" style="color:#777">
-        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> NuGet Gallery
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> nuget.org
     </a>
+    @if (!string.IsNullOrEmpty(package.LicenseUrl)) {
+        <a href="@package.LicenseUrl" type="button" class="btn btn-default" style="color: #777">
+            <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span> @(package.MatchedLicense?.Name ?? "License")
+        </a>
+    }
 </nav>
 
 <div class="code" style="font-size:14px;background-color:#fafafa;border-radius:4px;margin-top:1em;margin-bottom:1em;padding:16px;">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>

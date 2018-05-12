@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FuGetGallery.Data
+namespace FuGetGallery
 {
     public class License
     {
