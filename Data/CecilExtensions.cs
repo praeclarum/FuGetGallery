@@ -114,7 +114,7 @@ namespace FuGetGallery
         {
             var url = framework.FindTypeUrl (member.DeclaringType);
             if (string.IsNullOrEmpty (url)) return "";
-            if (linkToCode) url += "?code=true";
+            if (linkToCode && framework.Package.AllowedToDecompile) url += "?code=true";
             if (member is TypeDefinition t && !t.IsNested) return url;
             return url + "#" + Uri.EscapeDataString (member.GetXmlName ());
         }

@@ -45,7 +45,7 @@
     var docs = typ != null ? asm?.GetTypeDocumentation(typ) : null;
 
     var inputCode = Request.Query["code"].FirstOrDefault() ?? "";
-    var code = "true".Equals(inputCode);
+    var code = "true".Equals(inputCode) && package.AllowedToDecompile;
 
     var hasApi = framework != null;
     var hasContent = package != null && package.Content.Count > 0;
@@ -385,7 +385,9 @@ else {
     </div>
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab">Documentation</a></li>
+        @if (package.AllowedToDecompile) {
         <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab">Code</a></li>
+        }
     </ul>
     if (docs != null) {
     if (code) {
