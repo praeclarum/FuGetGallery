@@ -103,6 +103,42 @@ namespace FuGetGallery
             });
 
             known.Add (new License {
+                Name = "Mozilla Public License 1.1",
+                AllowsDecompilation = true,
+                KnownUrls = {
+                    "http://www.mozilla.org/en-US/MPL/1.1/",
+                    "https://www.mozilla.org/en-US/MPL/1.1/",
+                    "http://opensource.org/licenses/MPL-1.1",
+                    "https://opensource.org/licenses/MPL-1.1",
+                },
+                TemplateName = "MPL11",
+            });
+
+            known.Add (new License {
+                Name = "Mozilla Public License 2.0",
+                AllowsDecompilation = true,
+                KnownUrls = {
+                    "http://www.mozilla.org/en-US/MPL/2.0/",
+                    "https://www.mozilla.org/en-US/MPL/2.0/",
+                    "http://opensource.org/licenses/MPL-2.0",
+                    "https://opensource.org/licenses/MPL-2.0",
+                },
+                TemplateName = "MPL2",
+            });
+
+            known.Add (new License {
+                Name = "Mozilla Public License 2.0",
+                AllowsDecompilation = true,
+                KnownUrls = {
+                    "http://www.mozilla.org/en-US/MPL/2.0/",
+                    "https://www.mozilla.org/en-US/MPL/2.0/",
+                    "http://opensource.org/licenses/MPL-2.0",
+                    "https://opensource.org/licenses/MPL-2.0",
+                },
+                TemplateName = "MPL2",
+            });
+
+            known.Add (new License {
                 Name = "MS-PL",
                 AllowsDecompilation = true,
                 KnownUrls = {
