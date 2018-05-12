@@ -213,6 +213,7 @@ namespace FuGetGallery
                         MatchedLicense = License.FindLicenseWithText (licenseText);
                     }
                     catch (Exception ex) {
+                        Debug.WriteLine ("Failed to read " + LicenseUrl);
                         Debug.WriteLine (ex);
                     }
                 }
