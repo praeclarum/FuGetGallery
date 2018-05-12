@@ -34,7 +34,7 @@
     if (ns == null) {
         var publicNamespaces = namespaces.Where(n => n.Any(x => x.IsPublic)).OrderByDescending(n => n.Count(x => x.IsPublic));
         ns = publicNamespaces.FirstOrDefault ();
-        if (ns == null) {
+        if (ns == null && package.AllowedToDecompile) {
             ns = namespaces.FirstOrDefault ();
         }
     }
@@ -320,11 +320,13 @@ else {
         var bold = n.Key == ns?.Key ? "bold" : "normal";
         var isPublic = n.Any(x => x.IsPublic);
         var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
+        if (isPublic || package.AllowedToDecompile) {
         <li>
             <a style="font-weight:@bold;color:@color;"
                 href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
                 <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
         </li>
+        }
     }
     </ul>
 }
@@ -335,11 +337,13 @@ else {
         var bold = t.Name == typ?.Name ? "bold" : "normal";            
         var color = bold == "bold" ? "#000" : (t.IsPublic ? "#777" : "#CCC");
         var active = bold == "bold" ? "active" : "";
+        if (t.IsPublic || package.AllowedToDecompile) {
         <li>
             <a class="@active" style="font-weight:@bold;color:@color;"
                 href="@GetUrl(otypeName:t.Name)">
                 <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()</a>
         </li>
+        }
     }
     </ul>
 }
