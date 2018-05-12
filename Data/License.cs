@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Diagnostics;
 
 namespace FuGetGallery
 {
@@ -19,6 +20,8 @@ namespace FuGetGallery
 
         public string TemplateText { get; private set; }
         public HashSet<string> TemplateBigrams { get; private set; }
+
+        public override string ToString () => Name;
 
         readonly static List<License> known = new List<License> ();
 
@@ -164,7 +167,7 @@ namespace FuGetGallery
                 orderby dice descending
                 select Tuple.Create (dice, l);
             var r = q.FirstOrDefault ();
-            Console.WriteLine (r);
+            if (r != null) Debug.WriteLine (r);
             return r?.Item2;
         }
 

@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Mono.Cecil;
 using System.Threading;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace FuGetGallery
 {
@@ -28,7 +29,9 @@ namespace FuGetGallery
 
         public License MatchedLicense { get; set; }
 
-        public bool AllowedToDecompile => MatchedLicense != null && MatchedLicense.AllowsDecompilation;
+        public bool SourceCodeIsPublic => !string.IsNullOrEmpty (ProjectUrl) && sourceCodeUrlRes.Any (x => x.IsMatch (ProjectUrl));
+
+        public bool AllowedToDecompile => SourceCodeIsPublic || (MatchedLicense != null && MatchedLicense.AllowsDecompilation);
 
         public string DownloadUrl { get; set; } = "";
         public long SizeInBytes { get; set; }
@@ -207,6 +210,10 @@ namespace FuGetGallery
                 }
             }
         }
+
+        static readonly Regex[] sourceCodeUrlRes = {
+            new Regex ("https?://github.com/[^/]+/[^/]+", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        };
 
         async Task MatchLicenseAsync ()
         {
