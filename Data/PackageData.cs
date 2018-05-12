@@ -167,12 +167,18 @@ namespace FuGetGallery
                     try { return meta.Element(ns + name).Value.Trim(); }
                     catch { return def; }
                 }
+                string GetUrl (string name) {
+                    var u = GetS (name);
+                    if (!u.StartsWith ("http", StringComparison.OrdinalIgnoreCase)) return "";
+                    if (u.Contains ("_url_here_or_delete")) return "";
+                    return u;
+                }
                 Id = GetS ("id", IndexId);
                 Authors = GetS ("authors");
                 Owners = GetS ("owners");
-                ProjectUrl = GetS ("projectUrl");
-                LicenseUrl = GetS ("licenseUrl");
-                IconUrl = GetS ("iconUrl");
+                ProjectUrl = GetUrl ("projectUrl");
+                LicenseUrl = GetUrl ("licenseUrl");
+                IconUrl = GetUrl ("iconUrl");
                 Description = GetS ("description");
                 var deps = meta.Element(ns + "dependencies");
                 if (deps != null) {
