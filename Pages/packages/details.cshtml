@@ -186,16 +186,16 @@
         </ul>
     </div>
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
-    <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
+        <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
+    </a>
+    <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)" type="button" class="btn btn-default" style="color: #777">
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> nuget.org
     </a>
     @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
         <a href="@package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
             <span class="glyphicon glyphicon-link" aria-hidden="true"></span> Project Site
         </a>
     }
-    <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)" type="button" class="btn btn-default" style="color:#777">
-        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> nuget.org
-    </a>
     @if (!string.IsNullOrEmpty(package.LicenseUrl)) {
         <a href="@package.LicenseUrl" type="button" class="btn btn-default" style="color: #777">
             <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span> @(package.MatchedLicense?.Name ?? "License")

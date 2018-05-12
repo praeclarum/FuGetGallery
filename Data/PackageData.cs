@@ -170,7 +170,7 @@ namespace FuGetGallery
                 string GetUrl (string name) {
                     var u = GetS (name);
                     if (!u.StartsWith ("http", StringComparison.OrdinalIgnoreCase)) return "";
-                    if (u.Contains ("_url_here_or_delete")) return "";
+                    if (u.ToLowerInvariant ().Contains ("_url_here_or_delete")) return "";
                     return u;
                 }
                 Id = GetS ("id", IndexId);
