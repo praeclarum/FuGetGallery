@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Pages\_PackageHeader.cshtml" />
+    <Content Remove="Pages\privacy.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Licenses\Apache2.txt" />
@@ -58,5 +59,8 @@
     <None Remove="Resources\Licenses\MPL2.txt" />
     <None Remove="Resources\Licenses\MPL11.txt" />
     <None Remove="Resources\Licenses\LGPL3.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Pages\privacy.cshtml" />
   </ItemGroup>
 </Project>
