@@ -60,7 +60,4 @@
     <None Remove="Resources\Licenses\MPL11.txt" />
     <None Remove="Resources\Licenses\LGPL3.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Pages\privacy.cshtml" />
-  </ItemGroup>
 </Project>
