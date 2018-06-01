@@ -100,6 +100,13 @@ ul.inline-code {
     line-height: 24px;
 }
 
+ul.pkglist{
+    overflow:auto;
+    list-style-type:none;
+    padding:0;
+    white-space:nowrap;
+}
+
 li.diff-Add {
     list-style-type: disc;
 }
