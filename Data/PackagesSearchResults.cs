@@ -62,7 +62,7 @@ namespace FuGetGallery
                 };
                 try {
                     // System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
-                    var queryUrl = "https://api-v2v3search-0.nuget.org/query?q=" + Uri.EscapeDataString (q);
+                    var queryUrl = "https://api-v2v3search-0.nuget.org/query?prerelease=true&q=" + Uri.EscapeDataString (q);
                     var data = await httpClient.GetStringAsync (queryUrl).ConfigureAwait (false);
                     results.Read (data);
                 }
