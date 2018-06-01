@@ -64,7 +64,7 @@ function renderMru()
         $h.append($("<a/>").attr("href", "/packages/" + encodeURIComponent(p.id)).text(p.id));
         $h.append($("<small/>").text(" by " + p.authors));
         $body.append($h);
-        $body.append($("<p style=\"max-height:3em;overflow:scroll\">").text(p.description));
+        $body.append($("<p style=\"overflow:auto\">").text(p.description));
         $li.append($left);
         $li.append($body);
         $ul.append($li);
