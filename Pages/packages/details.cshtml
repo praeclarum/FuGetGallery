@@ -287,7 +287,7 @@ else {
 
 @if (framework != null && framework.Assemblies.Count > 0) {
     <h4>Assemblies</h4>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul class="pkglist">
     @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
         var bold = !isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
         var color = bold == "bold" ? "#000" : "#777";
@@ -301,7 +301,7 @@ else {
 }
 @if (framework != null && framework.BuildAssemblies.Count > 0) {
     <h4>Build Assemblies</h4>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul class="pkglist">
     @foreach (var a in framework.BuildAssemblies.OrderBy(x => x.FileName)) {
         var bold = isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
         var color = bold == "bold" ? "#000" : "#777";
@@ -315,7 +315,7 @@ else {
 }
 @if (asmDef != null && namespaces != null && namespaces.Count > 0) {
     <h4>Namespaces</h4>
-    <ul style="max-height:20em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul class="pkglist">
     @foreach (var n in namespaces) {
         var bold = n.Key == ns?.Key ? "bold" : "normal";
         var isPublic = n.Any(x => x.IsPublic);
@@ -349,7 +349,7 @@ else {
 }
 @if (package != null && package.Content.Count > 0) {
     <h4>Content</h4>
-    <ul style="overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul class="pkglist">
     @foreach (var a in package.Content.OrderBy(x => x.FileName)) {
         var bold = a.FileName == content?.FileName ? "bold" : "normal";
         var color = bold == "bold" ? "#000" : "#777";
@@ -363,7 +363,7 @@ else {
 }
 @if (package != null && package.Tools.Count > 0) {
     <h4>Tools</h4>
-    <ul style="max-height:10em;overflow:scroll;list-style-type:none;padding:0;white-space:nowrap">
+    <ul class="pkglist">
     @foreach (var a in package.Tools.OrderBy(x => x.FileName)) {
         var bold = a.FileName == content?.FileName ? "bold" : "normal";
         var color = bold == "bold" ? "#000" : "#777";
@@ -384,7 +384,7 @@ else {
     <div class="member-code" style="font-size:120%">
         @Html.Raw(typ.GetPrototypeHtml(framework:framework, linkToCode:false))
     </div>
-    <div style="overflow:scroll;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
+    <div style="overflow:auto;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
         @if (docs != null) {
         @Html.Raw(docs.SummaryHtml)
         }
@@ -409,15 +409,15 @@ else {
 }
 else if (showKlass == "namespace") {
     <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
-    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p style="overflow:auto;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 else if (showKlass == "assembly") {
     <h1 id="assembly" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
-    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p style="overflow:auto;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 else {
     <h1 id="package" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
-    <p style="overflow:scroll;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p style="overflow:auto;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
 }
 </article>
 </div>
