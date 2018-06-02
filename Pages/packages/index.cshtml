@@ -3,7 +3,8 @@
 @inject IHttpClientFactory HttpClientFactory
 @{
     var q = Request.Query["q"].FirstOrDefault() ?? "";
-    var results = await PackagesSearchResults.GetAsync(q, HttpClientFactory.CreateClient());
+    var httpClient = HttpClientFactory.CreateClient();
+    var results = await PackagesSearchResults.GetAsync(q, httpClient);
     ViewData["Title"] = "Packages";
     ViewData["q"] = q;
 }

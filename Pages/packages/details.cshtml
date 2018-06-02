@@ -2,10 +2,12 @@
 @using System.Net.Http
 @inject IHttpClientFactory HttpClientFactory
 @{
-    var package = await PackageData.GetAsync(RouteData.Values["id"], RouteData.Values["version"], HttpClientFactory.CreateClient());
+    var httpClient = HttpClientFactory.CreateClient();
+
+    var package = await PackageData.GetAsync(RouteData.Values["id"], RouteData.Values["version"], httpClient);
     var authors = package.AuthorsOrOwners;
 
-    var versions = await PackageVersions.GetAsync(RouteData.Values["id"], HttpClientFactory.CreateClient(), HttpContext.RequestAborted);
+    var versions = await PackageVersions.GetAsync(RouteData.Values["id"], httpClient, HttpContext.RequestAborted);
     var versionSpec = new PackageVersion { VersionString = package.Version };
 
     var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
@@ -22,7 +24,7 @@
 
     if (inputAssemblyName == "diff")
     {
-        diff = await ApiDiff.GetAsync(package.Id, package.Version, framework.Moniker, inputNamespace, HttpClientFactory.CreateClient(), HttpContext.RequestAborted);
+        diff = await ApiDiff.GetAsync(package.Id, package.Version, framework.Moniker, inputNamespace, httpClient, HttpContext.RequestAborted);
     }
     else
     {
