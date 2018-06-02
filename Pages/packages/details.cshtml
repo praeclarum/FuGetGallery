@@ -1,6 +1,6 @@
 @page
 @using System.Net.Http
-@inject System.Net.Http.IHttpClientFactory HttpClientFactory
+@inject IHttpClientFactory HttpClientFactory
 
 @{
     var httpClient = HttpClientFactory.CreateClient();
