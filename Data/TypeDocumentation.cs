@@ -183,12 +183,18 @@ namespace FuGetGallery
                     w.Write (x.Attribute ("name")?.Value ?? "");
                     w.Write ("</span>");
                     break;
+                case "seealso":
                 case "see": {
                         var cref = x.Attribute ("cref");
                         if (cref != null && cref.Value.Length > 2) {
                             WriteMemberLinkHtml (cref.Value, w);
                         }
                     }
+                    break;
+                case "typeparamref":
+                    w.Write ("<span class=\"inline-code c-tr\">");
+                    WriteEncodedHtml (x.Attribute ("name")?.Value ?? "", w);
+                    w.Write ("</span>");
                     break;
                 default:
                     //WriteEncodedHtml ($"<b>{x.Name.LocalName}</b>", w);
