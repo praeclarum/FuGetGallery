@@ -120,3 +120,8 @@ li.diff-Remove {
     text-decoration: line-through;
     text-decoration-color: #000;
 }
+
+.long-dropdown-menu {
+    max-height: 250px;
+    overflow-x: hidden;
+}
