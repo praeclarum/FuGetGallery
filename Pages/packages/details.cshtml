@@ -160,7 +160,7 @@
             <span class="caret"></span>
             <span class="sr-only">Toggle Dropdown</span>
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu long-dropdown-menu">
         @foreach (var v in versions.Versions.OrderByDescending (x => x))
         {
             <li><a href="@GetUrl(oversion:v.VersionString)">@v</a></li>
@@ -178,7 +178,7 @@
             <span class="caret"></span>
             <span class="sr-only">Toggle Dropdown</span>
         </button>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu long-dropdown-menu">
         @foreach (var v in versions.Versions.Where (x => x.CompareTo (versionSpec) < 0).OrderByDescending (x => x))
         {
             <li><a href="@GetUrl(oversion:package.Version, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")">@v</a></li>

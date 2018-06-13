@@ -73,10 +73,12 @@ namespace FuGetGallery
                             package.Read (lastPageItems);
                         }
                         else {
-                            var pageUrl = lastPage["@id"].ToString ();
-                            var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
-                            var pageRoot = JObject.Parse (pageRootJson);
-                            package.Read ((JArray)pageRoot["items"]);
+                            foreach (var page in pages) {
+                                var pageUrl = page["@id"].ToString();
+                                var pageRootJson = await httpClient.GetStringAsync(pageUrl).ConfigureAwait(false);
+                                var pageRoot = JObject.Parse(pageRootJson);
+                                package.Read((JArray)pageRoot["items"]);
+                            }
                         }
                     }
                 }
