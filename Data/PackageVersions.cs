@@ -41,6 +41,9 @@ namespace FuGetGallery
         void Read (JArray items)
         {
             foreach (var v in items) {
+                var listed = v["catalogEntry"]?["listed"] ?? true;
+                if (!(bool)listed) continue;
+
                 var version = v["version"]?.ToString();
                 if (version == null) {
                     version = v["catalogEntry"]?["version"]?.ToString();
