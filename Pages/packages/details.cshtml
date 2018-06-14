@@ -384,7 +384,7 @@ else {
     <div class="member-code" style="font-size:120%">
         @Html.Raw(typ.GetPrototypeHtml(framework:framework, linkToCode:false))
     </div>
-    <div style="overflow:auto;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">
+    <div class="description-section">
         @if (docs != null) {
         @Html.Raw(docs.SummaryHtml)
         }
@@ -409,15 +409,15 @@ else {
 }
 else if (showKlass == "namespace") {
     <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
-    <p style="overflow:auto;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p class="description-section">@description</p>
 }
 else if (showKlass == "assembly") {
     <h1 id="assembly" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
-    <p style="overflow:auto;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p class="description-section">@description</p>
 }
 else {
     <h1 id="package" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
-    <p style="overflow:auto;white-space:pre-wrap;word-wrap:normal;max-height:10em;font-size:120%;margin-bottom:1.25em;border:none;background-color:inherit;font-family:inherit;padding:0;">@description</p>
+    <p class="description-section">@description</p>
 }
 </article>
 </div>
