@@ -188,6 +188,14 @@ namespace FuGetGallery
                         if (cref != null && cref.Value.Length > 2) {
                             WriteMemberLinkHtml (cref.Value, w);
                         }
+                        else {
+                            var langword = x.Attribute ("langword");
+                            if (langword != null && !string.IsNullOrWhiteSpace (langword.Value)) {
+                                w.Write ("<span class=\"inline-code c-kw\">");
+                                WriteEncodedHtml (langword.Value, w);
+                                w.Write ("</span>");
+                            }
+                        }
                     }
                     break;
                 default:
