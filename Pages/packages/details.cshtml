@@ -32,7 +32,7 @@
 
     var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
     if (ns == null) {
-        var publicNamespaces = namespaces.Where(n => n.Any(x => x.IsPublic)).OrderByDescending(n => n.Count(x => x.IsPublic));
+        var publicNamespaces = namespaces.Where(n => n.Any(x => x.IsPublic)).OrderBy(n => n.Key.Length);
         ns = publicNamespaces.FirstOrDefault ();
         if (ns == null && package.AllowedToDecompile) {
             ns = namespaces.FirstOrDefault ();
