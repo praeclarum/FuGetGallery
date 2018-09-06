@@ -7,6 +7,6 @@ This site is a nuget package browser combined with an API browser. The package b
 This is a standard ASP.NET Core app that can be run with:
 
 ```bash
-dotnet watch run
+ASPNETCORE_ENVIRONMENT=Development dotnet watch run
 ```
 
