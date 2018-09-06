@@ -34,27 +34,28 @@ function addPackageToMru()
     }
 }
 
-function renderMru()
+function renderMru(id, title, sorter)
 {
-    var $mru = $("#mru");
+    var $mru = $(id);
     if ($mru.length === 0) return;
 
-    var i;
+    var i, x;
     var mru = (localStorage.getItem("mru") !== null) ? JSON.parse(localStorage["mru"]) : {};
     var mrus = [];
     for (i in mru) {
         if (i === "__lastPackageId" || !mru.hasOwnProperty(i)) continue;
-        if (mrus.length >= 20) break;
-        mrus.push(mru[i]);
+        x = mru[i];
+        x.lastTime = Date.parse(x.lastTime);
+        mrus.push(x);
     }
-    mrus.sort(function(x,y) { return y.count - x.count; });
+    mrus = mrus.sort(sorter);
 
-    $mru.append("<h3 style=\"margin-top:2em;margin-bottom:1em;\">Your Most Common Packages</h3>");
+    $mru.append("<h3 style=\"margin-top:2em;margin-bottom:1em;\">"+title+"</h3>");
     if (mrus.length === 0)
         $mru.append("<i>The packages that you visit will be listed here. Try searching at the top to get started.</i>");
     var $ul = $("<ul class='media-list'></ul>");
     $mru.append($ul);
-    for (i = 0; i < mrus.length; i++) {
+    for (i = 0; i < mrus.length && i < 10; i++) {
         var p = mrus[i];
         var $li = $("<li class='media'></li>");
         var $left = $("<div class=\"media-left\"/>");
@@ -86,6 +87,9 @@ $(function() {
     $('.dropdown-toggle').dropdown();
     showLastQuery ();
     addPackageToMru ();
-    renderMru ();
+    renderMru ("#rmru", "Your Recent Packages", function(x,y) { 
+        return y.lastTime - x.lastTime;
+    });
+    renderMru ("#cmru", "Your Common Packages", function(x,y) { return y.count - x.count; });
 });
 
