@@ -68,7 +68,7 @@ namespace FuGetGallery
                 try {
                     var url = "https://api.nuget.org/v3/registration3/" + Uri.EscapeDataString(lowerId) + "/index.json";
                     var rootJson = await httpClient.GetStringAsync (url).ConfigureAwait (false);
-                    //System.Console.WriteLine(rootJson + "\n\n\n\n");
+                    // System.Console.WriteLine(rootJson + "\n\n\n\n");
                     var root = JObject.Parse(rootJson);
                     var pages = (JArray)root["items"];
                     if (pages.Count > 0) {
@@ -78,12 +78,15 @@ namespace FuGetGallery
                             package.Read (lastPageItems);
                         }
                         else {
-                            var pageUrl = lastPage["@id"].ToString ();
-                            var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
-                            var pageRoot = JObject.Parse (pageRootJson);
-                            package.Read ((JArray)pageRoot["items"]);
+                            foreach (var p in pages.Reverse ()) {
+                                var pageUrl = p["@id"].ToString ();
+                                var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
+                                var pageRoot = JObject.Parse (pageRootJson);
+                                package.Read ((JArray)pageRoot["items"]);
+                            }
                         }
                     }
+                    package.Versions.Sort ((x, y) => x.VersionString.CompareTo (y.VersionString));
                 }
                 catch (Exception ex) {
                     package.Error = ex;
