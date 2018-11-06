@@ -86,7 +86,7 @@ namespace FuGetGallery
                             }
                         }
                     }
-                    package.Versions.Sort ((x, y) => x.VersionString.CompareTo (y.VersionString));
+                    package.Versions.Sort ((x, y) => x.CompareTo (y));
                 }
                 catch (Exception ex) {
                     package.Error = ex;
