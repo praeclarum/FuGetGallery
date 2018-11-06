@@ -13,6 +13,7 @@
     var inputAssemblyName = (RouteData.Values["assemblyName"] ?? "").ToString().Trim();
     var inputNamespace = (RouteData.Values["namespace"] ?? "").ToString().Trim();
     var isBuildAsm = "build".Equals(RouteData.Values["dir"]);
+    var autodir = string.IsNullOrEmpty (RouteData.Values["dir"]?.ToString());
     var dir = isBuildAsm ? "build" : "lib";
 
     var diff = default (ApiDiff);
@@ -31,7 +32,9 @@
     var namespaces = types.GroupBy(x => x.Namespace).OrderBy(x => x.Key).Where(x => !string.IsNullOrEmpty(x.Key)).ToList();
 
     var ns = namespaces.FirstOrDefault (x => x.Key == inputNamespace);
+    var autons = autodir;
     if (ns == null) {
+        autons = true;
         var publicNamespaces = namespaces.Where(n => n.Any(x => x.IsPublic)).OrderBy(n => n.Key.Length);
         ns = publicNamespaces.FirstOrDefault ();
         if (ns == null && package.AllowedToDecompile) {
@@ -58,7 +61,7 @@
     var title = typ != null ? typ.GetFriendlyFullName() : package.Id + " " + package.Version;
     var description = package.Description;
 
-    if (typ != null && typ.Name.Equals (inputTypeName, StringComparison.InvariantCultureIgnoreCase)) {
+    if (typ != null && !autons && typ.Name.Equals (inputTypeName, StringComparison.InvariantCultureIgnoreCase)) {
         showKlass = "type";
         title = typ.GetFriendlyFullName();
         description = $"Type with {typ.Fields.Count} fields and {typ.Methods.Count} methods";
@@ -66,12 +69,12 @@
             description += "\n\n" + docs.SummaryText;
         }
     }
-    else if (ns != null && ns.Key.Equals (inputNamespace, StringComparison.InvariantCultureIgnoreCase)) {
+    else if (ns != null && !autons) {
         showKlass = "namespace";
         title = ns.Key;
         description = $"Namespace with {ns.Count():#,0} types";
     }
-    else if (asmDef != null && asm.FileName.Equals (inputAssemblyName, StringComparison.InvariantCultureIgnoreCase)) {
+    else if (asmDef != null && !autons && asm.FileName.Equals (inputAssemblyName, StringComparison.InvariantCultureIgnoreCase)) {
         showKlass = "assembly";
         title = asm.FileName ?? asmDef.Name.Name;
         description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
@@ -101,7 +104,7 @@
         oid = (oid ?? package?.Id) ?? RouteData.Values["id"];
         oversion = (oversion ?? package?.Version) ?? RouteData.Values["version"];
         otargetFramework = (otargetFramework ?? framework?.Moniker) ?? RouteData.Values["targetFramework"];
-        odir = (odir ?? dir) ?? RouteData.Values["dir"];
+        odir = autodir ? null : (odir ?? dir) ?? RouteData.Values["dir"];
         oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals (RouteData.Values["assemblyName"]) ? null : RouteData.Values["assemblyName"]);
         onamespace = (onamespace ?? ns?.Key) ?? RouteData.Values["namespace"];
         otypeName = otypeName ?? RouteData.Values["typeName"];
@@ -415,6 +418,7 @@ else {
     }
 }
 else if (showKlass == "namespace") {
+    @showKlass
     <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
     <p class="description-section">@description</p>
 }
