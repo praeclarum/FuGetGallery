@@ -17,7 +17,7 @@ namespace FuGetGallery
     {
         public string Id { get; set; } = "";
         public string IndexId { get; set; } = "";
-        public string Version { get; set; } = "";
+        public PackageVersion Version { get; set; }
 
         public string Authors { get; set; } = "";
         public string Owners { get; set; } = "";
@@ -56,7 +56,7 @@ namespace FuGetGallery
             var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
 
-            return await cache.GetAsync (versions.LowerId, version.VersionString, token).ConfigureAwait (false);
+            return await cache.GetAsync (versions.LowerId, version, token).ConfigureAwait (false);
         }
 
         public PackageTargetFramework FindClosestTargetFramework (object inputTargetFramework)
@@ -290,11 +290,11 @@ namespace FuGetGallery
             return r;
         }
 
-        class PackageDataCache : DataCache<string, string, PackageData>
+        class PackageDataCache : DataCache<string, PackageVersion, PackageData>
         {
             public PackageDataCache () : base (TimeSpan.FromDays (365)) { }
             readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageData> GetValueAsync(string arg0, string arg1, CancellationToken token)
+            protected override async Task<PackageData> GetValueAsync(string arg0, PackageVersion arg1, CancellationToken token)
             {
                 var id = arg0;
                 var version = arg1;
@@ -304,7 +304,7 @@ namespace FuGetGallery
                     IndexId = id,
                     Version = version,
                     SizeInBytes = 0,
-                    DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version)}",
+                    DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version.VersionString)}",
                 };
                 try {
                     //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");

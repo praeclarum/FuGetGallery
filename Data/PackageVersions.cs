@@ -41,12 +41,17 @@ namespace FuGetGallery
         void Read (JArray items)
         {
             foreach (var v in items) {
+                DateTime? time = null;
+                var times = v["catalogEntry"]?["published"];
+                if (times != null) {
+                    time = (DateTime)times;
+                }
                 var version = v["version"]?.ToString();
                 if (version == null) {
                     version = v["catalogEntry"]?["version"]?.ToString();
                 }
                 if (version != null) {
-                    Versions.Add (new PackageVersion { VersionString = version });
+                    Versions.Add (new PackageVersion { VersionString = version, PublishTime = time });
                 }
             }
         }
@@ -98,6 +103,9 @@ namespace FuGetGallery
         public int Patch { get; private set; }
         public int Build { get; private set; }
         public string Rest { get; private set; } = "";
+        public DateTime? PublishTime { get; set; }
+
+        public bool IsPublished => PublishTime.HasValue && PublishTime.Value.Year > 1970;
 
         public string VersionString { 
             get => versionString; 
@@ -136,6 +144,16 @@ namespace FuGetGallery
             c = Build.CompareTo (other.Build);
             if (c != 0) return c;
             return string.Compare(Rest, other.Rest, StringComparison.Ordinal);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PackageVersion v && VersionString == v.VersionString;
+        }
+
+        public override int GetHashCode()
+        {
+            return VersionString.GetHashCode ();
         }
 
         public override string ToString() => VersionString;

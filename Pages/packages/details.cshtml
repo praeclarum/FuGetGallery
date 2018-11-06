@@ -4,7 +4,7 @@
     var authors = package.AuthorsOrOwners;
 
     var versions = await PackageVersions.GetAsync (RouteData.Values["id"], HttpContext.RequestAborted);
-    var versionSpec = new PackageVersion { VersionString = package.Version };
+    var versionSpec = package.Version;
 
     var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
     var framework = package.FindClosestTargetFramework (inputTargetFramework);
@@ -19,7 +19,7 @@
     var asm = default (PackageAssembly);
 
     if (inputAssemblyName == "diff") {
-        diff = await ApiDiff.GetAsync (package.Id, package.Version, framework.Moniker, inputNamespace, HttpContext.RequestAborted);
+        diff = await ApiDiff.GetAsync (package.Id, package.Version.VersionString, framework.Moniker, inputNamespace, HttpContext.RequestAborted);
     }
     else {
         asm = framework?.GetAssembly (dir, inputAssemblyName);
@@ -134,6 +134,13 @@
         return r;
     }
 
+    string ShortDate (DateTime? date)
+    {
+        if (date.HasValue)
+            return date.Value.ToString ("d MMM yy");
+        return "";
+    }
+
     ViewData["Title"] = title;
 
     ViewData["meta"] = new Dictionary<string, string> {
@@ -155,15 +162,15 @@
 </h1>
 <nav>
     <div class="btn-group" style="display: inline-block">
-        <button type="button" class="btn btn-default">@package.Version</button>
+        <button type="button" class="btn btn-default">@package.Version <small>(@ShortDate(package.Version?.PublishTime))</small></button>
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="caret"></span>
             <span class="sr-only">Toggle Dropdown</span>
         </button>
         <ul class="dropdown-menu">
-        @foreach (var v in versions.Versions.OrderByDescending (x => x))
+        @foreach (var v in versions.Versions.OrderByDescending (x => x).Where (x => x.IsPublished))
         {
-            <li><a href="@GetUrl(oversion:v.VersionString)">@v</a></li>
+            <li><a href="@GetUrl(oversion:v.VersionString)">@v <small>(@ShortDate(v.PublishTime))</small></a></li>
         }
         </ul>
     </div>
@@ -179,16 +186,16 @@
             <span class="sr-only">Toggle Dropdown</span>
         </button>
         <ul class="dropdown-menu">
-        @foreach (var v in versions.Versions.Where (x => x.CompareTo (versionSpec) < 0).OrderByDescending (x => x))
+        @foreach (var v in versions.Versions.Where (x => x.IsPublished && x.CompareTo (versionSpec) < 0).OrderByDescending (x => x))
         {
-            <li><a href="@GetUrl(oversion:package.Version, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")">@v</a></li>
+            <li><a href="@GetUrl(oversion:package.Version.VersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")">@v <small>(@ShortDate(v.PublishTime))</small></a></li>
         }
         </ul>
     </div>
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
         <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
     </a>
-    <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)" type="button" class="btn btn-default" style="color: #777">
+    <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)" type="button" class="btn btn-default" style="color: #777">
         <span class="glyphicon glyphicon-link" aria-hidden="true"></span> nuget.org
     </a>
     @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
@@ -293,7 +300,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -307,7 +314,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -323,7 +330,7 @@ else {
         if (isPublic || package.AllowedToDecompile) {
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
                 <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
         </li>
         }
@@ -355,7 +362,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/content/@a.ArchiveEntry.FullName.Substring(8)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)</a>
         </li>
     }
@@ -369,7 +376,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version)/tools/@a.ArchiveEntry.FullName.Substring(6)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)</a>
         </li>
     }
@@ -485,7 +492,7 @@ else {
                     k(r);
                 }
             });
-            req.open("GET", "/api/searchpackage?p=@Uri.EscapeDataString(package.Id)&v=@Uri.EscapeDataString(package.Version)&q=" + encodeURIComponent(text));
+            req.open("GET", "/api/searchpackage?p=@Uri.EscapeDataString(package.Id)&v=@Uri.EscapeDataString(package.Version.VersionString)&q=" + encodeURIComponent(text));
             req.send();
         }
         function doSearch() {

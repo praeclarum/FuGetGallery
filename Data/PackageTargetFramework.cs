@@ -91,7 +91,7 @@ namespace FuGetGallery
                 return null;
             }
             var dir = at.a.IsBuildAssembly ? "build" : "lib";
-            return $"/packages/{Uri.EscapeDataString(Package.Id)}/{Uri.EscapeDataString(Package.Version)}/{dir}/{Uri.EscapeDataString(Moniker)}/{Uri.EscapeDataString(at.a.FileName)}/{Uri.EscapeDataString(at.t.Namespace)}/{Uri.EscapeDataString(at.t.Name)}";
+            return $"/packages/{Uri.EscapeDataString(Package.Id)}/{Uri.EscapeDataString(Package.Version.VersionString)}/{dir}/{Uri.EscapeDataString(Moniker)}/{Uri.EscapeDataString(at.a.FileName)}/{Uri.EscapeDataString(at.t.Namespace)}/{Uri.EscapeDataString(at.t.Name)}";
         }
 
         async Task<string> DeepFindTypeUrlAsync (string typeFullName, ConcurrentDictionary<string, bool> tried, ConcurrentQueue<string> found)
