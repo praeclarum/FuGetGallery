@@ -19,6 +19,8 @@ namespace FuGetGallery
         public string IndexId { get; set; } = "";
         public PackageVersion Version { get; set; }
 
+        public string NuspecXml { get; set; } = "";
+
         public string Authors { get; set; } = "";
         public string Owners { get; set; } = "";
         public string AuthorsOrOwners => string.IsNullOrEmpty (Authors) ? Owners : Authors;
@@ -178,6 +180,7 @@ namespace FuGetGallery
                     if (u.ToLowerInvariant ().Contains ("_url_here_or_delete")) return "";
                     return u;
                 }
+                NuspecXml = xdoc.ToString (SaveOptions.OmitDuplicateNamespaces);
                 Id = GetS ("id", IndexId);
                 Authors = GetS ("authors");
                 Owners = GetS ("owners");
