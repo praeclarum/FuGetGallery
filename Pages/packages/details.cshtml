@@ -234,7 +234,7 @@
     @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId)) {
         <a class="btn btn-default btn-sm" style="color:#777"
             href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
-            <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId</a>
+            <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec</a>
     }
     </nav>
 }
