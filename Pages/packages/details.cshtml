@@ -160,7 +160,7 @@
 <header>
 <h1>
     <a href="/packages/@Uri.EscapeDataString(package.Id)">
-        <img src="@package.SafeIconUrl" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" style="margin-top:5px;margin-left:-84px;float:left" />
+        <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
     </a>
     <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
     <small>by @authors</small>
@@ -220,7 +220,7 @@
     }
 </nav>
 
-<div class="code" style="font-size:14px;background-color:#fafafa;border-radius:4px;margin-top:1em;margin-bottom:1em;padding:16px;">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
+<div class="code add-package-code">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
 
 @if (package.Error != null) {
     <div style="margin-top:2em">
@@ -306,11 +306,11 @@ else {
     <h4>Assemblies</h4>
     <ul class="pkglist">
     @foreach (var a in framework.Assemblies.OrderBy(x => x.FileName)) {
-        var bold = !isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
-        var color = bold == "bold" ? "#000" : "#777";
+        var active = !isBuildAsm && a.FileName == asm?.FileName;
+        var cls = (active ? "active " : "") + "public-api";
         <li>
-            <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+            <a class="@cls"
+               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -320,11 +320,11 @@ else {
     <h4>Build Assemblies</h4>
     <ul class="pkglist">
     @foreach (var a in framework.BuildAssemblies.OrderBy(x => x.FileName)) {
-        var bold = isBuildAsm && a.FileName == asm?.FileName ? "bold" : "normal";
-        var color = bold == "bold" ? "#000" : "#777";
+        var active = isBuildAsm && a.FileName == asm?.FileName;
+        var cls = (active ? "active " : "") + "public-api";
         <li>
-            <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+            <a class="@cls"
+               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -334,13 +334,13 @@ else {
     <h4>Namespaces</h4>
     <ul class="pkglist">
     @foreach (var n in namespaces) {
-        var bold = n.Key == ns?.Key ? "bold" : "normal";
         var isPublic = n.Any(x => x.IsPublic);
-        var color = bold == "bold" ? "#000" : (isPublic ? "#777" : "#CCC");
+        var active = n.Key == ns?.Key;
+        var cls = (active ? "active " : "") + (isPublic ? "public-api" : "private-api");
         if (isPublic || package.AllowedToDecompile) {
         <li>
-            <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
+            <a class="@cls"
+               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
                 <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
         </li>
         }
@@ -351,12 +351,11 @@ else {
     <h4 id="types">Types</h4>
     <ul class="long-item-list">
     @foreach (var t in ns.OrderBy(x => x.Name)) {
-        var bold = t.Name == typ?.Name ? "bold" : "normal";            
-        var color = bold == "bold" ? "#000" : (t.IsPublic ? "#777" : "#CCC");
-        var active = bold == "bold" ? "active" : "";
+        var active = t.Name == typ?.Name;
+        var cls = (active ? "active " : "") + (t.IsPublic ? "public-api" : "private-api");
         if (t.IsPublic || package.AllowedToDecompile) {
         <li>
-            <a class="@active" style="font-weight:@bold;color:@color;"
+            <a class="@cls"
                 href="@GetUrl(otypeName:t.Name)">
                 <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()</a>
         </li>

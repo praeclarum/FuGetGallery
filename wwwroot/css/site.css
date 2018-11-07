@@ -15,6 +15,12 @@ h1 a:hover { color: inherit; text-decoration: none; }
 
 footer { margin-top: 10em; }
 
+.package-icon {
+    margin-top:5px;
+    margin-left:-84px;
+    float:left
+}
+
 .btn-group .btn-default {
     color: #777;
 }
@@ -32,6 +38,17 @@ footer { margin-top: 10em; }
 #asearch {
     font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
     width: 80%;
+    color: #000;
+}
+
+.public-api {
+    color: #777;
+}
+.private-api {
+    color: #CCC;
+}
+.active {
+    font-weight: bold;
     color: #000;
 }
 
@@ -94,6 +111,15 @@ footer { margin-top: 10em; }
 .c-er { color: #986801 !important; }
 .c-ed { color: #986801 !important; font-weight: bold; }
 
+.add-package-code {
+    font-size:14px;
+    background-color:#fafafa;
+    border-radius:4px;
+    margin-top:1em;
+    margin-bottom:1em;
+    padding:16px;
+}
+
 ul.inline-code {
     padding: 20px;
     font-size: 15px;
@@ -127,3 +153,99 @@ li.diff-Remove {
     font-size: 120%;
     margin-bottom: 1.25em;
 }
+
+
+@media (prefers-color-scheme: dark) {
+    body, .dropdown-menu, ul.dropdown-menu>li>a {
+        background-color: #181818;
+        color: #ddd;
+    }
+    hr {
+        border-color: #666;
+    }
+    .form-control {
+        background-color: #222;
+        color: #eee;
+    }
+    pre {
+        background-color: #111;
+        color: #888;
+        border-color: #111;
+    }
+    .add-package-code, .member-code {
+        background-color: #111;
+    }
+    #asearch {
+        color: #fff;
+    }
+    .public-api {
+        color: #bbb;
+    }
+    .private-api {
+        color: #666;
+    }
+    .active {
+        color: #fff;
+    }
+    .btn-default {
+        background-color: #222;
+        border-color: #666;
+    }
+    .btn-default:hover {
+        background-color: #444;
+        border-color: #666;
+    }
+    .nav-tabs>li>a, .nav-tabs>li>a:focus
+    {
+        background-color: #181818;
+        border: none;
+    }
+    .nav-tabs>li>a:hover
+    {
+        background-color: #333;
+        border-color: #666;
+    }
+    .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover
+    {
+        background-color: #181818;
+        color: #ccc;
+        border-color: #666;
+    }
+    .nav-tabs
+    {
+        border-color: #666;
+    }
+    .package-icon {
+        background-color: #333;
+        border-radius: 8px;
+    }
+    .package-icon-in-list {
+        background-color: #333;
+        border-radius: 8px;
+    }
+
+
+    .c-kw { color: rgb(128, 128, 128) !important; }
+    .c-co { color: #909197 !important; }
+    .c-uk { color: #ccc !important; }
+    .c-nl { color: rgb(253, 143, 33) !important; }
+    .c-nu { color: rgb(255, 196, 0) !important; }
+    .c-st { color: #c60 !important; }
+    .c-nr { color: rgb(170, 175, 196) !important; }
+    .c-nd { color: rgb(167, 173, 194) !important; font-weight: bold; }
+    .c-fr { color: rgb(160, 165, 187) !important; }
+    .c-fd { color: rgb(143, 147, 160) !important; font-weight: bold; }
+    .c-mr { color: rgb(105, 211, 104) !important; }
+    .c-md { color: rgb(105, 211, 104) !important; font-weight: bold; }
+    .c-cr { color: rgb(105, 211, 104) !important; }
+    .c-cd { color: rgb(105, 211, 104) !important; font-weight: bold; }
+    .c-ar { color: rgb(165, 171, 194) !important; }
+    .c-ad { color: rgb(165, 171, 194) !important; font-weight: bold; }
+    .c-tr { color: #6da7cc !important; }
+    .c-td { color: #2f6f9f !important; font-weight: bold; }
+    .c-pr { color: rgb(52, 192, 252) !important; }
+    .c-pd { color: rgb(52, 192, 252) !important; font-weight: bold; }
+    .c-er { color: #986801 !important; }
+    .c-ed { color: #986801 !important; font-weight: bold; }
+}
+
