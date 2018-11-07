@@ -104,8 +104,10 @@
         oid = (oid ?? package?.Id) ?? RouteData.Values["id"];
         oversion = (oversion ?? package?.Version) ?? RouteData.Values["version"];
         otargetFramework = (otargetFramework ?? framework?.Moniker) ?? RouteData.Values["targetFramework"];
-        odir = autodir ? null : (odir ?? dir) ?? RouteData.Values["dir"];
-        oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals (RouteData.Values["assemblyName"]) ? null : RouteData.Values["assemblyName"]);
+        odir = (odir ?? dir) ?? RouteData.Values["dir"];
+        if (autodir && oassemblyName == null && onamespace == null && otypeName == null && ocode == null)
+            odir = null;
+        oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals(RouteData.Values["assemblyName"]) ? null : RouteData.Values["assemblyName"]);
         onamespace = (onamespace ?? ns?.Key) ?? RouteData.Values["namespace"];
         otypeName = otypeName ?? RouteData.Values["typeName"];
         ocode = ocode ?? Request.Query["code"].FirstOrDefault();
@@ -394,14 +396,7 @@ else {
     <div class="member-code" style="font-size:120%">
         @Html.Raw(typ.GetPrototypeHtml(framework:framework, linkToCode:false))
     </div>
-    <div class="description-section">
-        @if (docs != null) {
-        @Html.Raw(docs.SummaryHtml)
-        }
-        else {
-        @description
-        }
-    </div>
+    <div class="description-section">@if (docs != null) {@Html.Raw(docs.SummaryHtml)} else {@description}</div>
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab">Documentation</a></li>
         @if (package.AllowedToDecompile) {
