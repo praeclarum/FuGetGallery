@@ -194,9 +194,17 @@ namespace FuGetGallery
                     //WriteEncodedHtml ($"<b>{x.Name.LocalName}</b>", w);
                     break;
             }
+            var trimming = true;
             foreach (var n in x.Nodes ()) {
-                if (n is XText t) WriteEncodedHtml (t.Value, w);
-                else if (n is XElement e) XmlToHtml (e, w);
+                if (n is XText t) {
+                    var v = trimming ? t.Value.TrimStart () : t.Value;
+                    trimming = trimming && string.IsNullOrWhiteSpace (v);
+                    WriteEncodedHtml (v, w);
+                }
+                else if (n is XElement e) {
+                    trimming = false;
+                    XmlToHtml (e, w);
+                }
             }
             if (endTag.Length > 0) {
                 w.Write (endTag);
@@ -207,7 +215,7 @@ namespace FuGetGallery
         {
             using (var w = new StringWriter ()) {
                 XmlToHtml (x, w);
-                return w.ToString ();
+                return w.ToString ().Trim ();
             }
         }
 
