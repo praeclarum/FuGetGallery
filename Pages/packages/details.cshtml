@@ -198,19 +198,24 @@
         </ul>
     </div>
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
-        <span class="glyphicon glyphicon-download" aria-hidden="true"></span> @nupkgName
+        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;@nupkgName
     </a>
     <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)" type="button" class="btn btn-default" style="color: #777">
-        <span class="glyphicon glyphicon-link" aria-hidden="true"></span> nuget.org
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;nuget.org
     </a>
     @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
         <a href="@package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
-            <span class="glyphicon glyphicon-link" aria-hidden="true"></span> @package.ProjectUrlTitle
+            <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@package.ProjectUrlTitle
+        </a>
+    }
+    @if (!string.IsNullOrEmpty(package.RepositoryFullUrl) && package.RepositoryFullUrl != package.ProjectUrl) {
+        <a href="@package.RepositoryFullUrl" type="button" class="btn btn-default" style="color: #777">
+            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;@package.RepositoryUrlTitle
         </a>
     }
     @if (!string.IsNullOrEmpty(package.LicenseUrl)) {
         <a href="@package.LicenseUrl" type="button" class="btn btn-default" style="color: #777">
-            <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span> @(package.MatchedLicense?.Name ?? "License")
+            <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>&nbsp;@(package.MatchedLicense?.Name ?? "License")
         </a>
     }
 </nav>

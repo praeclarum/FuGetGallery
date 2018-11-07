@@ -29,6 +29,15 @@ namespace FuGetGallery
         public string IconUrl { get; set; } = "";
         public string LicenseUrl { get; set; } = "";
 
+        public string RepositoryType { get; set; } = "";
+        public string RepositoryUrl { get; set; } = "";
+        public string RepositoryCommit { get; set; } = "";
+        public string RepositoryFullUrl =>
+            string.IsNullOrEmpty (RepositoryUrl) ? "" :
+            (string.IsNullOrEmpty (RepositoryCommit) ? RepositoryUrl :
+            RepositoryUrl + "/tree/" + RepositoryCommit);
+        public string RepositoryUrlTitle => "Source";
+
         public License MatchedLicense { get; set; }
 
         public string ProjectUrlTitle => Uri.TryCreate (ProjectUrl, UriKind.Absolute, out var uri) ? uri.Host : "Project Site";
@@ -189,7 +198,13 @@ namespace FuGetGallery
                 if (LicenseUrl == ProjectUrl) LicenseUrl = "";
                 IconUrl = GetUrl ("iconUrl");
                 Description = GetS ("description");
-                var deps = meta.Element(ns + "dependencies");
+                var repo = meta.Element (ns + "repository");
+                if (repo != null) {
+                    RepositoryType = repo.Attribute ("type")?.Value ?? "";
+                    RepositoryUrl = repo.Attribute ("url")?.Value ?? "";
+                    RepositoryCommit = repo.Attribute ("commit")?.Value ?? "";
+                }
+                var deps = meta.Element (ns + "dependencies");
                 if (deps != null) {
                     // System.Console.WriteLine(deps);
                     foreach (var de in deps.Elements()) {
