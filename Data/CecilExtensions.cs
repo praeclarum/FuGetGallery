@@ -126,7 +126,7 @@ namespace FuGetGallery
             return "href=\"" + url + "\"";
         }
 
-        public static void WriteReferenceHtml (this TypeReference type, TextWriter w, PackageTargetFramework framework)
+        public static void WriteReferenceHtml(this TypeReference type, TextWriter w, PackageTargetFramework framework, bool isOut = false)
         {
             if (type.FullName == "System.Void") {
                 w.Write ("<span class=\"c-tr\">void</span>");
@@ -189,7 +189,11 @@ namespace FuGetGallery
                 }
             }
             else if (type.IsByReference) {
-                w.Write ("<span class=\"c-kw\">ref</span> ");
+                if (isOut) {
+                    w.Write("<span class=\"c-kw\">out</span> "); 
+                } else {
+                    w.Write("<span class=\"c-kw\">ref</span> ");
+                }
                 WriteReferenceHtml (type.GetElementType (), w, framework);
             }
             else {
@@ -301,7 +305,7 @@ namespace FuGetGallery
             head = "";
             foreach (var p in member.Parameters) {
                 w.Write (head);
-                WriteReferenceHtml (p.ParameterType, w, framework);
+                WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut);
                 w.Write (" <span class=\"c-ar\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
