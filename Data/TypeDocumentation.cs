@@ -190,6 +190,11 @@ namespace FuGetGallery
                         }
                     }
                     break;
+                case "typeparamref":
+                    w.Write ("<span class=\"inline-code c-tr\">");
+                    WriteEncodedHtml (x.Attribute ("name")?.Value ?? "", w);
+                    w.Write ("</span>");
+                    break;
                 default:
                     //WriteEncodedHtml ($"<b>{x.Name.LocalName}</b>", w);
                     break;
