@@ -34,8 +34,11 @@ namespace FuGetGallery
         public string RepositoryCommit { get; set; } = "";
         public string RepositoryFullUrl =>
             string.IsNullOrEmpty (RepositoryUrl) ? "" :
-            (string.IsNullOrEmpty (RepositoryCommit) ? RepositoryUrl :
-            RepositoryUrl + "/tree/" + RepositoryCommit);
+            (string.IsNullOrEmpty (RepositoryCommit) ? RepositoryUrlWithoutGit : CombinedRepositoryUrlAndCommit);
+        string RepositoryUrlWithoutGit => RepositoryUrl.EndsWith(".git") ?
+            RepositoryUrl.Substring(0, RepositoryUrl.Length - 4) :
+            RepositoryUrl;
+        string CombinedRepositoryUrlAndCommit => RepositoryUrlWithoutGit + "/tree/" + RepositoryCommit;
         public string RepositoryUrlTitle => "Source";
 
         public License MatchedLicense { get; set; }
