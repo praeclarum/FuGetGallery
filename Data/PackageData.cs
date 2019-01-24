@@ -58,16 +58,14 @@ namespace FuGetGallery
 
         public string SafeIconUrl => string.IsNullOrEmpty (IconUrl) ? "/images/no-icon.png" : IconUrl;
 
-        public static Task<PackageData> GetAsync (object inputId, object inputVersion) => GetAsync (inputId, inputVersion, CancellationToken.None);
+        public static Task<PackageData> GetAsync (object inputId, object inputVersion, HttpClient client) => 
+            GetAsync (inputId, inputVersion, client, CancellationToken.None);
 
-        public static async Task<PackageData> GetAsync (object inputId, object inputVersion, CancellationToken token)
+        public static async Task<PackageData> GetAsync (object inputId, object inputVersion, HttpClient client, CancellationToken token)
         {
-            var cleanId = (inputId ?? "").ToString().Trim().ToLowerInvariant();
-
-            var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
+            var versions = await PackageVersions.GetAsync (inputId, client, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
-
-            return await cache.GetAsync (versions.LowerId, version, token).ConfigureAwait (false);
+            return await cache.GetAsync (versions.LowerId, version, client, token).ConfigureAwait (false);
         }
 
         public PackageTargetFramework FindClosestTargetFramework (object inputTargetFramework)
@@ -109,7 +107,7 @@ namespace FuGetGallery
             return r;
         }
 
-        void Read (MemoryStream bytes)
+        void Read (MemoryStream bytes, HttpClient httpClient)
         {
             SizeInBytes = bytes.Length;
             Archive = new ZipArchive (bytes, ZipArchiveMode.Read);
@@ -132,7 +130,7 @@ namespace FuGetGallery
                     }
                     var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == tfm);
                     if (tf == null) {
-                        tf = new PackageTargetFramework (this) {
+                        tf = new PackageTargetFramework (this, httpClient) {
                             Moniker = tfm,
                         };
                         TargetFrameworks.Add (tf);
@@ -237,14 +235,14 @@ namespace FuGetGallery
             new Regex ("https?://bitbucket.org/[^/]+/[^/]+", RegexOptions.Compiled | RegexOptions.IgnoreCase),
         };
 
-        async Task MatchLicenseAsync ()
+        async Task MatchLicenseAsync(HttpClient httpClient)
         {
             if (!string.IsNullOrEmpty (LicenseUrl)) {
                 MatchedLicense = License.FindLicenseWithUrl (LicenseUrl);
 
                 if (MatchedLicense == null) {
                     try {
-                        var licenseText = await UrlExtensions.GetTextFileAsync (LicenseUrl).ConfigureAwait (false);
+                        var licenseText = await UrlExtensions.GetTextFileAsync (LicenseUrl, httpClient).ConfigureAwait (false);
                         MatchedLicense = License.FindLicenseWithText (licenseText);
                     }
                     catch (Exception ex) {
@@ -310,9 +308,12 @@ namespace FuGetGallery
 
         class PackageDataCache : DataCache<string, PackageVersion, PackageData>
         {
-            public PackageDataCache () : base (TimeSpan.FromDays (365)) { }
-            readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageData> GetValueAsync(string arg0, PackageVersion arg1, CancellationToken token)
+            public PackageDataCache() : base(TimeSpan.FromDays(365))
+            {
+
+            }
+
+            protected override async Task<PackageData> GetValueAsync(string arg0, PackageVersion arg1, HttpClient httpClient, CancellationToken token)
             {
                 var id = arg0;
                 var version = arg1;
@@ -332,8 +333,8 @@ namespace FuGetGallery
                         await s.CopyToAsync (data, 16*1024, token).ConfigureAwait(false);
                     }
                     data.Position = 0;
-                    await Task.Run (() => package.Read (data), token).ConfigureAwait (false);
-                    await package.MatchLicenseAsync ().ConfigureAwait (false);
+                    await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
+                    await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
                 }
                 catch (OperationCanceledException) {
                     throw;

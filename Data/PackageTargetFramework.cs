@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 using System.Threading;
 using Mono.Cecil;
 using System.Diagnostics;
+using System.Net.Http;
 using ICSharpCode.Decompiler.TypeSystem;
 
 namespace FuGetGallery
 {
     public class PackageTargetFramework
     {
+        private readonly HttpClient httpClient;
+
         public string Moniker { get; set; } = "";
         public PackageData Package { get; set; }
         public List<PackageDependency> Dependencies { get; } = new List<PackageDependency> ();
@@ -24,8 +27,9 @@ namespace FuGetGallery
 
         public IEnumerable<PackageAssembly> PublicAssemblies => Assemblies.Where (x => x.IsPublic).OrderBy (x => x.Definition.Name.Name);
 
-        public PackageTargetFramework(PackageData package)
+        public PackageTargetFramework(PackageData package, HttpClient httpClient)
         {
+            this.httpClient = httpClient;
             Package = package;
             AssemblyResolver = new PackageAssemblyResolver (package.IndexId, this);
         }
@@ -81,7 +85,12 @@ namespace FuGetGallery
                 if (!shallow) {
                     //var sw = new Stopwatch ();
                     //sw.Start ();
-                    url = DeepFindTypeUrlAsync (typeFullName, new ConcurrentDictionary<string, bool> (), new ConcurrentQueue<string> ()).Result;
+                    url = DeepFindTypeUrlAsync (
+                        typeFullName, 
+                        new ConcurrentDictionary<string, bool> (),
+                        new ConcurrentQueue<string> (),
+                        httpClient
+                        ).Result;
                     //sw.Stop ();
                     //Console.WriteLine ($"RESOLVED IN {sw.ElapsedMilliseconds} millis: {typeFullName} ---> {url}");
                     if (url != null)
@@ -94,7 +103,11 @@ namespace FuGetGallery
             return $"/packages/{Uri.EscapeDataString(Package.Id)}/{Uri.EscapeDataString(Package.Version.VersionString)}/{dir}/{Uri.EscapeDataString(Moniker)}/{Uri.EscapeDataString(at.a.FileName)}/{Uri.EscapeDataString(at.t.Namespace)}/{Uri.EscapeDataString(at.t.Name)}";
         }
 
-        async Task<string> DeepFindTypeUrlAsync (string typeFullName, ConcurrentDictionary<string, bool> tried, ConcurrentQueue<string> found)
+        async Task<string> DeepFindTypeUrlAsync (
+            string typeFullName,
+            ConcurrentDictionary<string, bool> tried,
+            ConcurrentQueue<string> found,
+            HttpClient httpClient)
         {
             var url = FindTypeUrl (typeFullName, shallow: true);
             if (url != null)
@@ -107,7 +120,7 @@ namespace FuGetGallery
             var shallowDepPackages = Dependencies.Select (async x => {
                 if (!tried.TryAdd (x.PackageId, true)) return null;
                 //Console.WriteLine ("TRY " + x.PackageId);
-                var data = await PackageData.GetAsync (x.PackageId, x.VersionSpec, CancellationToken.None).ConfigureAwait (false);
+                var data = await PackageData.GetAsync (x.PackageId, x.VersionSpec, httpClient, CancellationToken.None).ConfigureAwait (false);
                 if (found.Count > 0) return null;
                 var fw = data.FindClosestTargetFramework (this.Moniker);
                 if (fw == null) return null;
@@ -122,7 +135,7 @@ namespace FuGetGallery
                 return shallowResult;
 
             var deepDepPackages = depFrameworks.Select (async fw => {
-                var r = await fw.DeepFindTypeUrlAsync (typeFullName, tried, found).ConfigureAwait (false);
+                var r = await fw.DeepFindTypeUrlAsync (typeFullName, tried, found, httpClient).ConfigureAwait (false);
                 if (r != null) found.Enqueue (r);
                 return r;
             });
@@ -149,12 +162,16 @@ namespace FuGetGallery
         {
             readonly string packageId;
             readonly PackageTargetFramework packageTargetFramework;
+            private readonly HttpClient httpClient;
             readonly ConcurrentDictionary<string, AssemblyDefinition> assemblies = new ConcurrentDictionary<string, AssemblyDefinition> ();
+            
             public PackageAssemblyResolver (string packageId, PackageTargetFramework packageTargetFramework)
             {
                 this.packageId = packageId;
                 this.packageTargetFramework = packageTargetFramework;
+                this.httpClient = packageTargetFramework.httpClient;
             }
+
             public override AssemblyDefinition Resolve (AssemblyNameReference name)
             {
                 //System.Console.WriteLine("RESOLVE " + name);
@@ -201,7 +218,11 @@ namespace FuGetGallery
                 // throw new Exception ("Failed to resolve: " + name);
             }
 
-            async Task<PackageAssembly> TryResolveInFrameworkAsync (AssemblyNameReference name, PackageTargetFramework framework, ConcurrentDictionary<string, bool> searchedPackages, ConcurrentQueue<PackageAssembly> found)
+            async Task<PackageAssembly> TryResolveInFrameworkAsync (
+                AssemblyNameReference name,
+                PackageTargetFramework framework,
+                ConcurrentDictionary<string, bool> searchedPackages,
+                ConcurrentQueue<PackageAssembly> found)
             {
                 var a = framework.Assemblies.FirstOrDefault(x => {
                     // System.Console.WriteLine("HOW ABOUT? " + x.Definition.Name);
@@ -227,7 +248,11 @@ namespace FuGetGallery
                 return results.FirstOrDefault (x => x != null);
             }
 
-            async Task<PackageAssembly> TryResolveInDependencyAsync (AssemblyNameReference name, PackageDependency dep, ConcurrentDictionary<string, bool> searchedPackages, ConcurrentQueue<PackageAssembly> found)
+            async Task<PackageAssembly> TryResolveInDependencyAsync (
+                AssemblyNameReference name,
+                PackageDependency dep,
+                ConcurrentDictionary<string, bool> searchedPackages,
+                ConcurrentQueue<PackageAssembly> found)
             {
                 if (found.Count > 0) return null;
 
@@ -236,7 +261,7 @@ namespace FuGetGallery
                     return null;
 
                 try {
-                    var package = await PackageData.GetAsync(dep.PackageId, dep.VersionSpec, CancellationToken.None).ConfigureAwait (false);
+                    var package = await PackageData.GetAsync(dep.PackageId, dep.VersionSpec, httpClient, CancellationToken.None).ConfigureAwait (false);
                     if (found.Count > 0) return null;
                     var fw = package.FindClosestTargetFramework (packageTargetFramework.Moniker);
                     if (fw != null) {

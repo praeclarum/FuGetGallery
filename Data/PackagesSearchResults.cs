@@ -21,11 +21,11 @@ namespace FuGetGallery
 
         static readonly ResultsCache cache = new ResultsCache ();
 
-        public static Task<PackagesSearchResults> GetAsync (string inputId)
+        public static Task<PackagesSearchResults> GetAsync (string inputId, HttpClient httpClient)
         {
             var cleanId = (inputId ?? "").ToString().Trim().ToLowerInvariant();
 
-            return cache.GetAsync (cleanId);
+            return cache.GetAsync (cleanId, httpClient);
             
             // "https://api-v2v3search-0.nuget.org/query?q=%s" (Uri.EscapeDataString (searchTerm))
             // return Task.FromResult<PackageSearchResults> (null);
@@ -54,8 +54,8 @@ namespace FuGetGallery
         class ResultsCache : DataCache<string, PackagesSearchResults>
         {
             public ResultsCache () : base (TimeSpan.FromMinutes (15)) { }
-            readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackagesSearchResults> GetValueAsync (string q, CancellationToken token)
+            
+            protected override async Task<PackagesSearchResults> GetValueAsync (string q, HttpClient httpClient, CancellationToken token)
             {
                 var results = new PackagesSearchResults {
                     Query = q,
