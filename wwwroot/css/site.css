@@ -88,28 +88,28 @@ footer { margin-top: 10em; }
     margin-top: 0em;
     margin-bottom: 1.5em;
 }
-.c-kw { color: #777 !important; }
+.c-kw { color: #777 !important; } /* keyword */
 .c-co { color: #909197 !important; }
-.c-uk { color: #300 !important; }
+.c-uk { color: #300 !important; } /* unknown */
 .c-nl { color: #c60 !important; }
 .c-nu { color: #c60 !important; }
 .c-st { color: #c60 !important; }
-.c-nr { color: #40424A !important; }
-.c-nd { color: #40424A !important; font-weight: bold; }
-.c-fr { color: #383A42 !important; }
-.c-fd { color: rgb(101, 104, 114) !important; font-weight: bold; }
-.c-mr { color: #50A14F !important; }
-.c-md { color: #50A14F !important; font-weight: bold; }
-.c-cr { color: #50A14F !important; }
-.c-cd { color: #50A14F !important; font-weight: bold; }
-.c-ar { color: #383A42 !important; }
+.c-nr { color: #40424A !important; } /* namespace reference */
+.c-nd { color: #40424A !important; font-weight: bold; } /* namespace declaration */
+.c-fr { color: #383A42 !important; } /* field reference */
+.c-fd { color: rgb(101, 104, 114) !important; font-weight: bold; } /* field declaration */
+.c-mr { color: #50A14F !important; } /* method group reference */
+.c-md { color: #50A14F !important; font-weight: bold; } /* method declaration */
+.c-cr { color: #50A14F !important; } /* constructor reference */
+.c-cd { color: #50A14F !important; font-weight: bold; } /* constructor declaration */
+.c-ar { color: #383A42 !important; } /* variable reference */
 .c-ad { color: #484A52 !important; font-weight: bold; }
-.c-tr { color: #4f9fcf !important; }
-.c-td { color: #2f6f9f !important; font-weight: bold; }
-.c-pr { color: #0184BC !important; }
-.c-pd { color: #0184BC !important; font-weight: bold; }
-.c-er { color: #986801 !important; }
-.c-ed { color: #986801 !important; font-weight: bold; }
+.c-tr { color: #4f9fcf !important; } /* type reference */
+.c-td { color: #2f6f9f !important; font-weight: bold; } /* type declaration */
+.c-pr { color: #0184BC !important; } /* property reference */
+.c-pd { color: #0184BC !important; font-weight: bold; } /* property declaration */
+.c-er { color: #986801 !important; } /* event reference */
+.c-ed { color: #986801 !important; font-weight: bold; } /* event declaration */
 
 .add-package-code {
     font-size:14px;

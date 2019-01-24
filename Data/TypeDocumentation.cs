@@ -183,6 +183,7 @@ namespace FuGetGallery
                     w.Write (x.Attribute ("name")?.Value ?? "");
                     w.Write ("</span>");
                     break;
+                case "seealso":
                 case "see": {
                         var cref = x.Attribute ("cref");
                         if (cref != null && cref.Value.Length > 2) {
