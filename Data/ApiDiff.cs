@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ListDiff;
 using Mono.Cecil;
 using System.Linq;
+using System.Net.Http;
 
 namespace FuGetGallery
 {
@@ -139,29 +140,43 @@ namespace FuGetGallery
             Namespaces.Sort ((x, y) => string.Compare (x.Namespace, y.Namespace, StringComparison.Ordinal));
         }
 
-        public static async Task<ApiDiff> GetAsync (object inputId, object inputVersion, object inputFramework, object inputOtherVersion, CancellationToken token)
+        public static async Task<ApiDiff> GetAsync (
+            object inputId,
+            object inputVersion,
+            object inputFramework,
+            object inputOtherVersion,
+            HttpClient httpClient,
+            CancellationToken token)
         {
-            var cleanId = (inputId ?? "").ToString ().Trim ().ToLowerInvariant ();
-
-            var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
+            var versions = await PackageVersions.GetAsync (inputId, httpClient, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
             var otherVersion = versions.GetVersion (inputOtherVersion);
             var framework = (inputFramework ?? "").ToString ().ToLowerInvariant ().Trim ();
 
-            return await cache.GetAsync (Tuple.Create (versions.LowerId, version.VersionString, framework), otherVersion.VersionString, token).ConfigureAwait (false);
+            return await cache.GetAsync(
+                    Tuple.Create (versions.LowerId, version.VersionString, framework),
+                    otherVersion.VersionString,
+                    httpClient,
+                    token)
+                .ConfigureAwait (false);
         }
 
         class ApiDiffCache : DataCache<Tuple<string, string, string>, string, ApiDiff>
         {
             public ApiDiffCache () : base (TimeSpan.FromDays (365)) { }
-            protected override async Task<ApiDiff> GetValueAsync (Tuple<string, string, string> packageSpec, string otherVersion, CancellationToken token)
+
+            protected override async Task<ApiDiff> GetValueAsync (
+                Tuple<string, string, string> packageSpec,
+                string otherVersion,
+                HttpClient httpClient,
+                CancellationToken token)
             {
                 var packageId = packageSpec.Item1;
                 var version = packageSpec.Item2;
                 var inputFramework = packageSpec.Item3;
 
-                var package = await PackageData.GetAsync (packageId, version, token).ConfigureAwait (false);
-                var otherPackage = await PackageData.GetAsync (packageId, otherVersion, token).ConfigureAwait (false);
+                var package = await PackageData.GetAsync (packageId, version, httpClient, token).ConfigureAwait (false);
+                var otherPackage = await PackageData.GetAsync (packageId, otherVersion, httpClient, token).ConfigureAwait (false);
 
                 var framework = package.FindClosestTargetFramework (inputFramework);
                 var otherFramework = otherPackage.FindClosestTargetFramework (inputFramework);
