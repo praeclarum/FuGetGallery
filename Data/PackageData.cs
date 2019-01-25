@@ -256,6 +256,43 @@ namespace FuGetGallery
             }
         }
 
+        async Task SaveDependenciesAsync ()
+        {
+            var db = new Database ();
+
+            var depsq =
+                from tf in TargetFrameworks
+                from d in tf.Dependencies
+                where PackageWorthRemembering (d.PackageId)
+                select d.PackageId;
+            var deps = depsq.Distinct ();
+
+            var query = "select count(*) from StoredPackageDependency where PackageId = ? and DependentPackageId = ?";
+            foreach (var d in deps) {
+                var count = await db.ExecuteScalarAsync<int> (query, d, this.Id);
+                if (count == 0) {
+                    Console.WriteLine ("DEP2: " + d + " " + this.Id);
+                    try {
+                        await db.InsertAsync (new StoredPackageDependency {
+                            PackageId = d,
+                            DependentPackageId = this.Id,
+                        });
+                    }
+                    catch (Exception ex) {
+                        Debug.WriteLine (ex);
+                    }
+                }
+            }
+        }
+
+        static bool PackageWorthRemembering(string packageId)
+        {
+            return
+                !packageId.StartsWith ("NETStandard.", StringComparison.OrdinalIgnoreCase) &&
+                !packageId.StartsWith ("System.", StringComparison.OrdinalIgnoreCase) &&
+                !packageId.StartsWith ("Microsoft.", StringComparison.OrdinalIgnoreCase);
+        }
+
         static string TargetFrameworkNameToMoniker (string name)
         {
             var r = name.ToLowerInvariant ();
@@ -338,6 +375,7 @@ namespace FuGetGallery
                     data.Position = 0;
                     await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
                     await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
+                    await package.SaveDependenciesAsync ();
                 }
                 catch (OperationCanceledException) {
                     throw;
