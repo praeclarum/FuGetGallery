@@ -63,6 +63,11 @@ namespace FuGetGallery
                 return rt;
             });
         }
+        public void Invalidate (TArg arg)
+        {
+            var key = arg;
+            cache.Remove (key);
+        }
         protected abstract Task<TResult> GetValueAsync (TArg arg, HttpClient httpClient, CancellationToken token);
     }
 

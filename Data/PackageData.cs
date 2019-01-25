@@ -267,19 +267,22 @@ namespace FuGetGallery
                 select d.PackageId;
             var deps = depsq.Distinct ();
 
-            var query = "select count(*) from StoredPackageDependency where PackageId = ? and DependentPackageId = ?";
+            var query = "select count(*) from StoredPackageDependency where LowerPackageId = ? and LowerDependentPackageId = ?";
+            var lid = Id.ToLowerInvariant ();
             foreach (var d in deps) {
-                var count = await db.ExecuteScalarAsync<int> (query, d, this.Id);
+                var ld = d.ToLowerInvariant ();
+                var count = await db.ExecuteScalarAsync<int> (query, ld, lid);
                 if (count == 0) {
-                    Console.WriteLine ("DEP2: " + d + " " + this.Id);
                     try {
                         await db.InsertAsync (new StoredPackageDependency {
-                            PackageId = d,
+                            LowerPackageId = ld,
+                            LowerDependentPackageId = lid,
                             DependentPackageId = this.Id,
                         });
+                        PackageDependents.Invalidate (ld);
                     }
                     catch (Exception ex) {
-                        Debug.WriteLine (ex);
+                        Console.WriteLine (ex);
                     }
                 }
             }

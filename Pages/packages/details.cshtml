@@ -10,6 +10,8 @@
     var versions = await PackageVersions.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted);
     var versionSpec = package.Version;
 
+    var dependents = (await PackageDependents.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted)).DependentIds;
+
     var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
     var framework = package.FindClosestTargetFramework (inputTargetFramework);
 
@@ -84,6 +86,8 @@
         description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
     }
 
+    var packageIcon = "briefcase";
+
     string GetIcon(object o) {
         if (o == null) return "";
         if (o is PackageAssembly) return "file";
@@ -98,8 +102,8 @@
         if (o is System.Linq.IGrouping<string, Mono.Cecil.TypeDefinition> g) {
             return "book";
         }
-        if (o is PackageDependency d) return "briefcase";
-        if (o is PackageData p) return "briefcase";
+        if (o is PackageDependency d) return packageIcon;
+        if (o is PackageData p) return packageIcon;
         if (o is PackageFile f) return "file";
         return "";
     }
@@ -256,6 +260,17 @@
         <a class="btn btn-default btn-sm" style="color:#777"
             href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
             <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec</a>
+    }
+    </nav>
+}
+
+@if (dependents.Count > 0) {
+    <nav style="margin-top:0em;line-height:2.75em;">
+        <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
+    @foreach (var d in dependents.OrderBy(x => x).Take(16)) {
+        <a class="btn btn-default btn-sm" style="color:#777"
+            href="/packages/@Uri.EscapeDataString(d)">
+            <span class="glyphicon glyphicon-@packageIcon" aria-hidden="true"></span>&nbsp;@d</a>
     }
     </nav>
 }

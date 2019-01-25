@@ -21,7 +21,6 @@ namespace FuGetGallery
             if (string.IsNullOrEmpty(homePath)) {
                 homePath = Environment.CurrentDirectory;
             }
-            Console.WriteLine("HOME: {0}", homePath);
             var dbsPath = Path.Combine(homePath, "Databases");
             if (!Directory.Exists(dbsPath)) {
                 Directory.CreateDirectory(dbsPath);
@@ -37,8 +36,8 @@ namespace FuGetGallery
 
         public Database () : base (ConnectionString)
         {
-            Trace = true;
-            Tracer = x => Console.WriteLine(x);
+            // Trace = true;
+            // Tracer = x => Console.WriteLine(x);
         }
 
         public async Task MigrateAsync ()
