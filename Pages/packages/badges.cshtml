@@ -7,8 +7,13 @@
     var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"], httpClient);
     var authors = package.AuthorsOrOwners;
 
-    var title = package.Id;
-    var description = package.Description;
+    var dependents = (await PackageDependents.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted)).DependentIds;
+    dependents.Sort();
+
+    var title = package.Id + " Dependents";
+    var description = dependents.Count + " packages directly use " + package.Id;
+
+    var badges = new[] { "simple", "complex", "boring" };
 
     ViewData["Title"] = title;
 
@@ -21,19 +26,19 @@
     };
 }
 
-<header>
-<h1>
-    <a href="/packages/@Uri.EscapeDataString(package.Id)">
-        <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
-    </a>
-    <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Badges
-</h1>
-</header>
+<h1 style="margin-bottom:0.5em"><a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Badges</h1>
 
-<div style="clear:all;margin-top:4em">
-
-Here are a bunch of badges.
-
-</div>
-
-
+<ul class="media-list">
+@foreach (var b in badges) {
+    <li class="media">
+        <div class="media-left">
+            <a href="/packages/@Uri.EscapeDataString(package.Id)">
+                <img src="/images/no-icon.png" class="package-icon-in-list" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
+            </a>
+        </div>
+        <div class="media-body">
+            Hello
+        </div>
+    </li>
+}
+</ul>

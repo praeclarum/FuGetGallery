@@ -269,7 +269,7 @@
 @if (dependents.Count > 0) {
     <nav style="margin-top:0em;line-height:2.75em;">
         <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
-    @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents)) {
+    @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents).OrderBy(x => x)) {
         <a class="btn btn-default btn-sm" style="color:#777"
             href="/packages/@Uri.EscapeDataString(d)">
             <span class="glyphicon glyphicon-@packageIcon" aria-hidden="true"></span>&nbsp;@d</a>
