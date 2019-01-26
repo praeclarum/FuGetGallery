@@ -10,7 +10,7 @@
     var versions = await PackageVersions.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted);
     var versionSpec = package.Version;
 
-    var maxDisplayDependents = 2;
+    var maxDisplayDependents = 8;
     var rand = new Random ();
     var dependents = (await PackageDependents.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted)).DependentIds;
 
