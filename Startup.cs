@@ -28,6 +28,7 @@ namespace FuGetGallery
             services.AddMvc().AddRazorPagesOptions(options =>
             {
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}");
+                options.Conventions.AddPageRoute("/packages/badges", "packages/{id}/badges");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{dir}");
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}/{version}/{dir}/{targetFramework}");
