@@ -10,6 +10,8 @@
     var versions = await PackageVersions.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted);
     var versionSpec = package.Version;
 
+    var maxDisplayDependents = 2;
+    var rand = new Random ();
     var dependents = (await PackageDependents.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted)).DependentIds;
 
     var inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
@@ -267,10 +269,14 @@
 @if (dependents.Count > 0) {
     <nav style="margin-top:0em;line-height:2.75em;">
         <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
-    @foreach (var d in dependents.OrderBy(x => x).Take(16)) {
+    @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents)) {
         <a class="btn btn-default btn-sm" style="color:#777"
             href="/packages/@Uri.EscapeDataString(d)">
             <span class="glyphicon glyphicon-@packageIcon" aria-hidden="true"></span>&nbsp;@d</a>
+    }
+    @if (dependents.Count > maxDisplayDependents) {
+        <a class="btn btn-default btn-sm" style="color:#777"
+            href="/packages/@Uri.EscapeDataString(package.Id)/dependents">@(dependents.Count - maxDisplayDependents) more...</a>
     }
     </nav>
 }
