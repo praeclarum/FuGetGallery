@@ -1,0 +1,39 @@
+@page
+@using System.Net.Http
+@inject IHttpClientFactory HttpClientFactory
+
+@{
+    var httpClient = HttpClientFactory.CreateClient();
+    var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"], httpClient);
+    var authors = package.AuthorsOrOwners;
+
+    var title = package.Id;
+    var description = package.Description;
+
+    ViewData["Title"] = title;
+
+    ViewData["meta"] = new Dictionary<string, string> {
+        { "twitter:card", "summary" },
+        { "og:url", Request.GetEncodedUrl () },
+        { "og:title", title },
+        { "og:description", description },
+        { "og:image", package.SafeIconUrl },
+    };
+}
+
+<header>
+<h1>
+    <a href="/packages/@Uri.EscapeDataString(package.Id)">
+        <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
+    </a>
+    <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Badges
+</h1>
+</header>
+
+<div style="clear:all;margin-top:4em">
+
+Here are a bunch of badges.
+
+</div>
+
+
