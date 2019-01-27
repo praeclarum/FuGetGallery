@@ -36,26 +36,26 @@ namespace FuGetGallery.Controllers
             var v = package.Version.VersionString;
             
             var font = new Font ("DejaVu Sans,Verdana,Geneva,sans-serif", 11);
-            var mc = new GraphicCanvas(new Size(0,0));
-            var kw = (int)Math.Round(mc.MeasureText(k, font).Width) + 100;
-            var vw = (int)Math.Round(mc.MeasureText(v, font).Width) + 50;
-            Console.WriteLine((kw, vw));
+            var kw = (int)Math.Round(NullPlatform.GlobalMeasureText(k, font).Width * 1.15);
+            var vw = (int)Math.Round(NullPlatform.GlobalMeasureText(v, font).Width * 1.15);
 
             var hpad = 8;
-            var w = kw+vw+4*hpad;
+            var w = kw + vw + 4*hpad;
             var h = 20;
-            var c = new GraphicCanvas (new Size (kw+vw+4*hpad, 20));
+            var c = new GraphicCanvas (new Size (w, h));
 
-            c.DrawRectangle (new Rect(0, 0, w, h), new Size(3, 3), null, new SolidBrush (new Color("#555555")));
-            
-            c.DrawRectangle (new Rect(kw + 2*hpad, 0, w - 2*hpad - vw, 20), new Size(3,3), null, new SolidBrush (new Color("#44cc11")));
+            c.FillRectangle (new Rect(0, 0, w, h), new Size(3, 3), "#555");
+            c.FillRectangle (new Rect(kw + 2*hpad, 0, w - 2*hpad - kw, h), new Size(3,3), "#4c1");
+            c.FillRectangle (new Rect(kw + 2*hpad, 0, 6, h), "#4c1");
 
             var scolor = new Color(1.0 / 255.0, 0.3);
-            c.DrawText(k, new Point(6, 15), font, scolor);
-            c.DrawText(k, new Point(6, 14), font, Colors.White);
+            // c.FillRectangle(new Rect(hpad, 5, kw, font.Size), "#F00");
+            c.DrawText(k, new Point(hpad, 15), font, scolor);
+            c.DrawText(k, new Point(hpad, 14), font, Colors.White);
             
-            c.DrawText(v, new Point(100, 15), font, scolor);
-            c.DrawText(v, new Point(100, 14), font, Colors.White);
+            // c.FillRectangle(new Rect(w - vw - hpad, 5, vw, font.Size), "#FF0");
+            c.DrawText(v, new Point(w - vw - hpad, 15), font, scolor);
+            c.DrawText(v, new Point(w - vw - hpad, 14), font, Colors.White);
 
             using (var tw = new System.IO.StringWriter ()) {
                 c.Graphic.WriteSvg (tw);
