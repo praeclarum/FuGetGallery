@@ -15,6 +15,8 @@
 
     var badges = new[] { "simple", "complex", "boring" };
 
+    var urlroot = "https://www.fuget.org";
+
     ViewData["Title"] = title;
 
     ViewData["meta"] = new Dictionary<string, string> {
@@ -28,17 +30,22 @@
 
 <h1 style="margin-bottom:0.5em"><a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Badges</h1>
 
-<ul class="media-list">
-@foreach (var b in badges) {
-    <li class="media">
-        <div class="media-left">
-            <a href="/packages/@Uri.EscapeDataString(package.Id)">
-                <img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg" class="package-icon-in-list" />
-            </a>
-        </div>
-        <div class="media-body">
-            Hello
-        </div>
-    </li>
-}
-</ul>
+<div style="margin-bottom:2em">
+    <a href="@urlroot/packages/@Uri.EscapeDataString(package.Id)/badge.svg">
+        <img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg" />
+    </a>
+</div>
+
+<p>Badges are SVG files that you can add to your README.md or anywhere else you want to link to fuget.org.</p>
+
+<h3>URL</h3>
+<pre><code>@urlroot/packages/@package.Id/badge.svg</code></pre>
+
+<h3>Markdown</h3>
+<pre><code>[![@package.Id on fuget.org](@urlroot/packages/@Uri.EscapeDataString(package.Id)/badge.svg)](@urlroot/packages/@Uri.EscapeDataString(package.Id))</code></pre>
+
+<h3>Query Parameters</h3>
+<dl>
+    <dt>v</dt>
+    <dd>Version to display. Defaults to the latest pre-release.</dd>
+</dl>

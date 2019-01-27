@@ -18,9 +18,9 @@ namespace FuGetGallery.Controllers
         }
 
         [Route("/packages/{id}/badge.svg")]
-        public async Task<ActionResult> GetBadgeAsync (string id)
+        public async Task<ActionResult> GetBadgeAsync (string id, string v)
         {
-            var package = await PackageData.GetAsync (id, "", httpClientFactory.CreateClient());
+            var package = await PackageData.GetAsync (id, v, httpClientFactory.CreateClient());
 
             var content = DrawBadge (package);
 
@@ -32,8 +32,8 @@ namespace FuGetGallery.Controllers
 
         string DrawBadge (PackageData package)
         {
-            var k = "fuget package";
-            var v = package.Version.VersionString;
+            var k = "fuget";
+            var v = "v" + package.Version.VersionString;
             
             var font = new Font ("DejaVu Sans,Verdana,Geneva,sans-serif", 11);
             var kw = (int)Math.Round(NullPlatform.GlobalMeasureText(k, font).Width * 1.15);
@@ -45,8 +45,8 @@ namespace FuGetGallery.Controllers
             var c = new GraphicCanvas (new Size (w, h));
 
             c.FillRectangle (new Rect(0, 0, w, h), new Size(3, 3), "#555");
-            c.FillRectangle (new Rect(kw + 2*hpad, 0, w - 2*hpad - kw, h), new Size(3,3), "#4c1");
-            c.FillRectangle (new Rect(kw + 2*hpad, 0, 6, h), "#4c1");
+            c.FillRectangle (new Rect(kw + 2*hpad, 0, w - 2*hpad - kw, h), new Size(3,3), "#5cb85c");
+            c.FillRectangle (new Rect(kw + 2*hpad, 0, 6, h), "#5cb85c");
 
             var scolor = new Color(1.0 / 255.0, 0.3);
             // c.FillRectangle(new Rect(hpad, 5, kw, font.Size), "#F00");
