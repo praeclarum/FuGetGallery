@@ -55,7 +55,7 @@ function renderMru(id, title, sorter)
         $mru.append("<i>The packages that you visit will be listed here. Try searching at the top to get started.</i>");
     var $ul = $("<ul class='media-list'></ul>");
     $mru.append($ul);
-    for (i = 0; i < mrus.length && i < 10; i++) {
+    for (i = 0; i < mrus.length && i < 20; i++) {
         var p = mrus[i];
         var $li = $("<li class='media'></li>");
         var $left = $("<div class=\"media-left\"/>");
