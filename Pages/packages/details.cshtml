@@ -211,8 +211,8 @@
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
         <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;@nupkgName
     </a>
-    <a href="https://www.nuget.org/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)" type="button" class="btn btn-default" style="color: #777">
-        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;nuget.org
+    <a href="@string.Format(package.PackageDetailsUrlFormat, Uri.EscapeDataString(package.Id), Uri.EscapeDataString(package.Version.VersionString))" type="button" class="btn btn-default" style="color: #777">
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@package.DisplayUrl
     </a>
     @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
         <a href="@package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
