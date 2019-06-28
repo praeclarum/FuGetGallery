@@ -126,8 +126,12 @@ namespace FuGetGallery
             return "href=\"" + url + "\"";
         }
 
-        public static void WriteReferenceHtml(this TypeReference type, TextWriter w, PackageTargetFramework framework, bool isOut = false)
+        public static void WriteReferenceHtml(this TypeReference type, TextWriter w, PackageTargetFramework framework, bool isOut = false, bool isExtension = false)
         {
+            if (isExtension) {
+                w.Write ("<span class=\"c-kw\">this</span> ");
+            }
+
             if (type.FullName == "System.Void") {
                 w.Write ("<span class=\"c-tr\">void</span>");
             }
@@ -303,9 +307,11 @@ namespace FuGetGallery
             }
             w.Write ("(");
             head = "";
+
+            bool isExtensionMethod = HasExtensionAttribute (member);
             foreach (var p in member.Parameters) {
                 w.Write (head);
-                WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut);
+                WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut, isExtensionMethod);
                 w.Write (" <span class=\"c-ar\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
@@ -314,8 +320,15 @@ namespace FuGetGallery
                     TypeDocumentation.WritePrimitiveHtml (p.Constant, w);
                 }
                 head = ", ";
+
+                isExtensionMethod = false;
             }
             w.Write (")");
+        }
+
+        static bool HasExtensionAttribute (this MethodDefinition method)
+        {
+            return method.CustomAttributes.Any (x => x.AttributeType.Name == "ExtensionAttribute" && x.AttributeType.Namespace == "System.Runtime.CompilerServices");
         }
 
         public static void WritePrototypeHtml (this PropertyDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode)
