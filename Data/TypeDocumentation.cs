@@ -74,6 +74,8 @@ namespace FuGetGallery
         void WriteDocumentation (TextWriter w)
         {
             var members = typeDefinition.GetPublicMembers ();
+            var isExtensionClass = typeDefinition.IsExtensionClass ();
+
             foreach (var m in members) {
 
                 var xmlName = m.GetXmlName ();
@@ -81,7 +83,7 @@ namespace FuGetGallery
                 xmlDocs?.MemberDocs.TryGetValue (xmlName, out mdocs);
 
                 w.WriteLine ("<div class='member-code'>");
-                m.WritePrototypeHtml (w, framework: framework, linkToCode: true);
+                m.WritePrototypeHtml (w, framework: framework, linkToCode: true, isExtensionClass);
                 w.WriteLine ("</div>");
 
                 w.WriteLine ("<p>");

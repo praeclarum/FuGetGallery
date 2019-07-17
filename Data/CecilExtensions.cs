@@ -126,8 +126,12 @@ namespace FuGetGallery
             return "href=\"" + url + "\"";
         }
 
-        public static void WriteReferenceHtml(this TypeReference type, TextWriter w, PackageTargetFramework framework, bool isOut = false)
+        public static void WriteReferenceHtml(this TypeReference type, TextWriter w, PackageTargetFramework framework, bool isOut = false, bool isExtension = false)
         {
+            if (isExtension) {
+                w.Write ("<span class=\"c-kw\">this</span> ");
+            }
+
             if (type.FullName == "System.Void") {
                 w.Write ("<span class=\"c-tr\">void</span>");
             }
@@ -249,7 +253,7 @@ namespace FuGetGallery
             }
         }
 
-        public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode)
+        public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode, bool inExtensionClass)
         {
             if (!member.DeclaringType.IsInterface) {
                 if (member.IsFamily || member.IsFamilyOrAssembly) {
@@ -303,9 +307,11 @@ namespace FuGetGallery
             }
             w.Write ("(");
             head = "";
+
+            bool isExtensionMethod = inExtensionClass && member.HasExtensionAttribute ();
             foreach (var p in member.Parameters) {
                 w.Write (head);
-                WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut);
+                WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut, isExtensionMethod);
                 w.Write (" <span class=\"c-ar\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
@@ -314,8 +320,21 @@ namespace FuGetGallery
                     TypeDocumentation.WritePrimitiveHtml (p.Constant, w);
                 }
                 head = ", ";
+
+                isExtensionMethod = false;
             }
             w.Write (")");
+        }
+
+        public static bool HasExtensionAttribute (this ICustomAttributeProvider provider)
+        {
+            return provider.CustomAttributes.Any (x => x.AttributeType.Name == "ExtensionAttribute" && x.AttributeType.Namespace == "System.Runtime.CompilerServices");
+        }
+
+        public static bool IsExtensionClass (this TypeDefinition type)
+        {
+            return type.IsClass && type.IsSealed && type.IsAbstract // IsStatic
+                && type.HasExtensionAttribute ();
         }
 
         public static void WritePrototypeHtml (this PropertyDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode)
@@ -462,11 +481,11 @@ namespace FuGetGallery
             }
         }
 
-        public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode)
+        public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode, bool inExtensionClass)
         {
             switch (member) {
                 case FieldDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
-                case MethodDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
+                case MethodDefinition t: WritePrototypeHtml (t, w, framework, linkToCode, inExtensionClass); break;
                 case PropertyDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
                 case EventDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
                 case TypeDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
@@ -474,10 +493,10 @@ namespace FuGetGallery
             }
         }
 
-        public static string GetPrototypeHtml (this IMemberDefinition member, PackageTargetFramework framework, bool linkToCode)
+        public static string GetPrototypeHtml (this IMemberDefinition member, PackageTargetFramework framework, bool linkToCode, bool inExtensionClass)
         {
             using (var w = new StringWriter ()) {
-                WritePrototypeHtml (member, w, framework, linkToCode);
+                WritePrototypeHtml (member, w, framework, linkToCode, inExtensionClass);
                 return w.ToString ();
             }
         }
