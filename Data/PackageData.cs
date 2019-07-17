@@ -56,6 +56,8 @@ namespace FuGetGallery
         public List<PackageFile> Content { get; } = new List<PackageFile> ();
         public List<PackageFile> Tools { get; } = new List<PackageFile> ();
         public Exception Error { get; set; }
+        public string DisplayUrl { get; set; }
+        public string PackageDetailsUrlFormat { get; set; }
 
         static readonly PackageDataCache cache = new PackageDataCache ();
 
@@ -115,6 +117,8 @@ namespace FuGetGallery
             SizeInBytes = bytes.Length;
             Archive = new ZipArchive (bytes, ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
+            Content.Clear();
+            Tools.Clear();
             ZipArchiveEntry nuspecEntry = null;
             foreach (var e in Archive.Entries.Where(x => x.Name != "_._").OrderBy (x => x.FullName)) {
                 var n = e.FullName;                
@@ -364,29 +368,46 @@ namespace FuGetGallery
                 var package = new PackageData {
                     Id = id,
                     IndexId = id,
-                    Version = version,
-                    SizeInBytes = 0,
-                    DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version.VersionString)}",
+                    Version = version
                 };
-                try {
-                    //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
-                    var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
-                    var data = new MemoryStream ();
-                    using (var s = await r.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
-                        await s.CopyToAsync (data, 16*1024, token).ConfigureAwait(false);
+
+                var exceptions = new List<Exception> ();
+                foreach (var source in NugetPackageSources.PackageSources) {
+                    try {
+                        package.SizeInBytes = 0;
+                        package.DisplayUrl = source.DisplayUrl;
+                        package.PackageDetailsUrlFormat = source.PackageDetailsUrlFormat;
+                        package.DownloadUrl = string.Format (source.DownloadUrlFormat, Uri.EscapeDataString (id), Uri.EscapeDataString (version.VersionString));
+                        return await ReadPackageFromUrl (package, httpClient, token);
                     }
-                    data.Position = 0;
-                    await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
-                    await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
-                    await package.SaveDependenciesAsync ();
-                }
-                catch (OperationCanceledException) {
-                    throw;
-                }
-                catch (Exception ex) {
-                    package.Error = ex;
+                    catch (OperationCanceledException) {
+                        throw;
+                    }
+                    catch (Exception ex) {
+                        exceptions.Add(ex);
+                    }
                 }
 
+                // If we reach here, all urls failed, return the latest error.
+                package.Error = exceptions.Count == 1 
+                    ? exceptions[0] 
+                    : new AggregateException (exceptions);
+
+                return package;
+            }
+
+            private static async Task<PackageData> ReadPackageFromUrl (PackageData package, HttpClient httpClient, CancellationToken token)
+            {
+                //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
+                var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
+                var data = new MemoryStream ();
+                using (var s = await r.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+                    await s.CopyToAsync (data, 16 * 1024, token).ConfigureAwait (false);
+                }
+                data.Position = 0;
+                await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
+                await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
+                await package.SaveDependenciesAsync ();
                 return package;
             }
         }

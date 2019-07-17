@@ -1,6 +1,8 @@
 ﻿@page
 @{
     ViewData["Title"] = "Home page";
+
+    var sources = NugetPackageSources.PackageSources;
 }
 
 <h1 style="margin-top:1em;margin-bottom:0.5em;">fuget.org <small>pro nuget package browsing</small></h1>
@@ -8,7 +10,29 @@
 <p>This site is a nuget package browser combined with an API browser.
 
 The package browser uses the
-<a href="https://nuget.org">nuget.org</a> API to display all the packages in their index.
+@if(sources.Count == 1)
+{ 
+    @:<a href="@sources[0].DomainUrl">@sources[0].DisplayName</a> API to display all the packages in their index.
+}
+else if(sources.Count == 2)
+{
+    @:<a href="@sources[0].DomainUrl">@sources[0].DisplayName</a> and <a href="@sources[1].DomainUrl">@sources[1].DisplayName</a> APIs to display all the packages in their index.
+}
+else
+{
+    for (int i = 0; i < sources.Count; i++)
+    {
+        if (i == sources.Count - 1)
+        {
+            @:and <a href="@sources[i].DomainUrl">@sources[i].DisplayName</a> 
+        }
+        else
+        {
+            @:<a href="@sources[i].DomainUrl">@sources[i].DisplayName</a>, 
+        }
+    }
+    @:APIs to display all the packages in their index.
+}
 
 The API browser combines the XML documentation and the metadata of the package's assemblies to
     help you explore and learn. Try the API search box to quickly find code, and use the

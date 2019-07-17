@@ -50,7 +50,7 @@ namespace FuGetGallery
                 if (version == null) {
                     version = v["catalogEntry"]?["version"]?.ToString();
                 }
-                if (version != null) {
+                if (version != null && !Versions.Any(x => string.Equals(x.VersionString, version, StringComparison.OrdinalIgnoreCase))) {
                     Versions.Add (new PackageVersion { VersionString = version, PublishTime = time });
                 }
             }
@@ -59,40 +59,58 @@ namespace FuGetGallery
         class PackageVersionsCache : DataCache<string, PackageVersions>
         {
             public PackageVersionsCache () : base (TimeSpan.FromMinutes (20)) { }
-            
-            protected override async Task<PackageVersions> GetValueAsync(string lowerId, HttpClient httpClient, CancellationToken token)
+
+            protected override async Task<PackageVersions> GetValueAsync (string lowerId, HttpClient httpClient, CancellationToken token)
             {
                 var package = new PackageVersions {
                     LowerId = lowerId,
                 };
-                try {
-                    var url = "https://api.nuget.org/v3/registration3/" + Uri.EscapeDataString(lowerId) + "/index.json";
-                    var rootJson = await httpClient.GetStringAsync (url).ConfigureAwait (false);
-                    // System.Console.WriteLine(rootJson + "\n\n\n\n");
-                    var root = JObject.Parse(rootJson);
-                    var pages = (JArray)root["items"];
-                    if (pages.Count > 0) {
-                        var lastPage = pages.Last();
-                        var lastPageItems = lastPage["items"] as JArray;
-                        if (lastPageItems != null) {
-                            package.Read (lastPageItems);
-                        }
-                        else {
-                            foreach (var p in pages.Reverse ()) {
-                                var pageUrl = p["@id"].ToString ();
-                                var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
-                                var pageRoot = JObject.Parse (pageRootJson);
-                                package.Read ((JArray)pageRoot["items"]);
-                            }
+
+                var succeededOnce = false;
+                var exceptions = new List<Exception> ();
+                foreach (var source in NugetPackageSources.PackageSources) {
+                    try {
+                        await ReadVersionsFromUrl (httpClient, package, string.Format (source.VersionUrlFormat, Uri.EscapeDataString (lowerId)));
+                        if (package.Versions.Count > 0) {
+                            package.Versions.Sort ((x, y) => x.CompareTo (y));
+                            succeededOnce = true;
                         }
                     }
-                    package.Versions.Sort ((x, y) => x.CompareTo (y));
+                    catch (Exception ex) {
+                        exceptions.Add(ex);
+                    }
                 }
-                catch (Exception ex) {
-                    package.Error = ex;
+
+                if (!succeededOnce) {
+                    package.Error = exceptions.Count == 1 
+                        ? exceptions[0] 
+                        : new AggregateException(exceptions);
                 }
 
                 return package;
+            }
+
+            private static async Task ReadVersionsFromUrl (HttpClient httpClient, PackageVersions package, string url)
+            {
+                var rootJson = await httpClient.GetStringAsync (url).ConfigureAwait (false);
+                // System.Console.WriteLine(rootJson + "\n\n\n\n");
+                var root = JObject.Parse (rootJson);
+                var pages = (JArray)root["items"];
+                if (pages.Count > 0) {
+                    var lastPage = pages.Last ();
+                    var lastPageItems = lastPage["items"] as JArray;
+                    if (lastPageItems != null) {
+                        package.Read (lastPageItems);
+                    }
+                    else {
+                        foreach (var p in pages.Reverse ()) {
+                            var pageUrl = p["@id"].ToString ();
+                            var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
+                            var pageRoot = JObject.Parse (pageRootJson);
+                            package.Read ((JArray)pageRoot["items"]);
+                        }
+                    }
+                }
             }
         }
     }
