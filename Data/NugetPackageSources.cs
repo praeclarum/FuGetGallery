@@ -46,7 +46,7 @@ namespace FuGetGallery
                     "Nuget Gallery",
                     "nuget.org",
                     "https://www.nuget.org/packages/{0}/{1}",
-                    "https://api-v2v3search-0.nuget.org/query?prerelease=true&q={0}",
+                    "https://api-v2v3search-0.nuget.org/query?prerelease=true&semVerLevel=2.0.0&q={0}",
                     "https://api.nuget.org/v3/registration3/{0}/index.json",
                     "https://www.nuget.org/api/v2/package/{0}/{1}")
             };
