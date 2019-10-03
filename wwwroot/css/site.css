@@ -53,7 +53,7 @@ footer { margin-top: 10em; }
 }
 
 .long-item-list {
-    overflow:scroll;
+    overflow:auto;
     list-style-type:none;
     padding:0;
     white-space:nowrap;
