@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO;
 using System;
 using System.Text;
+using Mono.Collections.Generic;
 
 namespace FuGetGallery
 {
@@ -296,14 +297,7 @@ namespace FuGetGallery
             w.Write ("</a>");
             var head = "";
             if (member.HasGenericParameters) {
-                w.Write ("&lt;");
-                head = "";
-                foreach (var p in member.GenericParameters) {
-                    w.Write (head);
-                    WriteReferenceHtml (p, w, framework);
-                    head = ", ";
-                }
-                w.Write ("&gt;");
+                WriteGenericParameterListHtml (member.GenericParameters, w, framework);
             }
             w.Write ("(");
             head = "";
@@ -324,6 +318,52 @@ namespace FuGetGallery
                 isExtensionMethod = false;
             }
             w.Write (")");
+            if (member.HasGenericParameters) {
+                WriteGenericConstraintsHtml (member.GenericParameters, w, framework);
+            }
+        }
+
+        private static void WriteGenericParameterListHtml (Collection<GenericParameter> genericParameters, TextWriter w, PackageTargetFramework framework)
+        {
+            w.Write ("&lt;");
+            var head = "";
+            foreach (var p in genericParameters) {
+                w.Write (head);
+                WriteReferenceHtml (p, w, framework);
+                head = ", ";
+            }
+            w.Write ("&gt;");
+        }
+
+        private static void WriteGenericConstraintsHtml (Collection<GenericParameter> genericParameters, TextWriter w, PackageTargetFramework framework)
+        {
+            foreach (var p in genericParameters) {
+                if (p.HasConstraints) {
+                    w.Write (" where ");
+                    WriteReferenceHtml (p, w, framework);
+                    w.Write (" : ");
+                    var head = "";
+                    foreach (var c in p.Constraints) {
+                        if (c.FullName == "System.Object") {
+                            w.Write ("class");
+                            head = ", ";
+                            break;
+                        }
+                        else if (c.FullName == "System.ValueType") {
+                            w.Write ("struct");
+                            head = ", ";
+                            break;
+                        }
+                    }
+                    foreach (var c in p.Constraints) {
+                        if (c.FullName != "System.ValueType" && c.FullName != "System.Object") {
+                            w.Write (head);
+                            WriteReferenceHtml (c, w, framework);
+                            head = ", ";
+                        }
+                    }
+                }
+            }
         }
 
         public static bool HasExtensionAttribute (this ICustomAttributeProvider provider)
@@ -459,14 +499,7 @@ namespace FuGetGallery
                 w.Write ("</span>");
             }
             if (member.HasGenericParameters) {
-                w.Write ("&lt;");
-                var head = "";
-                foreach (var a in member.GenericParameters) {
-                    w.Write (head);
-                    WriteReferenceHtml (a, w, framework);
-                    head = ", ";
-                }
-                w.Write ("&gt;");
+                WriteGenericParameterListHtml (member.GenericParameters, w, framework);
             }
             var hier = ((!member.IsEnum && !member.IsValueType && member.BaseType != null && member.BaseType.FullName != "System.Object") ? new[] { member.BaseType } : new TypeReference[0])
                 .Concat (member.Interfaces.Select (x => x.InterfaceType)).ToList ();
@@ -478,6 +511,9 @@ namespace FuGetGallery
                     WriteReferenceHtml (h, w, framework);
                     head = ", ";
                 }
+            }
+            if (member.HasGenericParameters) {
+                WriteGenericConstraintsHtml (member.GenericParameters, w, framework);
             }
         }
 
