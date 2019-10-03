@@ -34,6 +34,7 @@ namespace FuGetGallery
         public string SummaryText { get; }
         public string SummaryHtml { get; }
         public string DocumentationHtml { get; }
+        public MemberXmlDocs MemberXmlDocs { get; }
 
         readonly PackageAssemblyXmlDocs xmlDocs;
 
@@ -54,7 +55,8 @@ namespace FuGetGallery
 
             if (xmlDocs != null) {
                 var tn = typeDefinition.GetXmlName ();
-                if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {                    
+                if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {
+                    MemberXmlDocs = td;
                     SummaryHtml = XmlToHtml (td.SummaryXml);
                     SummaryText = XmlToText (td.SummaryXml);
                     if (ignoreSummaryTextRe.IsMatch (SummaryHtml)) {
@@ -83,7 +85,7 @@ namespace FuGetGallery
                 xmlDocs?.MemberDocs.TryGetValue (xmlName, out mdocs);
 
                 w.WriteLine ("<div class='member-code'>");
-                m.WritePrototypeHtml (w, framework: framework, linkToCode: true, isExtensionClass);
+                m.WritePrototypeHtml (w, framework: framework, mdocs, linkToCode: true, isExtensionClass);
                 w.WriteLine ("</div>");
 
                 w.WriteLine ("<p>");
