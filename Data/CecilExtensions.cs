@@ -306,7 +306,9 @@ namespace FuGetGallery
             foreach (var p in member.Parameters) {
                 w.Write (head);
                 WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut, isExtensionMethod);
-                w.Write ($" <span class=\"c-ar\" title=\"{(docs != null && docs.ParametersText.TryGetValue(p.Name, out var paramText) ? paramText : string.Empty)}\">");
+                w.Write (" <span class=\"c-ar\" title=\"");
+                WriteEncoded (docs != null && docs.ParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty, w);
+                w.Write ("\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
                 if (p.HasConstant) {
@@ -329,7 +331,9 @@ namespace FuGetGallery
             var head = "";
             foreach (var p in genericParameters) {
                 w.Write (head);
-                w.Write ($"<span class=\"c-tr\" title=\"{(docs != null && docs.TypeParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty)}\">");
+                w.Write ("<span class=\"c-tr\" title=\"");
+                WriteEncoded (docs != null && docs.TypeParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty, w);
+                w.Write ("\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
                 head = ", ";
@@ -414,7 +418,9 @@ namespace FuGetGallery
                 foreach (var p in member.GetMethod.Parameters) {
                     w.Write (head);
                     WriteReferenceHtml (p.ParameterType, w, framework);
-                    w.Write ($" <span class=\"c-ar\" title=\"{(docs != null && docs.ParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty)}\">");
+                    w.Write (" <span class=\"c-ar\" title=\"");
+                    WriteEncoded (docs != null && docs.ParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty, w);
+                    w.Write ("\">");
                     WriteEncoded (p.Name, w);
                     w.Write ("</span>");
                     head = ", ";
