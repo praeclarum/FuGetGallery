@@ -311,7 +311,13 @@ namespace FuGetGallery
                 w.Write ("</span>");
                 if (p.HasConstant) {
                     w.Write (" = ");
-                    TypeDocumentation.WritePrimitiveHtml (p.Constant, w);
+                    var constant = p.Constant;
+                    if (constant == null && p.ParameterType.IsValueType) {
+                        w.Write ("<span class=\"c-nl\">default</span>");
+                    }
+                    else {
+                        TypeDocumentation.WritePrimitiveHtml (constant, w);
+                    }
                 }
                 head = ", ";
 
