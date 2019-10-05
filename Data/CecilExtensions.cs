@@ -254,7 +254,7 @@ namespace FuGetGallery
             }
         }
 
-        public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode, bool inExtensionClass)
+        public static void WritePrototypeHtml (this MethodDefinition member, TextWriter w, PackageTargetFramework framework, MemberXmlDocs docs, bool linkToCode, bool inExtensionClass)
         {
             if (!member.DeclaringType.IsInterface) {
                 if (member.IsFamily || member.IsFamilyOrAssembly) {
@@ -297,7 +297,7 @@ namespace FuGetGallery
             w.Write ("</a>");
             var head = "";
             if (member.HasGenericParameters) {
-                WriteGenericParameterListHtml (member.GenericParameters, w, framework);
+                WriteGenericParameterListHtml (member.GenericParameters, w, framework, docs);
             }
             w.Write ("(");
             head = "";
@@ -306,7 +306,9 @@ namespace FuGetGallery
             foreach (var p in member.Parameters) {
                 w.Write (head);
                 WriteReferenceHtml (p.ParameterType, w, framework, p.IsOut, isExtensionMethod);
-                w.Write (" <span class=\"c-ar\">");
+                w.Write (" <span class=\"c-ar\" title=\"");
+                WriteEncoded (docs != null && docs.ParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty, w);
+                w.Write ("\">");
                 WriteEncoded (p.Name, w);
                 w.Write ("</span>");
                 if (p.HasConstant) {
@@ -323,13 +325,17 @@ namespace FuGetGallery
             }
         }
 
-        private static void WriteGenericParameterListHtml (Collection<GenericParameter> genericParameters, TextWriter w, PackageTargetFramework framework)
+        private static void WriteGenericParameterListHtml (Collection<GenericParameter> genericParameters, TextWriter w, PackageTargetFramework framework, MemberXmlDocs docs)
         {
             w.Write ("&lt;");
             var head = "";
             foreach (var p in genericParameters) {
                 w.Write (head);
-                WriteReferenceHtml (p, w, framework);
+                w.Write ("<span class=\"c-tr\" title=\"");
+                WriteEncoded (docs != null && docs.TypeParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty, w);
+                w.Write ("\">");
+                WriteEncoded (p.Name, w);
+                w.Write ("</span>");
                 head = ", ";
             }
             w.Write ("&gt;");
@@ -377,7 +383,7 @@ namespace FuGetGallery
                 && type.HasExtensionAttribute ();
         }
 
-        public static void WritePrototypeHtml (this PropertyDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode)
+        public static void WritePrototypeHtml (this PropertyDefinition member, TextWriter w, PackageTargetFramework framework, MemberXmlDocs docs, bool linkToCode)
         {
             if (member.GetMethod != null && !member.DeclaringType.IsInterface) {
                 if ((member.GetMethod.IsFamily || member.GetMethod.IsFamilyOrAssembly)) {
@@ -412,7 +418,9 @@ namespace FuGetGallery
                 foreach (var p in member.GetMethod.Parameters) {
                     w.Write (head);
                     WriteReferenceHtml (p.ParameterType, w, framework);
-                    w.Write (" <span class=\"c-ar\">");
+                    w.Write (" <span class=\"c-ar\" title=\"");
+                    WriteEncoded (docs != null && docs.ParametersText.TryGetValue (p.Name, out var paramText) ? paramText : string.Empty, w);
+                    w.Write ("\">");
                     WriteEncoded (p.Name, w);
                     w.Write ("</span>");
                     head = ", ";
@@ -456,7 +464,7 @@ namespace FuGetGallery
             w.Write ("</a>");
         }
 
-        public static void WritePrototypeHtml (this TypeDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode)
+        public static void WritePrototypeHtml (this TypeDefinition member, TextWriter w, PackageTargetFramework framework, MemberXmlDocs docs, bool linkToCode)
         {
             if (member.IsNestedFamily || member.IsNestedFamilyOrAssembly) {
                 w.Write ("<span class=\"c-kw\">protected</span> ");
@@ -499,7 +507,7 @@ namespace FuGetGallery
                 w.Write ("</span>");
             }
             if (member.HasGenericParameters) {
-                WriteGenericParameterListHtml (member.GenericParameters, w, framework);
+                WriteGenericParameterListHtml (member.GenericParameters, w, framework, docs);
             }
             var hier = ((!member.IsEnum && !member.IsValueType && member.BaseType != null && member.BaseType.FullName != "System.Object") ? new[] { member.BaseType } : new TypeReference[0])
                 .Concat (member.Interfaces.Select (x => x.InterfaceType)).ToList ();
@@ -517,22 +525,22 @@ namespace FuGetGallery
             }
         }
 
-        public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageTargetFramework framework, bool linkToCode, bool inExtensionClass)
+        public static void WritePrototypeHtml (this IMemberDefinition member, TextWriter w, PackageTargetFramework framework, MemberXmlDocs docs, bool linkToCode, bool inExtensionClass)
         {
             switch (member) {
                 case FieldDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
-                case MethodDefinition t: WritePrototypeHtml (t, w, framework, linkToCode, inExtensionClass); break;
-                case PropertyDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
+                case MethodDefinition t: WritePrototypeHtml (t, w, framework, docs, linkToCode, inExtensionClass); break;
+                case PropertyDefinition t: WritePrototypeHtml (t, w, framework, docs, linkToCode); break;
                 case EventDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
-                case TypeDefinition t: WritePrototypeHtml (t, w, framework, linkToCode); break;
+                case TypeDefinition t: WritePrototypeHtml (t, w, framework, docs, linkToCode); break;
                 default: throw new NotSupportedException (member.GetType() + " " + member.FullName);
             }
         }
 
-        public static string GetPrototypeHtml (this IMemberDefinition member, PackageTargetFramework framework, bool linkToCode, bool inExtensionClass)
+        public static string GetPrototypeHtml (this IMemberDefinition member, PackageTargetFramework framework, MemberXmlDocs docs, bool linkToCode, bool inExtensionClass)
         {
             using (var w = new StringWriter ()) {
-                WritePrototypeHtml (member, w, framework, linkToCode, inExtensionClass);
+                WritePrototypeHtml (member, w, framework, docs, linkToCode, inExtensionClass);
                 return w.ToString ();
             }
         }
