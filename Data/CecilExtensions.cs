@@ -419,7 +419,7 @@ namespace FuGetGallery
             var id = member.GetXmlName ();
             var href = GetHref (member, framework, linkToCode);
             if (member.GetMethod != null && member.GetMethod.Parameters.Count > 0) {
-                w.Write ($" <a {href} id=\"{id}\" class=\"c-pd\">this</a>[");
+                w.Write ($" <a {href} id=\"{id}\" class=\"c-cd\">this</a>[");
                 var head = "";
                 foreach (var p in member.GetMethod.Parameters) {
                     w.Write (head);
