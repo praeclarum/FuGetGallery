@@ -47,7 +47,7 @@ namespace FuGetGallery
                         Version = (string)x["version"],
                         Description = (string)x["description"],
                         IconUrl = (string)x["iconUrl"],
-                        TotalDownloads = (int)x["totalDownloads"],
+                        TotalDownloads = ((int?)x["totalDownloads"]) ?? 0,
                         Authors = string.Join (", ", x["authors"]),
                     });
                 }
@@ -57,7 +57,7 @@ namespace FuGetGallery
                         existingResult.Version = newVersion;
                         existingResult.Description = (string)x["description"];
                         existingResult.IconUrl = (string)x["iconUrl"];
-                        existingResult.TotalDownloads = (int)x["totalDownloads"];
+                        existingResult.TotalDownloads = ((int?)x["totalDownloads"]) ?? 0;
                         existingResult.Authors = string.Join (", ", x["authors"]);
                     }
                 }
