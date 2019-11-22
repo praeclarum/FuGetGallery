@@ -119,6 +119,11 @@ namespace FuGetGallery
     public class PackageVersion : IComparable<PackageVersion>
     {
         string versionString = "";
+        int major;
+        int minor;
+        int patch;
+        int build;
+        string rest = "";
 
         public SemanticVersion SemanticVersion { get; private set; }
 
@@ -133,12 +138,54 @@ namespace FuGetGallery
                     return;
                 versionString = value;
 
-                SemanticVersion.TryParse (value, out var semanticVersion);
-                SemanticVersion = semanticVersion;
+                if (SemanticVersion.TryParse (value, out var semanticVersion)) {
+                    SemanticVersion = semanticVersion;
+                } else {
+                    // SemanticVersion only supports 3-part version numbers (major.minor.patch); fall back to parsing
+                    // the version string manually if it fails.
+                    var di = value.IndexOf ('-');
+                    var vpart = di > 0 ? value.Substring (0, di) : value;
+                    rest = di > 0 ? value.Substring (di) : "";
+                    var parts = vpart.Split ('.');
+                    major = 0;
+                    minor = 0;
+                    patch = 0;
+                    build = 0;
+                    if (parts.Length > 0)
+                        int.TryParse (parts[0], out major);
+                    if (parts.Length > 1)
+                        int.TryParse (parts[1], out minor);
+                    if (parts.Length > 2)
+                        int.TryParse (parts[2], out patch);
+                    if (parts.Length > 3)
+                        int.TryParse (parts[3], out build);
+                }
             }
         }
 
-        public int CompareTo(PackageVersion other) => Comparer<SemanticVersion>.Default.Compare (SemanticVersion, other.SemanticVersion);
+        public int CompareTo(PackageVersion other)
+        {
+            if (other is null)
+                return 1;
+
+            if (SemanticVersion is null && other.SemanticVersion is null) {
+                var c = major.CompareTo (other.major);
+                if (c != 0)
+                    return c;
+                c = minor.CompareTo (other.minor);
+                if (c != 0)
+                    return c;
+                c = patch.CompareTo (other.patch);
+                if (c != 0)
+                    return c;
+                c = build.CompareTo (other.build);
+                if (c != 0)
+                    return c;
+                return string.Compare (rest, other.rest, StringComparison.Ordinal);
+            }
+            
+            return Comparer<SemanticVersion>.Default.Compare (SemanticVersion, other.SemanticVersion);
+        }
 
         public override bool Equals(object obj)
         {
