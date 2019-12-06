@@ -92,7 +92,7 @@ namespace FuGetGallery
                     }
                 }
 
-                if (!succeededOnce) {
+                if (!succeededOnce && exceptions.Count > 0) {
                     results.Error = exceptions.Count == 1 
                         ? exceptions[0] 
                         : new AggregateException(exceptions);
