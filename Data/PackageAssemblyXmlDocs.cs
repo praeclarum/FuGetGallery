@@ -83,7 +83,13 @@ namespace FuGetGallery
                 if (n is XElement el) {
                     if (el.Name == "see") {
                         var cref = el.Attribute (element.Name.Namespace + "cref")?.Value;
-                        return cref.Substring (cref.LastIndexOf ('.') + 1);
+                        if (cref != null) {
+                            return cref.Substring (cref.LastIndexOf ('.') + 1);
+                        }
+                        var langword = el.Attribute (element.Name.Namespace + "langword")?.Value;
+                        if (langword != null) {
+                            return langword;
+                        }
                     }
                     return string.Empty;
                 }
