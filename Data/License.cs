@@ -96,6 +96,7 @@ namespace FuGetGallery
                     "https://www.gnu.org/licenses/gpl-2.0.html",
                     "http://opensource.org/licenses/GPL-2.0",
                     "https://opensource.org/licenses/GPL-2.0",
+                    "https://downloads.mysql.com/docs/licenses/connector-net-8.0-gpl-en.pdf",
                 },
                 TemplateName = "GPL2",
             });
