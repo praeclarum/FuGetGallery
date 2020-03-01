@@ -250,8 +250,9 @@
                     (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
         var bold = active == "active" ? "bold" : "normal";
         var tcolor = active == "active" ? "color:#fff" : "color:rgba(255,255,255,0.75)";
+        var fwurl = diff == null ? GetUrl(otargetFramework:tf.Moniker) : GetUrl(otargetFramework:tf.Moniker, oassemblyName:"diff", onamespace:diff.OtherPackage.Version);
         <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button"
-           href="@GetUrl(otargetFramework:tf.Moniker)">@tf.Moniker</a>
+           href="@fwurl">@tf.Moniker</a>
     }
     </nav>
 }
