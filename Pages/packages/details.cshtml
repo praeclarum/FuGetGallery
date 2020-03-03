@@ -462,10 +462,10 @@ else {
 </div>
 }
 <script>
-    var packageId = "@package.Id";
-    var packageIconUrl = "@package.SafeIconUrl";
-    var packageAuthors = "@package.Authors";
-    var packageDescription = "@package.Description";
+    var packageId = @Html.Raw(Json.Serialize(package.Id));
+    var packageIconUrl = @Html.Raw(Json.Serialize(package.SafeIconUrl));
+    var packageAuthors = @Html.Raw(Json.Serialize(package.Authors));
+    var packageDescription = @Html.Raw(Json.Serialize(package.Description));
 
     var asearch = document.getElementById("asearch");
     var anav = document.getElementById("anav");
