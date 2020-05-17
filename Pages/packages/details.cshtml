@@ -27,7 +27,7 @@
     var asm = default (PackageAssembly);
 
     if (inputAssemblyName == "diff") {
-        diff = await ApiDiff.GetAsync (package.Id, package.Version.VersionString, framework.Moniker, inputNamespace, httpClient, HttpContext.RequestAborted);
+        diff = await ApiDiff.GetAsync (package.Id, package.Version.ShortVersionString, framework.Moniker, inputNamespace, httpClient, HttpContext.RequestAborted);
     }
     else {
         asm = framework?.GetAssembly (dir, inputAssemblyName);
@@ -173,7 +173,7 @@
     </a>
     <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
     <small>by @authors</small>
-    <a href="/packages/@Uri.EscapeDataString(package.Id)/badges"><img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg?v=@Uri.EscapeDataString(versionSpec.VersionString)"/></a>
+    <a href="/packages/@Uri.EscapeDataString(package.Id)/badges"><img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg?v=@Uri.EscapeDataString(versionSpec.ShortVersionString)"/></a>
 </h1>
 <nav>
     <div class="btn-group" style="display: inline-block">
@@ -185,7 +185,7 @@
         <ul class="dropdown-menu">
         @foreach (var v in versions.Versions.OrderByDescending (x => x).Where (x => x.IsPublished))
         {
-            <li><a href="@GetUrl(oversion:v.VersionString)">@v <small>(@ShortDate(v.PublishTime))</small></a></li>
+            <li><a href="@GetUrl(oversion:v.ShortVersionString)">@v <small>(@ShortDate(v.PublishTime))</small></a></li>
         }
         </ul>
     </div>
@@ -203,14 +203,14 @@
         <ul class="dropdown-menu">
         @foreach (var v in versions.Versions.Where (x => x.IsPublished && x.CompareTo (versionSpec) < 0).OrderByDescending (x => x))
         {
-            <li><a href="@GetUrl(oversion:package.Version.VersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")">@v <small>(@ShortDate(v.PublishTime))</small></a></li>
+            <li><a href="@GetUrl(oversion:package.Version.ShortVersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")">@v <small>(@ShortDate(v.PublishTime))</small></a></li>
         }
         </ul>
     </div>
     <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
         <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;@nupkgName
     </a>
-    <a href="@string.Format(package.PackageDetailsUrlFormat, Uri.EscapeDataString(package.Id), Uri.EscapeDataString(package.Version.VersionString))" type="button" class="btn btn-default" style="color: #777">
+    <a href="@string.Format(package.PackageDetailsUrlFormat, Uri.EscapeDataString(package.Id), Uri.EscapeDataString(package.Version.ShortVersionString))" type="button" class="btn btn-default" style="color: #777">
         <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@package.DisplayUrl
     </a>
     @if (!string.IsNullOrEmpty(package.ProjectUrl)) {
@@ -342,7 +342,7 @@ else {
         var cls = (active ? "active " : "") + "public-api";
         <li>
             <a class="@cls"
-               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
+               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
                title="@a.Definition.Name.Version.ToString()">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
@@ -357,7 +357,7 @@ else {
         var cls = (active ? "active " : "") + "public-api";
         <li>
             <a class="@cls"
-               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName</a>
         </li>
     }
@@ -373,7 +373,7 @@ else {
         if (isPublic || package.AllowedToDecompile) {
         <li>
             <a class="@cls"
-               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
+               href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
                 <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key</a>
         </li>
         }
@@ -404,7 +404,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)</a>
         </li>
     }
@@ -418,7 +418,7 @@ else {
         var color = bold == "bold" ? "#000" : "#777";
         <li>
             <a style="font-weight:@bold;color:@color;"
-                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.VersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
+                href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
                 <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)</a>
         </li>
     }
@@ -528,7 +528,7 @@ else {
                     k(r);
                 }
             });
-            req.open("GET", "/api/searchpackage?p=@Uri.EscapeDataString(package.Id)&v=@Uri.EscapeDataString(package.Version.VersionString)&q=" + encodeURIComponent(text));
+            req.open("GET", "/api/searchpackage?p=@Uri.EscapeDataString(package.Id)&v=@Uri.EscapeDataString(package.Version.ShortVersionString)&q=" + encodeURIComponent(text));
             req.send();
         }
         function doSearch() {

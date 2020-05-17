@@ -377,7 +377,7 @@ namespace FuGetGallery
                         package.SizeInBytes = 0;
                         package.DisplayUrl = source.DisplayUrl;
                         package.PackageDetailsUrlFormat = source.PackageDetailsUrlFormat;
-                        package.DownloadUrl = string.Format (source.DownloadUrlFormat, Uri.EscapeDataString (id), Uri.EscapeDataString (version.VersionString));
+                        package.DownloadUrl = string.Format (source.DownloadUrlFormat, Uri.EscapeDataString (id), Uri.EscapeDataString (version.ShortVersionString));
                         return await ReadPackageFromUrl (package, httpClient, token);
                     }
                     catch (OperationCanceledException) {
