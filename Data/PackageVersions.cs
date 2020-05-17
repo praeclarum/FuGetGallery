@@ -26,13 +26,13 @@ namespace FuGetGallery
         public PackageVersion GetVersion (object inputVersion)
         {
             var version = (inputVersion ?? "").ToString().Trim().ToLowerInvariant();
-            var v = Versions.FirstOrDefault (x => x.VersionString == version);
+            var v = Versions.FirstOrDefault (x => x.ShortVersionString == version);
             if (v == null) {
                 v = Versions.LastOrDefault ();
             }
             if (v == null) {
                 v = new PackageVersion {
-                    VersionString = version.Length > 0 ? version : "0",
+                    LongVersionString = version.Length > 0 ? version : "0",
                 };
             }
             return v;
@@ -50,8 +50,8 @@ namespace FuGetGallery
                 if (version == null) {
                     version = v["catalogEntry"]?["version"]?.ToString();
                 }
-                if (version != null && !Versions.Any(x => string.Equals(x.VersionString, version, StringComparison.OrdinalIgnoreCase))) {
-                    Versions.Add (new PackageVersion { VersionString = version, PublishTime = time });
+                if (version != null && !Versions.Any(x => string.Equals(x.LongVersionString, version, StringComparison.OrdinalIgnoreCase))) {
+                    Versions.Add (new PackageVersion { LongVersionString = version, PublishTime = time });
                 }
             }
         }
@@ -118,85 +118,89 @@ namespace FuGetGallery
 
     public class PackageVersion : IComparable<PackageVersion>
     {
-        string versionString = "";
+        string longVersionString = "";
+        string shortVersionString = "";
         int major;
         int minor;
         int patch;
         int build;
         string rest = "";
 
-        public SemanticVersion SemanticVersion { get; private set; }
-
         public DateTime? PublishTime { get; set; }
 
         public bool IsPublished => PublishTime.HasValue && PublishTime.Value.Year > 1970;
 
-        public string VersionString { 
-            get => versionString; 
+        public string LongVersionString { 
+            get => longVersionString; 
             set {
-                if (versionString == value || string.IsNullOrEmpty (value))
+                if (longVersionString == value || string.IsNullOrEmpty (value))
                     return;
-                versionString = value;
+                longVersionString = value;
 
-                if (SemanticVersion.TryParse (value, out var semanticVersion)) {
-                    SemanticVersion = semanticVersion;
-                } else {
-                    // SemanticVersion only supports 3-part version numbers (major.minor.patch); fall back to parsing
-                    // the version string manually if it fails.
-                    var di = value.IndexOf ('-');
-                    var vpart = di > 0 ? value.Substring (0, di) : value;
-                    rest = di > 0 ? value.Substring (di) : "";
-                    var parts = vpart.Split ('.');
-                    major = 0;
-                    minor = 0;
-                    patch = 0;
-                    build = 0;
-                    if (parts.Length > 0)
-                        int.TryParse (parts[0], out major);
-                    if (parts.Length > 1)
-                        int.TryParse (parts[1], out minor);
-                    if (parts.Length > 2)
-                        int.TryParse (parts[2], out patch);
-                    if (parts.Length > 3)
-                        int.TryParse (parts[3], out build);
+                // SemanticVersion only supports 3-part version numbers (major.minor.patch); fall back to parsing
+                // the version string manually if it fails.
+                var di = value.IndexOf ('-');
+                var vpart = di > 0 ? value.Substring (0, di) : value;
+                rest = di > 0 ? value.Substring (di) : "";
+                var parts = vpart.Split ('.');
+                major = 0;
+                minor = 0;
+                patch = 0;
+                build = 0;
+                if (parts.Length > 0)
+                    int.TryParse (parts[0], out major);
+                if (parts.Length > 1)
+                    int.TryParse (parts[1], out minor);
+                if (parts.Length > 2)
+                    int.TryParse (parts[2], out patch);
+                if (parts.Length > 3)
+                    int.TryParse (parts[3], out build);
+
+                //
+                // Short version is just the long version with + stuff
+                // chopped off.
+                //
+                shortVersionString = longVersionString;
+                var pi = shortVersionString.IndexOf ('+');
+                if (pi > 0) {
+                    shortVersionString = shortVersionString.Substring(0, pi);
                 }
             }
         }
+
+        public string ShortVersionString => shortVersionString;
 
         public int CompareTo(PackageVersion other)
         {
             if (other is null)
                 return 1;
 
-            if (SemanticVersion is null && other.SemanticVersion is null) {
-                var c = major.CompareTo (other.major);
-                if (c != 0)
-                    return c;
-                c = minor.CompareTo (other.minor);
-                if (c != 0)
-                    return c;
-                c = patch.CompareTo (other.patch);
-                if (c != 0)
-                    return c;
-                c = build.CompareTo (other.build);
-                if (c != 0)
-                    return c;
-                return string.Compare (rest, other.rest, StringComparison.Ordinal);
-            }
-            
-            return Comparer<SemanticVersion>.Default.Compare (SemanticVersion, other.SemanticVersion);
+            var c = major.CompareTo (other.major);
+            if (c != 0)
+                return c;
+            c = minor.CompareTo (other.minor);
+            if (c != 0)
+                return c;
+            c = patch.CompareTo (other.patch);
+            if (c != 0)
+                return c;
+            c = build.CompareTo (other.build);
+            if (c != 0)
+                return c;
+            return string.Compare (rest, other.rest, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            return obj is PackageVersion v && VersionString == v.VersionString;
+            return obj is PackageVersion v &&
+                CompareTo (v) == 0;
         }
 
         public override int GetHashCode()
         {
-            return VersionString.GetHashCode ();
+            return LongVersionString.GetHashCode ();
         }
 
-        public override string ToString() => VersionString;
+        public override string ToString() => ShortVersionString;
     }
 }

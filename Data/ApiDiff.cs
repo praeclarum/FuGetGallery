@@ -154,8 +154,8 @@ namespace FuGetGallery
             var framework = (inputFramework ?? "").ToString ().ToLowerInvariant ().Trim ();
 
             return await cache.GetAsync(
-                    Tuple.Create (versions.LowerId, version.VersionString, framework),
-                    otherVersion.VersionString,
+                    Tuple.Create (versions.LowerId, version.ShortVersionString, framework),
+                    otherVersion.ShortVersionString,
                     httpClient,
                     token)
                 .ConfigureAwait (false);

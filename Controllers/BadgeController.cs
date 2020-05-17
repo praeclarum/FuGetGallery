@@ -33,7 +33,7 @@ namespace FuGetGallery.Controllers
         string DrawBadge (PackageData package)
         {
             var k = "fuget";
-            var v = "v" + package.Version.VersionString;
+            var v = "v" + package.Version.ShortVersionString;
             
             var font = new Font ("DejaVu Sans,Verdana,Geneva,sans-serif", 11);
             var kw = (int)Math.Round(NullPlatform.GlobalMeasureText(k, font).Width * 1.15);
