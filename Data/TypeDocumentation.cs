@@ -30,6 +30,7 @@ namespace FuGetGallery
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler;
         readonly ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format;
+        private readonly string languageCode;
 
         public string SummaryText { get; }
         public string SummaryHtml { get; }
@@ -40,22 +41,24 @@ namespace FuGetGallery
 
         public TypeDocumentation (TypeDefinition typeDefinition, PackageTargetFramework framework, PackageAssemblyXmlDocs xmlDocs,
             Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler, Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler,
-            ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format)
+            ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format,
+            string languageCode)
         {
             this.xmlDocs = xmlDocs;
+            this.languageCode = languageCode;
             this.typeDefinition = typeDefinition;
             this.framework = framework;
             this.decompiler = decompiler;
             this.idecompiler = idecompiler;
             this.format = format;
-
             SummaryHtml = "";
             SummaryText = "";
             DocumentationHtml = "";
 
             if (xmlDocs != null) {
                 var tn = typeDefinition.GetXmlName ();
-                if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {
+                var ldocs = xmlDocs.GetLanguage (languageCode);
+                if (ldocs.MemberDocs.TryGetValue (tn, out var td)) {
                     MemberXmlDocs = td;
                     SummaryHtml = XmlToHtml (td.SummaryXml);
                     SummaryText = XmlToText (td.SummaryXml);
@@ -82,7 +85,7 @@ namespace FuGetGallery
 
                 var xmlName = m.GetXmlName ();
                 MemberXmlDocs mdocs = null;
-                xmlDocs?.MemberDocs.TryGetValue (xmlName, out mdocs);
+                xmlDocs?.GetLanguage(languageCode).MemberDocs.TryGetValue (xmlName, out mdocs);
 
                 w.WriteLine ("<div class='member-code'>");
                 m.WritePrototypeHtml (w, framework: framework, mdocs, linkToCode: true, isExtensionClass);

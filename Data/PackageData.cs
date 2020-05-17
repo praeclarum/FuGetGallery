@@ -143,10 +143,14 @@ namespace FuGetGallery
                         TargetFrameworks.Add (tf);
                     }
                     if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
-                        var docs = new PackageAssemblyXmlDocs (e);
+                        var docs = new PackageAssemblyXmlLanguageDocs (e);
                         if (string.IsNullOrEmpty (docs.Error)) {
                             // System.Console.WriteLine(docs.AssemblyName);
-                            tf.AssemblyXmlDocs[docs.AssemblyName] = docs;
+                            if (!tf.AssemblyXmlDocs.TryGetValue (docs.AssemblyName, out var allLanguageDocs)) {
+                                allLanguageDocs = new PackageAssemblyXmlDocs (docs.AssemblyName);
+                                tf.AssemblyXmlDocs[docs.AssemblyName] = allLanguageDocs;
+                            }
+                            allLanguageDocs.AddLanguage (docs.LanguageCode, docs);
                         }
                     }
                     else if (isBuild) {
