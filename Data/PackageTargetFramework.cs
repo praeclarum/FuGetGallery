@@ -60,8 +60,8 @@ namespace FuGetGallery
 
             var types =
                 from a in Assemblies.Concat (BuildAssemblies)
-                from m in a.Definition.Modules
-                select new { a, t = m.GetType (typeFullName) };
+                from m in a.Definition?.Modules ?? Enumerable.Empty<ModuleDefinition> ()
+                select new { a, t = m?.GetType (typeFullName) };
             var at = types.FirstOrDefault (x => x.t != null);
 
             if (at == null) {
