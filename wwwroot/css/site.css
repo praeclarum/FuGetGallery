@@ -98,7 +98,7 @@ footer { margin-top: 10em; }
 .c-nd { color: #40424A !important; font-weight: bold; } /* namespace declaration */
 .c-fr { color: #383A42 !important; } /* field reference */
 .c-fd { color: rgb(101, 104, 114) !important; font-weight: bold; } /* field declaration */
-.c-mr { color: #50A14F !important; } /* method group reference */
+.c-mr { color: rgb(116, 182, 115) !important; } /* method group reference */
 .c-md { color: #50A14F !important; font-weight: bold; } /* method declaration */
 .c-cr { color: #50A14F !important; } /* constructor reference */
 .c-cd { color: #50A14F !important; font-weight: bold; } /* constructor declaration */
@@ -109,7 +109,7 @@ footer { margin-top: 10em; }
 .c-pr { color: #0184BC !important; } /* property reference */
 .c-pd { color: #0184BC !important; font-weight: bold; } /* property declaration */
 .c-er { color: #986801 !important; } /* event reference */
-.c-ed { color: #986801 !important; font-weight: bold; } /* event declaration */
+.c-ed { color: rgb(152, 104, 1) !important; font-weight: bold; } /* event declaration */
 
 .add-package-code {
     font-size:14px;
@@ -164,16 +164,16 @@ li.diff-Member {
     list-style-type: none;
 }
 .diff-Add {
-    border-color: rgba(105, 211, 104, 0.75);
-    background-color: rgba(105, 211, 104, 0.05);
+    border-color: rgba(116, 182, 115, 0.75);
+    background-color: rgba(116, 182, 115, 0.15);
 }
 .diff-Remove {
-    border-color: rgba(253, 143, 33, 0.75);
-    background-color: rgba(253, 143, 33, 0.05);
+    border-color: rgba(152, 104, 1, 0.75);
+    background-color: rgba(152, 104, 1, 0.15);
 }
 .diff-Update {
-    border-color: rgba(105, 105, 105, 0.75);
-    background-color: rgba(105, 105, 105, 0.05);
+    border-color: rgba(188, 193, 211, 0.75);
+    background-color: rgba(129, 133, 145, 0.05);
 }
 
 
@@ -247,7 +247,19 @@ li.diff-Member {
         border-radius: 8px;
     }
 
-
+    .diff-Add {
+        border-color: rgba(105, 211, 104, 0.75);
+        background-color: rgba(105, 211, 104, 0.05);
+    }
+    .diff-Remove {
+        border-color: rgba(253, 143, 33, 0.75);
+        background-color: rgba(253, 143, 33, 0.05);
+    }
+    .diff-Update {
+        border-color: rgba(105, 105, 105, 0.75);
+        background-color: rgba(105, 105, 105, 0.05);
+    }
+    
     .c-kw { color: rgb(128, 128, 128) !important; }
     .c-co { color: #909197 !important; }
     .c-uk { color: #ccc !important; }
