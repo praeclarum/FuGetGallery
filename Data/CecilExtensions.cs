@@ -356,21 +356,21 @@ namespace FuGetGallery
                     w.Write (" : ");
                     var head = "";
                     foreach (var c in p.Constraints) {
-                        if (c.ConstraintType.FullName == "System.Object") {
+                        if (c.FullName == "System.Object") {
                             w.Write ("class");
                             head = ", ";
                             break;
                         }
-                        else if (c.ConstraintType.FullName == "System.ValueType") {
+                        else if (c.FullName == "System.ValueType") {
                             w.Write ("struct");
                             head = ", ";
                             break;
                         }
                     }
                     foreach (var c in p.Constraints) {
-                        if (c.ConstraintType.FullName != "System.ValueType" && c.ConstraintType.FullName != "System.Object") {
+                        if (c.FullName != "System.ValueType" && c.FullName != "System.Object") {
                             w.Write (head);
-                            WriteReferenceHtml (c.ConstraintType, w, framework);
+                            WriteReferenceHtml (c, w, framework);
                             head = ", ";
                         }
                     }
