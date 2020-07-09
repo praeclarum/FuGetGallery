@@ -97,19 +97,16 @@ namespace FuGetGallery
                 // Console.WriteLine(rootJson + "\n\n\n\n");
                 var root = JObject.Parse (rootJson);
                 var pages = (JArray)root["items"];
-                if (pages.Count > 0) {
-                    var lastPage = pages.Last ();
-                    var lastPageItems = lastPage["items"] as JArray;
-                    if (lastPageItems != null) {
-                        package.Read (lastPageItems);
+                foreach (var p in pages) {
+                    var pageItems = p["items"] as JArray;
+                    if (pageItems != null) {
+                        package.Read (pageItems);
                     }
                     else {
-                        foreach (var p in pages.Reverse ()) {
-                            var pageUrl = p["@id"].ToString ();
-                            var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
-                            var pageRoot = JObject.Parse (pageRootJson);
-                            package.Read ((JArray)pageRoot["items"]);
-                        }
+                        var pageUrl = p["@id"].ToString ();
+                        var pageRootJson = await httpClient.GetStringAsync (pageUrl).ConfigureAwait (false);
+                        var pageRoot = JObject.Parse (pageRootJson);
+                        package.Read ((JArray)pageRoot["items"]);
                     }
                 }
             }
