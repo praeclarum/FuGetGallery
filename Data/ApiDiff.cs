@@ -31,6 +31,8 @@ namespace FuGetGallery
         {
             public string Namespace;
             public List<TypeDiffInfo> Types = new List<TypeDiffInfo> ();
+            public int NumAdditions => Types.Sum(x => x.NumAdditions);
+            public int NumRemovals => Types.Sum(x => x.NumRemovals);
         }
 
         public class TypeDiffInfo : DiffInfo
@@ -38,11 +40,31 @@ namespace FuGetGallery
             public TypeDefinition Type;
             public PackageTargetFramework Framework;
             public List<MemberDiffInfo> Members = new List<MemberDiffInfo> ();
+            public int NumAdditions {
+                get {
+                    switch (Action) {
+                        case ListDiffActionType.Remove: return 0;
+                        case ListDiffActionType.Update: return Members.Sum(x => x.NumAdditions);
+                        default: return 1 + Members.Sum(x => x.NumAdditions);
+                    }
+                }
+            }
+            public int NumRemovals {
+                get {
+                    switch (Action) {
+                        case ListDiffActionType.Remove: return 1;
+                        case ListDiffActionType.Update: return Members.Sum(x => x.NumRemovals);
+                        default: return 0;
+                    }
+                }
+            }
         }
 
         public class MemberDiffInfo : DiffInfo
         {
             public IMemberDefinition Member;
+            public int NumAdditions => Action == ListDiffActionType.Add ? 1 : 0;
+            public int NumRemovals => Action == ListDiffActionType.Remove ? 1 : 0;
         }
 
         public ApiDiff (PackageData package, PackageTargetFramework framework, PackageData otherPackage, PackageTargetFramework otherFramework)

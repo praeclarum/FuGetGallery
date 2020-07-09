@@ -133,26 +133,49 @@ ul.pkglist{
     white-space:nowrap;
 }
 
-li.diff-Add {
-    list-style-type: disc;
-}
-
-li.diff-Update {
-    list-style-type: circle;
-}
-
-li.diff-Remove {
-    list-style-type: circle;
-    text-decoration: line-through;
-    text-decoration-color: #000;
-}
-
 .description-section {
     white-space: pre-wrap;
     word-wrap: normal;
     font-size: 120%;
     margin-bottom: 1.25em;
 }
+
+.diff-Types {
+    padding-left: 0;
+}
+.diff-Members {
+    padding-left: 1em;
+}
+
+li.diff-Type > span {
+    font-size: 120%;
+}
+li.diff-Type {
+    margin: 1em 0;
+}
+li.diff-Member {
+    margin: 0.5em;
+}
+
+.diff-Add, .diff-Remove, .diff-Update {
+    border:solid 1px;
+    border-radius: 0.5em;
+    padding: 0.5em;
+    list-style-type: none;
+}
+.diff-Add {
+    border-color: rgba(105, 211, 104, 0.75);
+    background-color: rgba(105, 211, 104, 0.05);
+}
+.diff-Remove {
+    border-color: rgba(253, 143, 33, 0.75);
+    background-color: rgba(253, 143, 33, 0.05);
+}
+.diff-Update {
+    border-color: rgba(105, 105, 105, 0.75);
+    background-color: rgba(105, 105, 105, 0.05);
+}
+
 
 
 @media (prefers-color-scheme: dark) {
@@ -233,8 +256,8 @@ li.diff-Remove {
     .c-st { color: #c60 !important; }
     .c-nr { color: rgb(170, 175, 196) !important; }
     .c-nd { color: rgb(167, 173, 194) !important; font-weight: bold; }
-    .c-fr { color: rgb(160, 165, 187) !important; }
-    .c-fd { color: rgb(143, 147, 160) !important; font-weight: bold; }
+    .c-fr { color: rgb(176, 181, 206) !important; }
+    .c-fd { color: rgb(167, 171, 187) !important; font-weight: bold; }
     .c-mr { color: rgb(105, 211, 104) !important; }
     .c-md { color: rgb(105, 211, 104) !important; font-weight: bold; }
     .c-cr { color: rgb(105, 211, 104) !important; }
