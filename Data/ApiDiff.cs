@@ -163,7 +163,7 @@ namespace FuGetGallery
 
         class ApiDiffCache : DataCache<Tuple<string, string, string>, string, ApiDiff>
         {
-            public ApiDiffCache () : base (TimeSpan.FromDays (365)) { }
+            public ApiDiffCache () : base (TimeSpan.FromDays (1)) { }
 
             protected override async Task<ApiDiff> GetValueAsync (
                 Tuple<string, string, string> packageSpec,

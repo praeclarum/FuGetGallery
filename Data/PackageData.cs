@@ -359,7 +359,7 @@ namespace FuGetGallery
 
         class PackageDataCache : DataCache<string, PackageVersion, PackageData>
         {
-            public PackageDataCache() : base(TimeSpan.FromDays(365))
+            public PackageDataCache() : base(TimeSpan.FromDays(1))
             {
 
             }
