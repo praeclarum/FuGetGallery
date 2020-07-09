@@ -25,6 +25,10 @@ footer { margin-top: 10em; }
     color: #777;
 }
 
+.version small {
+    opacity: 0.65;
+}
+
 .sidenav h4 {
     color:#777;
 }

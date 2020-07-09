@@ -28,7 +28,7 @@ namespace FuGetGallery
             var version = (inputVersion ?? "").ToString().Trim().ToLowerInvariant();
             var v = Versions.FirstOrDefault (x => x.ShortVersionString == version);
             if (v == null) {
-                v = Versions.LastOrDefault ();
+                v = Versions.LastOrDefault (x => !x.IsPreRelease);
             }
             if (v == null) {
                 v = new PackageVersion {
@@ -51,8 +51,28 @@ namespace FuGetGallery
                     version = v["catalogEntry"]?["version"]?.ToString();
                 }
                 if (version != null && !Versions.Any(x => string.Equals(x.LongVersionString, version, StringComparison.OrdinalIgnoreCase))) {
-                    Versions.Add (new PackageVersion { LongVersionString = version, PublishTime = time });
+                    var pv = new PackageVersion { LongVersionString = version, PublishTime = time };
+                    Versions.Add (pv);
+                    Console.WriteLine (pv.LongVersionString);
                 }
+                Versions.Sort ((x, y) => {
+                    if (x.PublishTime.HasValue) {
+                        if (y.PublishTime.HasValue) {
+                            return x.PublishTime.Value.CompareTo (y.PublishTime.Value);
+                        }
+                        else {
+                            return 1;
+                        }
+                    }
+                    else {
+                        if (y.PublishTime.HasValue) {
+                            return -1;
+                        }
+                        else {
+                            return 0;
+                        }
+                    }
+                });
             }
         }
 
@@ -123,9 +143,13 @@ namespace FuGetGallery
         int build;
         string rest = "";
 
+        public int Major => major;
+
         public DateTime? PublishTime { get; set; }
 
         public bool IsPublished => PublishTime.HasValue && PublishTime.Value.Year > 1970;
+
+        public bool IsPreRelease => rest != null && rest.Length > 0 && rest[0] == '-';
 
         public string LongVersionString { 
             get => longVersionString; 
@@ -134,11 +158,24 @@ namespace FuGetGallery
                     return;
                 longVersionString = value;
 
+                //
+                // Short version is just the long version with + stuff
+                // chopped off.
+                //
+                shortVersionString = longVersionString;
+                var pi = longVersionString.IndexOf ('+');
+                if (pi > 0) {
+                    shortVersionString = longVersionString.Substring (0, pi);
+                }
+                else {
+                    shortVersionString = longVersionString;
+                }
+
                 // SemanticVersion only supports 3-part version numbers (major.minor.patch); fall back to parsing
                 // the version string manually if it fails.
-                var di = value.IndexOf ('-');
-                var vpart = di > 0 ? value.Substring (0, di) : value;
-                rest = di > 0 ? value.Substring (di) : "";
+                var di = shortVersionString.IndexOf ('-');
+                var vpart = di > 0 ? shortVersionString.Substring (0, di) : shortVersionString;
+                rest = di > 0 ? shortVersionString.Substring (di) : "";
                 var parts = vpart.Split ('.');
                 major = 0;
                 minor = 0;
@@ -152,16 +189,6 @@ namespace FuGetGallery
                     int.TryParse (parts[2], out patch);
                 if (parts.Length > 3)
                     int.TryParse (parts[3], out build);
-
-                //
-                // Short version is just the long version with + stuff
-                // chopped off.
-                //
-                shortVersionString = longVersionString;
-                var pi = shortVersionString.IndexOf ('+');
-                if (pi > 0) {
-                    shortVersionString = shortVersionString.Substring(0, pi);
-                }
             }
         }
 
