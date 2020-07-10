@@ -53,26 +53,8 @@ namespace FuGetGallery
                 if (version != null && !Versions.Any(x => string.Equals(x.LongVersionString, version, StringComparison.OrdinalIgnoreCase))) {
                     var pv = new PackageVersion { LongVersionString = version, PublishTime = time };
                     Versions.Add (pv);
-                    Console.WriteLine (pv.LongVersionString);
                 }
-                Versions.Sort ((x, y) => {
-                    if (x.PublishTime.HasValue) {
-                        if (y.PublishTime.HasValue) {
-                            return x.PublishTime.Value.CompareTo (y.PublishTime.Value);
-                        }
-                        else {
-                            return 1;
-                        }
-                    }
-                    else {
-                        if (y.PublishTime.HasValue) {
-                            return -1;
-                        }
-                        else {
-                            return 0;
-                        }
-                    }
-                });
+                Versions.Sort ();
             }
         }
 
@@ -211,7 +193,18 @@ namespace FuGetGallery
             c = build.CompareTo (other.build);
             if (c != 0)
                 return c;
-            return string.Compare (rest, other.rest, StringComparison.Ordinal);
+            if (string.IsNullOrEmpty (rest)) {
+                if (string.IsNullOrEmpty (other.rest))
+                    return 0;
+                else
+                    return 1;
+            }
+            else {
+                if (string.IsNullOrEmpty (other.rest))
+                    return -1;
+                else
+                    return string.Compare (rest, other.rest, StringComparison.Ordinal);
+            }
         }
 
         public override bool Equals(object obj)
