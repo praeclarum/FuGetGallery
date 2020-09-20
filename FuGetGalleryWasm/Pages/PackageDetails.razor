@@ -1,5 +1,8 @@
 ﻿@page "/details"
 @using FuGetGallery
+@inject HttpClient httpClient
+
+
 <header>
     <h1>
         <a href="/packages/@Uri.EscapeDataString(package.Id)">
@@ -165,11 +168,11 @@
             {
                 bool isExtensionClass = ti.Type.IsExtensionClass();
                 <li class="diff-@ti.Action diff-Type">
-                    <span class="inline-code">@Html.Raw(ti.Type.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass))</span>
+                    <span class="inline-code">@(new MarkupString(ti.Type.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass)))</span>
                     <ul class="diff-Members">
                         @foreach (var mi in ti.Members)
                         {
-                            <li class="diff-@mi.Action diff-Member"><span class="inline-code">@Html.Raw(mi.Member.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass))</span></li>
+                            <li class="diff-@mi.Action diff-Member"><span class="inline-code">@(new MarkupString(mi.Member.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass)))</span></li>
                         }
                     </ul>
                 </li>
@@ -319,31 +322,24 @@ else
                 {
                     <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
                     <div class="member-code" style="font-size:120%">
-                        @Html.Raw(typ.GetPrototypeHtml(framework: framework, docs?.MemberXmlDocs, linkToCode: false, inExtensionClass: false))
+                        @(new MarkupString (typ.GetPrototypeHtml(framework: framework, docs?.MemberXmlDocs, linkToCode: false, inExtensionClass: false)))
                     </div>
                     <div class="description-section">
                         @if (docs != null)
-                        {@Html.Raw(docs.SummaryHtml)}
-                    else
-                    {@description}
+                        {@(new MarkupString (docs.SummaryHtml))}
+                        else
+                        {@description}
                     </div>
                     <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:"false")" aria-controls="documentation" role="tab">Documentation</a></li>
+                        <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:false)" aria-controls="documentation" role="tab">Documentation</a></li>
                         @if (package.AllowedToDecompile)
                         {
-                            <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:"true")" aria-controls="code" role="tab">Code</a></li>
+                            <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:true)" aria-controls="code" role="tab">Code</a></li>
                         }
                     </ul>
                     if (docs != null)
                     {
-                        if (code)
-                        {
-                            @Html.Raw(await docs.GetTypeCodeAsync())
-                        }
-                        else
-                        {
-                            @Html.Raw(docs.DocumentationHtml)
-                        }
+                        @(new MarkupString (docsHtml))
                     }
                 }
                 else if (showKlass == "namespace")
@@ -388,45 +384,65 @@ PackageTargetFramework framework;
 bool hasApi;
 ApiDiff diff;
 string showKlass;
-IGrouping<string, Mono.Cecil.TypeDefinition> ns;
+IGrouping<string, Mono.Cecil.TypeDefinition>
+                                ns;
 List<IGrouping<string, Mono.Cecil.TypeDefinition>> namespaces;
 Mono.Cecil.AssemblyDefinition asmDef;
 Mono.Cecil.TypeDefinition typ;
 string description;
 PackageFile content;
 TypeDocumentation docs;
-string code;
+bool code;
 string nupkgName;
 string packageIcon;
 PackageAssembly asm;
 bool isBuildAsm;
+bool autodir;
 string dir;
 List<string> dependents;
-Random rand;
+readonly Random rand = new Random();
+string docsHtml;
 
 const int maxDisplayDependents = 8;
 
-override async Task OnInitializedAsync()
+[Parameter]
+public string PackageId { get; set; } = "Newtonsoft.Json";
+[Parameter]
+public string PackageVersion { get; set; } = "";
+[Parameter]
+public string TargetFramework { get; set; } = "";
+[Parameter]
+public string Directory { get; set; } = "";
+[Parameter]
+public string AssemblyName { get; set; } = "";
+[Parameter]
+public string Namespace { get; set; } = "";
+[Parameter]
+public string TypeName { get; set; } = "";
+[Parameter]
+public bool ShowCode { get; set; }
+[Parameter]
+public string LanguageCode { get; set; } = "en";
+
+readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
+
+protected override async Task OnInitializedAsync()
 {
-    package = await PackageData.GetAsync(RouteData.Values["id"], RouteData.Values["version"], httpClient);
+    package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
     authors = package.AuthorsOrOwners;
-    versions = await PackageVersions.GetAsync(RouteData.Values["id"], httpClient, HttpContext.RequestAborted);
+    versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
     versionSpec = package.Version;
 
-    var acceptLangHeader = HttpContext.Request.GetTypedHeaders().AcceptLanguage;
-    var languageCode = acceptLangHeader != null && acceptLangHeader.Count > 0 ?
-        acceptLangHeader.First().Value.ToString() : "en";
+    dependents = (await PackageDependents.GetAsync(PackageId, httpClient, tokenSource.Token)).DependentIds;
 
-    dependents = (await PackageDependents.GetAsync(RouteData.Values["id"], httpClient, HttpContext.RequestAborted)).DependentIds;
-
-    string inputTargetFramework = (RouteData.Values["targetFramework"] ?? "").ToString().Trim();
+    string inputTargetFramework = (TargetFramework ?? "").ToString().Trim();
     framework = package.FindClosestTargetFramework(inputTargetFramework);
 
     content = default(PackageFile);
-    string inputAssemblyName = (RouteData.Values["assemblyName"] ?? "").ToString().Trim();
-    string inputNamespace = (RouteData.Values["namespace"] ?? "").ToString().Trim();
-    isBuildAsm = "build".Equals(RouteData.Values["dir"]);
-    var autodir = string.IsNullOrEmpty(RouteData.Values["dir"]?.ToString());
+    string inputAssemblyName = (AssemblyName ?? "").ToString().Trim();
+    string inputNamespace = (Namespace ?? "").ToString().Trim();
+    isBuildAsm = "build".Equals(Directory);
+    autodir = string.IsNullOrEmpty(Directory);
     dir = isBuildAsm ? "build" : "lib";
 
     diff = default(ApiDiff);
@@ -434,7 +450,7 @@ override async Task OnInitializedAsync()
 
     if (inputAssemblyName == "diff")
     {
-        diff = await ApiDiff.GetAsync(package.Id, package.Version.ShortVersionString, framework.Moniker, inputNamespace, httpClient, HttpContext.RequestAborted);
+        diff = await ApiDiff.GetAsync(package.Id, package.Version.ShortVersionString, framework.Moniker, inputNamespace, httpClient, tokenSource.Token);
     }
     else
     {
@@ -459,13 +475,12 @@ override async Task OnInitializedAsync()
         }
     }
 
-    string inputTypeName = (RouteData.Values["typeName"] ?? "").ToString().Trim();
+    string inputTypeName = (TypeName ?? "").ToString().Trim();
 
     typ = ns?.FirstOrDefault(x => x.Name == inputTypeName);
-    docs = typ != null ? asm?.GetTypeDocumentation(typ, languageCode) : null;
+    docs = typ != null ? asm?.GetTypeDocumentation(typ, LanguageCode) : null;
 
-    var inputCode = Request.Query["code"].FirstOrDefault() ?? "";
-    code = "true".Equals(inputCode) && package.AllowedToDecompile;
+    code = ShowCode && package.AllowedToDecompile;
 
     hasApi = framework != null;
     var hasContent = package != null && package.Content.Count > 0;
@@ -503,7 +518,9 @@ override async Task OnInitializedAsync()
 
     packageIcon = "briefcase";
 
-
+    docsHtml = (code) ?
+        await docs.GetTypeCodeAsync() :
+        docs.DocumentationHtml;
 }
 
 string GetIcon(object o)
@@ -534,18 +551,18 @@ string GetIcon(object o)
     return "";
 }
 
-string GetUrl(object oid = null, object oversion = null, object otargetFramework = null, object odir = null, object oassemblyName = null, object onamespace = null, object otypeName = null, object ocode = null)
+string GetUrl(object oid = null, object oversion = null, object otargetFramework = null, object odir = null, object oassemblyName = null, object onamespace = null, object otypeName = null, bool ocode = false)
 {
-    oid = (oid ?? package?.Id) ?? RouteData.Values["id"];
-    oversion = (oversion ?? package?.Version) ?? RouteData.Values["version"];
-    otargetFramework = (otargetFramework ?? framework?.Moniker) ?? RouteData.Values["targetFramework"];
-    odir = (odir ?? dir) ?? RouteData.Values["dir"];
+    oid = (oid ?? package?.Id) ?? PackageId;
+    oversion = (oversion ?? package?.Version) ?? PackageVersion;
+    otargetFramework = (otargetFramework ?? framework?.Moniker) ?? TargetFramework;
+    odir = (odir ?? dir) ?? Directory;
     if (autodir && oassemblyName == null && onamespace == null && otypeName == null && ocode == null)
         odir = null;
-    oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals(RouteData.Values["assemblyName"]) ? null : RouteData.Values["assemblyName"]);
-    onamespace = (onamespace ?? ns?.Key) ?? RouteData.Values["namespace"];
-    otypeName = otypeName ?? RouteData.Values["typeName"];
-    ocode = ocode ?? Request.Query["code"].FirstOrDefault();
+    oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals(AssemblyName) ? null : AssemblyName);
+    onamespace = (onamespace ?? ns?.Key) ?? Namespace;
+    otypeName = otypeName ?? TypeName;
+    ocode = ShowCode;
     var r = "/packages";
     if (oid != null)
     {
@@ -575,7 +592,7 @@ string GetUrl(object oid = null, object oversion = null, object otargetFramework
             }
         }
     }
-    if ("true".Equals(ocode) && package.AllowedToDecompile)
+    if (ocode && package.AllowedToDecompile)
     {
         r += "?code=true";
     }
