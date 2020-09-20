@@ -5,13 +5,20 @@
 
 <header>
     <h1>
+        OMG
+        @if (package == null) {
+        <span>Loading the package</span>
+        }
+        else {
         <a href="/packages/@Uri.EscapeDataString(package.Id)">
             <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
         </a>
         <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
         <small>by @authors</small>
         <a href="/packages/@Uri.EscapeDataString(package.Id)/badges"><img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg?v=@Uri.EscapeDataString(versionSpec.ShortVersionString)" /></a>
+        }
     </h1>
+    @if (package != null) {
     <nav>
         <div class="btn-group" style="display: inline-block">
             <button type="button" class="btn btn-default version">@package.Version <small>@ShortDate(package.Version?.PublishTime)</small></button>
@@ -20,14 +27,13 @@
                 <span class="sr-only">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu">
-                @foreach (var mv in versions.Versions.Where(x => x.IsPublished).OrderByDescending(x => x).GroupBy(x => x.Major))
-                {
-                    <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
-                    foreach (var v in mv)
-                    {
-                        <li><a href="@GetUrl(oversion: v.ShortVersionString)" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
+                @if (versions != null)
+                    foreach (var mv in versions.Versions.Where (x => x.IsPublished).OrderByDescending (x => x).GroupBy (x => x.Major)) {
+                        <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
+                        foreach (var v in mv) {
+                            <li><a href="@GetUrl(oversion: v.ShortVersionString)" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
+                        }
                     }
-                }
             </ul>
         </div>
         <div class="btn-group" style="display: inline-block">
@@ -43,14 +49,15 @@
                 <span class="sr-only">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu">
-                @foreach (var mv in versions.Versions.Where(x => x.IsPublished).OrderByDescending(x => x).GroupBy(x => x.Major))
-                {
-                    <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
-                    foreach (var v in mv)
+                @if (versions != null) 
+                    foreach (var mv in versions.Versions.Where(x => x.IsPublished).OrderByDescending(x => x).GroupBy(x => x.Major))
                     {
-                        <li><a href="@GetUrl(oversion:package.Version.ShortVersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
+                        <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
+                        foreach (var v in mv)
+                        {
+                            <li><a href="@GetUrl(oversion:package.Version.ShortVersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
+                        }
                     }
-                }
             </ul>
         </div>
         <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
@@ -78,10 +85,12 @@
             </a>
         }
     </nav>
+    }
+    @if (package != null) {
+        <div class="code add-package-code">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
+    }
 
-    <div class="code add-package-code">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
-
-    @if (package.Error != null)
+    @if (package != null && package.Error != null)
     {
         <div style="margin-top:2em">
             <h2>Error reading package</h2>
@@ -89,7 +98,7 @@
         </div>
     }
 
-    @if (package.TargetFrameworks.Count > 0)
+    @if (package != null && package.TargetFrameworks.Count > 0)
     {
         <nav style="margin-top:0em;line-height:2.75em;">
             <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h4>
@@ -109,7 +118,7 @@
         </nav>
     }
 
-    @if (framework != null && framework.Dependencies.Count > 0)
+    @if (package != null && framework != null && framework.Dependencies.Count > 0)
     {
         <nav style="margin-top:0em;line-height:2.75em;">
             <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h4>
@@ -123,7 +132,7 @@
         </nav>
     }
 
-    @if (dependents != null && dependents.Count > 0)
+    @if (package != null && dependents != null && dependents.Count > 0)
     {
         <nav style="margin-top:0em;line-height:2.75em;">
             <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
@@ -144,7 +153,7 @@
 
     <hr style="margin-top:2em;" />
 </header>
-
+@*
 @if (diff != null)
 {
 
@@ -362,7 +371,7 @@ else
             </article>
         </div>
     </div>
-}
+}*@
 
 @code {
 
@@ -377,69 +386,70 @@ else
             { "og:description", description },
             { "og:image", package.SafeIconUrl },*@
 
-    PackageData package;
-    string authors;
-    PackageVersions versions;
-    PackageVersion versionSpec;
-    PackageTargetFramework framework;
-    bool hasApi;
-    ApiDiff diff;
-    string showKlass;
-    IGrouping<string, Mono.Cecil.TypeDefinition>
-                                    ns;
-    List<IGrouping<string, Mono.Cecil.TypeDefinition>> namespaces;
-    Mono.Cecil.AssemblyDefinition asmDef;
-    Mono.Cecil.TypeDefinition typ;
-    string description;
-    PackageFile content;
-    TypeDocumentation docs;
-    bool code;
-    string nupkgName;
-    string packageIcon;
-    PackageAssembly asm;
-    bool isBuildAsm;
-    bool autodir;
-    string dir;
-    List<string> dependents;
-    readonly Random rand = new Random();
-    string docsHtml;
+PackageData package;
+string authors;
+PackageVersions versions;
+PackageVersion versionSpec;
+PackageTargetFramework framework;
+bool hasApi;
+ApiDiff diff;
+string showKlass;
+IGrouping<string, Mono.Cecil.TypeDefinition>
+                                ns;
+List<IGrouping<string, Mono.Cecil.TypeDefinition>> namespaces;
+Mono.Cecil.AssemblyDefinition asmDef;
+Mono.Cecil.TypeDefinition typ;
+string description;
+PackageFile content;
+TypeDocumentation docs;
+bool code;
+string nupkgName;
+string packageIcon;
+PackageAssembly asm;
+bool isBuildAsm;
+bool autodir;
+string dir;
+List<string> dependents;
+readonly Random rand = new Random();
+string docsHtml;
 
-    const int maxDisplayDependents = 8;
+const int maxDisplayDependents = 8;
 
-    [Parameter]
-    public string PackageId { get; set; } = "Newtonsoft.Json";
-    [Parameter]
-    public string PackageVersion { get; set; } = "";
-    [Parameter]
-    public string TargetFramework { get; set; } = "";
-    [Parameter]
-    public string Directory { get; set; } = "";
-    [Parameter]
-    public string AssemblyName { get; set; } = "";
-    [Parameter]
-    public string Namespace { get; set; } = "";
-    [Parameter]
-    public string TypeName { get; set; } = "";
-    [Parameter]
-    public bool ShowCode { get; set; }
-    [Parameter]
-    public string LanguageCode { get; set; } = "en";
+[Parameter]
+public string PackageId { get; set; } = "Newtonsoft.Json";
+[Parameter]
+public string PackageVersion { get; set; } = "";
+[Parameter]
+public string TargetFramework { get; set; } = "";
+[Parameter]
+public string Directory { get; set; } = "";
+[Parameter]
+public string AssemblyName { get; set; } = "";
+[Parameter]
+public string Namespace { get; set; } = "";
+[Parameter]
+public string TypeName { get; set; } = "";
+[Parameter]
+public bool ShowCode { get; set; }
+[Parameter]
+public string LanguageCode { get; set; } = "en";
 
-    readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
+readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
 
-    protected override async Task OnInitializedAsync()
-    {
-        package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
-        authors = package.AuthorsOrOwners;
-        versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
-        versionSpec = package.Version;
-        Console.WriteLine("READY FOR MORE");
-#if BAD
+protected override async Task OnInitializedAsync()
+{
+    package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
+    Console.WriteLine ("PACKAGE = " + package);
+    authors = package.AuthorsOrOwners;
+    versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
+    versionSpec = package.Version;
+    Console.WriteLine("READY FOR MORE");
 
     dependents = (await PackageDependents.GetAsync(PackageId, httpClient, tokenSource.Token)).DependentIds;
 
     string inputTargetFramework = (TargetFramework ?? "").ToString().Trim();
     framework = package.FindClosestTargetFramework(inputTargetFramework);
+#if BAD
 
     content = default(PackageFile);
     string inputAssemblyName = (AssemblyName ?? "").ToString().Trim();
