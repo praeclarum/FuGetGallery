@@ -7,6 +7,8 @@ using Mono.Cecil;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+
+#if HAS_SQLITE
 using SQLite;
 
 namespace FuGetGallery
@@ -48,3 +50,5 @@ namespace FuGetGallery
         }
     }
 }
+
+#endif

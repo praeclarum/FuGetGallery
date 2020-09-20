@@ -93,18 +93,19 @@
     {
         <nav style="margin-top:0em;line-height:2.75em;">
             <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h4>
-            @foreach (var tf in package.TargetFrameworks)
-            {
-                var active = tf.Moniker == framework.Moniker ? "active" : "";
-                var color = tf.Moniker.StartsWith("netstandard") ? "success" :
-                            (tf.Moniker.StartsWith("net") ? "info" :
-                            (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
-                var bold = active == "active" ? "bold" : "normal";
-                var tcolor = active == "active" ? "color:#fff" : "color:rgba(255,255,255,0.75)";
-                var fwurl = diff == null ? GetUrl(otargetFramework: tf.Moniker) : GetUrl(otargetFramework: tf.Moniker, oassemblyName: "diff", onamespace: diff.OtherPackage.Version);
-                <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button"
-                   href="@fwurl">@tf.Moniker</a>
-            }
+            @if (package != null && framework != null)
+                foreach (var tf in package.TargetFrameworks)
+                {
+                    var active = tf.Moniker == framework.Moniker ? "active" : "";
+                    var color = tf.Moniker.StartsWith("netstandard") ? "success" :
+                                (tf.Moniker.StartsWith("net") ? "info" :
+                                (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
+                    var bold = active == "active" ? "bold" : "normal";
+                    var tcolor = active == "active" ? "color:#fff" : "color:rgba(255,255,255,0.75)";
+                    var fwurl = diff == null ? GetUrl(otargetFramework: tf.Moniker) : GetUrl(otargetFramework: tf.Moniker, oassemblyName: "diff", onamespace: diff.OtherPackage.Version);
+                    <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button"
+                       href="@fwurl">@tf.Moniker</a>
+                }
         </nav>
     }
 
@@ -122,7 +123,7 @@
         </nav>
     }
 
-    @if (dependents.Count > 0)
+    @if (dependents != null && dependents.Count > 0)
     {
         <nav style="margin-top:0em;line-height:2.75em;">
             <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
@@ -376,62 +377,64 @@ else
             { "og:description", description },
             { "og:image", package.SafeIconUrl },*@
 
-PackageData package;
-string authors;
-PackageVersions versions;
-PackageVersion versionSpec;
-PackageTargetFramework framework;
-bool hasApi;
-ApiDiff diff;
-string showKlass;
-IGrouping<string, Mono.Cecil.TypeDefinition>
-                                ns;
-List<IGrouping<string, Mono.Cecil.TypeDefinition>> namespaces;
-Mono.Cecil.AssemblyDefinition asmDef;
-Mono.Cecil.TypeDefinition typ;
-string description;
-PackageFile content;
-TypeDocumentation docs;
-bool code;
-string nupkgName;
-string packageIcon;
-PackageAssembly asm;
-bool isBuildAsm;
-bool autodir;
-string dir;
-List<string> dependents;
-readonly Random rand = new Random();
-string docsHtml;
+    PackageData package;
+    string authors;
+    PackageVersions versions;
+    PackageVersion versionSpec;
+    PackageTargetFramework framework;
+    bool hasApi;
+    ApiDiff diff;
+    string showKlass;
+    IGrouping<string, Mono.Cecil.TypeDefinition>
+                                    ns;
+    List<IGrouping<string, Mono.Cecil.TypeDefinition>> namespaces;
+    Mono.Cecil.AssemblyDefinition asmDef;
+    Mono.Cecil.TypeDefinition typ;
+    string description;
+    PackageFile content;
+    TypeDocumentation docs;
+    bool code;
+    string nupkgName;
+    string packageIcon;
+    PackageAssembly asm;
+    bool isBuildAsm;
+    bool autodir;
+    string dir;
+    List<string> dependents;
+    readonly Random rand = new Random();
+    string docsHtml;
 
-const int maxDisplayDependents = 8;
+    const int maxDisplayDependents = 8;
 
-[Parameter]
-public string PackageId { get; set; } = "Newtonsoft.Json";
-[Parameter]
-public string PackageVersion { get; set; } = "";
-[Parameter]
-public string TargetFramework { get; set; } = "";
-[Parameter]
-public string Directory { get; set; } = "";
-[Parameter]
-public string AssemblyName { get; set; } = "";
-[Parameter]
-public string Namespace { get; set; } = "";
-[Parameter]
-public string TypeName { get; set; } = "";
-[Parameter]
-public bool ShowCode { get; set; }
-[Parameter]
-public string LanguageCode { get; set; } = "en";
+    [Parameter]
+    public string PackageId { get; set; } = "Newtonsoft.Json";
+    [Parameter]
+    public string PackageVersion { get; set; } = "";
+    [Parameter]
+    public string TargetFramework { get; set; } = "";
+    [Parameter]
+    public string Directory { get; set; } = "";
+    [Parameter]
+    public string AssemblyName { get; set; } = "";
+    [Parameter]
+    public string Namespace { get; set; } = "";
+    [Parameter]
+    public string TypeName { get; set; } = "";
+    [Parameter]
+    public bool ShowCode { get; set; }
+    [Parameter]
+    public string LanguageCode { get; set; } = "en";
 
-readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
+    readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
 
-protected override async Task OnInitializedAsync()
-{
-    package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
-    authors = package.AuthorsOrOwners;
-    versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
-    versionSpec = package.Version;
+    protected override async Task OnInitializedAsync()
+    {
+        package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
+        authors = package.AuthorsOrOwners;
+        versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
+        versionSpec = package.Version;
+        Console.WriteLine("READY FOR MORE");
+#if BAD
 
     dependents = (await PackageDependents.GetAsync(PackageId, httpClient, tokenSource.Token)).DependentIds;
 
@@ -457,7 +460,7 @@ protected override async Task OnInitializedAsync()
         asm = framework?.GetAssembly(dir, inputAssemblyName);
     }
     asmDef = asm?.Definition;
-
+    Console.WriteLine ("ASSEMBLY LOADED " + asmDef);
     var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
 
     namespaces = types.GroupBy(x => x.Namespace).OrderBy(x => x.Key).Where(x => !string.IsNullOrEmpty(x.Key)).ToList();
@@ -518,9 +521,11 @@ protected override async Task OnInitializedAsync()
 
     packageIcon = "briefcase";
 
-    docsHtml = (code) ?
-        await docs.GetTypeCodeAsync() :
-        docs.DocumentationHtml;
+    if (docs != null)
+        docsHtml = (code) ?
+            await docs.GetTypeCodeAsync() :
+            docs.DocumentationHtml;
+#endif
 }
 
 string GetIcon(object o)

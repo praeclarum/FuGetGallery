@@ -7,7 +7,10 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 using System.Diagnostics;
+
+#if HAS_SQLITE
 using SQLite;
+#endif
 
 namespace FuGetGallery
 {
@@ -37,10 +40,12 @@ namespace FuGetGallery
             {
                 var deps = new PackageDependents ();
                 try {
+#if HAS_SQLITE
                     var db = new Database ();
                     foreach (var d in await db.Table<StoredPackageDependency>().Where (x => x.LowerPackageId == lowerId).ToListAsync ()) {
                         deps.DependentIds.Add (d.DependentPackageId);
                     }
+#endif
                 }
                 catch (Exception ex) {
                     Console.WriteLine (ex);
@@ -52,12 +57,12 @@ namespace FuGetGallery
 
     class StoredPackageDependency
     {
-        [Unique(Name="StoredPackageDependency_U", Order=0), NotNull]
+        //[Unique(Name="StoredPackageDependency_U", Order=0), NotNull]
         public string LowerPackageId { get; set; }
-        [Unique(Name="StoredPackageDependency_U", Order=1), NotNull]
+        //[Unique(Name="StoredPackageDependency_U", Order=1), NotNull]
         public string LowerDependentPackageId { get; set; }
 
-        [NotNull]
+        //[NotNull]
         public string DependentPackageId { get; set; }
     }
 }

@@ -94,7 +94,7 @@ namespace FuGetGallery
 
             private static async Task ReadVersionsFromUrl (HttpClient httpClient, PackageVersions package, string url)
             {
-                // Console.WriteLine("READ VERSIONS FROM: " + url);
+                Console.WriteLine ("READ VERSIONS FROM: " + url);
                 var rootJson = await httpClient.GetStringAsync (url).ConfigureAwait (false);
                 // Console.WriteLine(rootJson + "\n\n\n\n");
                 var root = JObject.Parse (rootJson);
