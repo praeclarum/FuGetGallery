@@ -12,4 +12,66 @@
     <PackageReference Include="System.Net.Http.Json" Version="3.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Data\PackageVersions.cs">
+      <Link>Data\PackageVersions.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\ApiDiff.cs">
+      <Link>Data\ApiDiff.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\CecilExtensions.cs">
+      <Link>Data\CecilExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageData.cs">
+      <Link>Data\PackageData.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageTargetFramework.cs">
+      <Link>Data\PackageTargetFramework.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\TypeDocumentation.cs">
+      <Link>Data\TypeDocumentation.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageAssemblyXmlDocs.cs">
+      <Link>Data\PackageAssemblyXmlDocs.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageAssembly.cs">
+      <Link>Data\PackageAssembly.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageSearchResults.cs">
+      <Link>Data\PackageSearchResults.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackagesSearchResults.cs">
+      <Link>Data\PackagesSearchResults.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\License.cs">
+      <Link>Data\License.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\NugetPackageSources.cs">
+      <Link>Data\NugetPackageSources.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\NugetPackageSource.cs">
+      <Link>Data\NugetPackageSource.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\Database.cs">
+      <Link>Data\Database.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageDependents.cs">
+      <Link>Data\PackageDependents.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\DataCache.cs">
+      <Link>Data\DataCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageDependency.cs">
+      <Link>Data\PackageDependency.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\UrlExtensions.cs">
+      <Link>Data\UrlExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Data\PackageFile.cs">
+      <Link>Data\PackageFile.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
