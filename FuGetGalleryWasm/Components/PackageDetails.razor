@@ -1,5 +1,4 @@
-﻿@page "/details"
-@using FuGetGallery
+﻿@using FuGetGallery
 @using FuGetGallery.Components
 @inject HttpClient httpClient
 
@@ -252,10 +251,11 @@ public string LanguageCode { get; set; } = "en";
 
 readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
 
-readonly PackageContext routing = new PackageContext ();
+readonly PackageContext routing = new PackageContext();
 
 protected override async Task OnInitializedAsync()
 {
+    Console.WriteLine ("HELLO I'M INITING");
     routing.PackageId = PackageId;
     routing.PackageVersion = PackageVersion;
     routing.TargetFramework = TargetFramework;
@@ -267,7 +267,7 @@ protected override async Task OnInitializedAsync()
 
     package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
     routing.package = package;
-    Console.WriteLine ("PACKAGE = " + package);
+    Console.WriteLine("PACKAGE = " + package);
     versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
     routing.versions = versions;
     versionSpec = package.Version;
@@ -302,7 +302,7 @@ protected override async Task OnInitializedAsync()
     }
     routing.asm = asm;
     asmDef = asm?.Definition;
-    Console.WriteLine ("ASSEMBLY LOADED " + asmDef);
+    Console.WriteLine("ASSEMBLY LOADED " + asmDef);
     var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
 
     namespaces = types.GroupBy(x => x.Namespace).OrderBy(x => x.Key).Where(x => !string.IsNullOrEmpty(x.Key)).ToList();
@@ -363,7 +363,7 @@ protected override async Task OnInitializedAsync()
         description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
     }
 
-    
+
 
     if (docs != null)
         docsHtml = (code) ?
