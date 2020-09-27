@@ -1,9 +1,9 @@
 ﻿@page "/packages/{PackageId}"
-
+@using FuGetGallery.Components
 
 Hello chat room!!!!
 
-<PackageDetails PackageId="Ooui" />
+<PackageDetails PackageId=@PackageId />
 
 @code {
 
