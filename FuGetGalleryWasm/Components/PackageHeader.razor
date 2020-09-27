@@ -1,0 +1,174 @@
+﻿@using FuGetGallery
+
+<header>
+    <h1>
+        @if (Context.package == null) {
+        <span>Loading the package</span>
+        }
+        else {
+        <a href="/packages/@Uri.EscapeDataString(Context.package.Id)">
+            <img src="@Context.package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
+        </a>
+        <a href="/packages/@Uri.EscapeDataString(Context.package.Id)">@Context.package.Id</a>
+        <small>by @Context.authors</small>
+        <a href="/packages/@Uri.EscapeDataString(Context.package.Id)/badges"><img src="/packages/@Uri.EscapeDataString(Context.package.Id)/badge.svg?v=@Uri.EscapeDataString(Context.versionSpec.ShortVersionString)" /></a>
+        }
+    </h1>
+    @if (Context.package != null) {
+    <nav>
+        <div class="btn-group" style="display: inline-block">
+            <button type="button" class="btn btn-default version">@Context.package.Version <small>@ShortDate(Context.package.Version?.PublishTime)</small></button>
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                @if (Context.versions != null)
+                    foreach (var mv in Context.versions.Versions.Where (x => x.IsPublished).OrderByDescending (x => x).GroupBy (x => x.Major)) {
+                        <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
+                        foreach (var v in mv) {
+                            <li><a href="@Context.GetUrl(oversion: v.ShortVersionString)" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
+                        }
+                    }
+            </ul>
+        </div>
+        <div class="btn-group" style="display: inline-block">
+            <button type="button" class="btn btn-default">
+                API Diff
+                @if (diff != null)
+                {
+                    <span>with @diff.OtherPackage.Version</span>
+                }
+            </button>
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                @if (Context.versions != null) 
+                    foreach (var mv in Context.versions.Versions.Where(x => x.IsPublished).OrderByDescending(x => x).GroupBy(x => x.Major))
+                    {
+                        <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
+                        foreach (var v in mv)
+                        {
+                            <li><a href="@Context.GetUrl(oversion:Context.package.Version.ShortVersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
+                        }
+                    }
+            </ul>
+        </div>
+        <a href="@Context.package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
+            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;@Context.nupkgName
+        </a>
+        <a href="@string.Format(Context.package.PackageDetailsUrlFormat, Uri.EscapeDataString(Context.package.Id), Uri.EscapeDataString(Context.package.Version.ShortVersionString))" type="button" class="btn btn-default" style="color: #777">
+            <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@Context.package.DisplayUrl
+        </a>
+        @if (!string.IsNullOrEmpty(Context.package.ProjectUrl))
+        {
+            <a href="@Context.package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
+                <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@Context.package.ProjectUrlTitle
+            </a>
+        }
+        @if (!string.IsNullOrEmpty(Context.package.RepositoryFullUrl) && Context.package.RepositoryFullUrl != Context.package.ProjectUrl)
+        {
+            <a href="@Context.package.RepositoryFullUrl" type="button" class="btn btn-default" style="color: #777">
+                <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;@Context.package.RepositoryUrlTitle
+            </a>
+        }
+        @if (!string.IsNullOrEmpty(Context.package.LicenseUrl))
+        {
+            <a href="@Context.package.LicenseUrl" type="button" class="btn btn-default" style="color: #777">
+                <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>&nbsp;@(Context.package.MatchedLicense?.Name ?? "License")
+            </a>
+        }
+    </nav>
+    }
+    @if (Context.package != null) {
+        <div class="code add-package-code">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@Context.package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@Context.package.Version"</span> /&gt;</div>
+    }
+
+    @if (Context.package != null && Context.package.Error != null)
+    {
+        <div style="margin-top:2em">
+            <h2>Error reading package</h2>
+            <pre>@Context.package.Error</pre>
+        </div>
+    }
+
+    @if (Context.package != null && Context.package.TargetFrameworks.Count > 0)
+    {
+        <nav style="margin-top:0em;line-height:2.75em;">
+            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h4>
+            @if (Context.package != null && Context.framework != null)
+                foreach (var tf in Context.package.TargetFrameworks)
+                {
+                    var active = tf.Moniker == Context.framework.Moniker ? "active" : "";
+                    var color = tf.Moniker.StartsWith("netstandard") ? "success" :
+                                (tf.Moniker.StartsWith("net") ? "info" :
+                                (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
+                    var bold = active == "active" ? "bold" : "normal";
+                    var tcolor = active == "active" ? "color:#fff" : "color:rgba(255,255,255,0.75)";
+                    var fwurl = diff == null ? Context.GetUrl(otargetFramework: tf.Moniker) : Context.GetUrl(otargetFramework: tf.Moniker, oassemblyName: "diff", onamespace: diff.OtherPackage.Version);
+                    <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button"
+                       href="@fwurl">@tf.Moniker</a>
+                }
+        </nav>
+    }
+
+    @if (Context.package != null && Context.framework != null && Context.framework.Dependencies.Count > 0)
+    {
+        <nav style="margin-top:0em;line-height:2.75em;">
+            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h4>
+            @foreach (var d in Context.framework.Dependencies.OrderBy(x => x.PackageId))
+            {
+                <a class="btn btn-default btn-sm" style="color:#777"
+                   href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
+                    <span class="glyphicon glyphicon-@Icon.ForObject(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec
+                </a>
+            }
+        </nav>
+    }
+
+    @if (Context.package != null && dependents != null && dependents.Count > 0)
+    {
+        <nav style="margin-top:0em;line-height:2.75em;">
+            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
+            @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents).OrderBy(x => x))
+            {
+                <a class="btn btn-default btn-sm" style="color:#777"
+                   href="/packages/@Uri.EscapeDataString(d)">
+                    <span class="glyphicon glyphicon-@Icon.packageIcon" aria-hidden="true"></span>&nbsp;@d
+                </a>
+            }
+            @if (dependents.Count > maxDisplayDependents)
+            {
+                <a class="btn btn-default btn-sm" style="color:#777"
+                   href="/packages/@Uri.EscapeDataString(Context.package.Id)/dependents">@(dependents.Count - maxDisplayDependents) more...</a>
+            }
+        </nav>
+    }
+
+    <hr style="margin-top:2em;" />
+</header>
+
+@code {
+    [Parameter]
+    public List<string> dependents { get; set; }
+
+    [Parameter]
+    public ApiDiff diff { get; set; }
+
+    [Parameter]
+    public PackageContext Context { get; set; } = new PackageContext ();
+
+    readonly Random rand = new Random ();
+
+    const int maxDisplayDependents = 8;
+
+    static string ShortDate (DateTime? date)
+    {
+        if (date.HasValue)
+            return date.Value.ToString ("d MMM yy");
+        return "";
+    }
+
+}

@@ -1,158 +1,10 @@
 ﻿@page "/details"
 @using FuGetGallery
+@using FuGetGallery.Components
 @inject HttpClient httpClient
 
+<PackageHeader Context=@routing diff=@diff dependents=@dependents />
 
-<header>
-    <h1>
-        OMG
-        @if (package == null) {
-        <span>Loading the package</span>
-        }
-        else {
-        <a href="/packages/@Uri.EscapeDataString(package.Id)">
-            <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
-        </a>
-        <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
-        <small>by @authors</small>
-        <a href="/packages/@Uri.EscapeDataString(package.Id)/badges"><img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg?v=@Uri.EscapeDataString(versionSpec.ShortVersionString)" /></a>
-        }
-    </h1>
-    @if (package != null) {
-    <nav>
-        <div class="btn-group" style="display: inline-block">
-            <button type="button" class="btn btn-default version">@package.Version <small>@ShortDate(package.Version?.PublishTime)</small></button>
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul class="dropdown-menu">
-                @if (versions != null)
-                    foreach (var mv in versions.Versions.Where (x => x.IsPublished).OrderByDescending (x => x).GroupBy (x => x.Major)) {
-                        <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
-                        foreach (var v in mv) {
-                            <li><a href="@GetUrl(oversion: v.ShortVersionString)" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
-                        }
-                    }
-            </ul>
-        </div>
-        <div class="btn-group" style="display: inline-block">
-            <button type="button" class="btn btn-default">
-                API Diff
-                @if (diff != null)
-                {
-                    <span>with @diff.OtherPackage.Version</span>
-                }
-            </button>
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul class="dropdown-menu">
-                @if (versions != null) 
-                    foreach (var mv in versions.Versions.Where(x => x.IsPublished).OrderByDescending(x => x).GroupBy(x => x.Major))
-                    {
-                        <li><strong style="padding-left:0.5em">Version @mv.Key</strong></li>
-                        foreach (var v in mv)
-                        {
-                            <li><a href="@GetUrl(oversion:package.Version.ShortVersionString, odir:"lib", oassemblyName:"diff", onamespace:v, otypeName:"")" class="version">@v <small>@ShortDate(v.PublishTime)</small></a></li>
-                        }
-                    }
-            </ul>
-        </div>
-        <a href="@package.DownloadUrl" type="button" class="btn btn-default" style="color:#777">
-            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;@nupkgName
-        </a>
-        <a href="@string.Format(package.PackageDetailsUrlFormat, Uri.EscapeDataString(package.Id), Uri.EscapeDataString(package.Version.ShortVersionString))" type="button" class="btn btn-default" style="color: #777">
-            <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@package.DisplayUrl
-        </a>
-        @if (!string.IsNullOrEmpty(package.ProjectUrl))
-        {
-            <a href="@package.ProjectUrl" type="button" class="btn btn-default" style="color:#777">
-                <span class="glyphicon glyphicon-link" aria-hidden="true"></span>&nbsp;@package.ProjectUrlTitle
-            </a>
-        }
-        @if (!string.IsNullOrEmpty(package.RepositoryFullUrl) && package.RepositoryFullUrl != package.ProjectUrl)
-        {
-            <a href="@package.RepositoryFullUrl" type="button" class="btn btn-default" style="color: #777">
-                <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;@package.RepositoryUrlTitle
-            </a>
-        }
-        @if (!string.IsNullOrEmpty(package.LicenseUrl))
-        {
-            <a href="@package.LicenseUrl" type="button" class="btn btn-default" style="color: #777">
-                <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>&nbsp;@(package.MatchedLicense?.Name ?? "License")
-            </a>
-        }
-    </nav>
-    }
-    @if (package != null) {
-        <div class="code add-package-code">&lt;<span class="c-pr">PackageReference</span> <span class="c-tr">Include</span>=<span class="c-st" style="font-weight:bold">"@package.Id"</span> <span class="c-tr">Version</span>=<span class="c-st" style="font-weight:bold">"@package.Version"</span> /&gt;</div>
-    }
-
-    @if (package != null && package.Error != null)
-    {
-        <div style="margin-top:2em">
-            <h2>Error reading package</h2>
-            <pre>@package.Error</pre>
-        </div>
-    }
-
-    @if (package != null && package.TargetFrameworks.Count > 0)
-    {
-        <nav style="margin-top:0em;line-height:2.75em;">
-            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Frameworks</h4>
-            @if (package != null && framework != null)
-                foreach (var tf in package.TargetFrameworks)
-                {
-                    var active = tf.Moniker == framework.Moniker ? "active" : "";
-                    var color = tf.Moniker.StartsWith("netstandard") ? "success" :
-                                (tf.Moniker.StartsWith("net") ? "info" :
-                                (tf.Moniker.StartsWith("portable") ? "warning" : "primary"));
-                    var bold = active == "active" ? "bold" : "normal";
-                    var tcolor = active == "active" ? "color:#fff" : "color:rgba(255,255,255,0.75)";
-                    var fwurl = diff == null ? GetUrl(otargetFramework: tf.Moniker) : GetUrl(otargetFramework: tf.Moniker, oassemblyName: "diff", onamespace: diff.OtherPackage.Version);
-                    <a class="btn btn-@color btn-sm @active" style="font-weight:@bold;@tcolor" role="button"
-                       href="@fwurl">@tf.Moniker</a>
-                }
-        </nav>
-    }
-
-    @if (package != null && framework != null && framework.Dependencies.Count > 0)
-    {
-        <nav style="margin-top:0em;line-height:2.75em;">
-            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependencies</h4>
-            @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId))
-            {
-                <a class="btn btn-default btn-sm" style="color:#777"
-                   href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
-                    <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec
-                </a>
-            }
-        </nav>
-    }
-
-    @if (package != null && dependents != null && dependents.Count > 0)
-    {
-        <nav style="margin-top:0em;line-height:2.75em;">
-            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
-            @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents).OrderBy(x => x))
-            {
-                <a class="btn btn-default btn-sm" style="color:#777"
-                   href="/packages/@Uri.EscapeDataString(d)">
-                    <span class="glyphicon glyphicon-@packageIcon" aria-hidden="true"></span>&nbsp;@d
-                </a>
-            }
-            @if (dependents.Count > maxDisplayDependents)
-            {
-                <a class="btn btn-default btn-sm" style="color:#777"
-                   href="/packages/@Uri.EscapeDataString(package.Id)/dependents">@(dependents.Count - maxDisplayDependents) more...</a>
-            }
-        </nav>
-    }
-
-    <hr style="margin-top:2em;" />
-</header>
 @if (diff != null)
 {
 
@@ -225,7 +77,7 @@ else if (framework != null && package != null)
                                 <a class="@cls"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
                                    title="@a.Definition.Name.Version.ToString()">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
+                                    <span class="glyphicon glyphicon-@Icon.ForObject(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
                         }
@@ -242,7 +94,7 @@ else if (framework != null && package != null)
                             <li>
                                 <a class="@cls"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
+                                    <span class="glyphicon glyphicon-@Icon.ForObject(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
                         }
@@ -262,7 +114,7 @@ else if (framework != null && package != null)
                                 <li>
                                     <a class="@cls"
                                        href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
-                                        <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key
+                                        <span class="glyphicon glyphicon-@Icon.ForObject(n)" aria-hidden="true"></span>&nbsp;@n.Key
                                     </a>
                                 </li>
                             }
@@ -281,8 +133,8 @@ else if (framework != null && package != null)
                             {
                                 <li>
                                     <a class="@cls"
-                                       href="@GetUrl(otypeName:t.Name)">
-                                        <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()
+                                       href="@routing.GetUrl(otypeName:t.Name)">
+                                        <span class="glyphicon glyphicon-@Icon.ForObject(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()
                                     </a>
                                 </li>
                             }
@@ -300,7 +152,7 @@ else if (framework != null && package != null)
                             <li>
                                 <a style="font-weight:@bold;color:@color;"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)
+                                    <span class="glyphicon glyphicon-@Icon.ForObject(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)
                                 </a>
                             </li>
                         }
@@ -317,7 +169,7 @@ else if (framework != null && package != null)
                             <li>
                                 <a style="font-weight:@bold;color:@color;"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)
+                                    <span class="glyphicon glyphicon-@Icon.ForObject(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)
                                 </a>
                             </li>
                         }
@@ -329,7 +181,7 @@ else if (framework != null && package != null)
             <article>
                 @if (showKlass == "type")
                 {
-                    <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
+                    <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@Icon.ForObject(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
                     <div class="member-code" style="font-size:120%">
                         @(new MarkupString (typ.GetPrototypeHtml(framework: framework, docs?.MemberXmlDocs, linkToCode: false, inExtensionClass: false)))
                     </div>
@@ -340,10 +192,10 @@ else if (framework != null && package != null)
                         {@description}
                     </div>
                     <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="@(!code?"active":"")"><a href="@GetUrl(ocode:false)" aria-controls="documentation" role="tab">Documentation</a></li>
+                        <li role="presentation" class="@(!code?"active":"")"><a href="@routing.GetUrl(ocode:false)" aria-controls="documentation" role="tab">Documentation</a></li>
                         @if (package.AllowedToDecompile)
                         {
-                            <li role="presentation" class="@(code?"active":"")"><a href="@GetUrl(ocode:true)" aria-controls="code" role="tab">Code</a></li>
+                            <li role="presentation" class="@(code?"active":"")"><a href="@routing.GetUrl(ocode:true)" aria-controls="code" role="tab">Code</a></li>
                         }
                     </ul>
                     if (docs != null)
@@ -353,17 +205,17 @@ else if (framework != null && package != null)
                 }
                 else if (showKlass == "namespace")
                 {
-                    <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
+                    <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@Icon.ForObject(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
                     <p class="description-section">@description</p>
                 }
                 else if (showKlass == "assembly")
                 {
-                    <h1 id="assembly" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
+                    <h1 id="assembly" style="margin-top:0"><span class="glyphicon glyphicon-@Icon.ForObject(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
                     <p class="description-section">@description</p>
                 }
                 else
                 {
-                    <h1 id="package" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
+                    <h1 id="package" style="margin-top:0"><span class="glyphicon glyphicon-@Icon.ForObject(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
                     <p class="description-section">@description</p>
                     <pre><code>@package.NuspecXml</code></pre>
                 }
@@ -393,8 +245,7 @@ PackageTargetFramework framework;
 bool hasApi;
 ApiDiff diff;
 string showKlass;
-IGrouping<string, Mono.Cecil.TypeDefinition>
-                                ns;
+IGrouping<string, Mono.Cecil.TypeDefinition> ns;
 List<IGrouping<string, Mono.Cecil.TypeDefinition>> namespaces;
 Mono.Cecil.AssemblyDefinition asmDef;
 Mono.Cecil.TypeDefinition typ;
@@ -403,19 +254,17 @@ PackageFile content;
 TypeDocumentation docs;
 bool code;
 string nupkgName;
-string packageIcon;
 PackageAssembly asm;
 bool isBuildAsm;
 bool autodir;
 string dir;
 List<string> dependents;
-readonly Random rand = new Random();
 string docsHtml;
 
-const int maxDisplayDependents = 8;
+
 
 [Parameter]
-public string PackageId { get; set; } = "Newtonsoft.Json";
+public string PackageId { get; set; } = "";
 [Parameter]
 public string PackageVersion { get; set; } = "";
 [Parameter]
@@ -435,26 +284,42 @@ public string LanguageCode { get; set; } = "en";
 
 readonly System.Threading.CancellationTokenSource tokenSource = new System.Threading.CancellationTokenSource();
 
+readonly PackageContext routing = new PackageContext ();
+
 protected override async Task OnInitializedAsync()
 {
+    routing.PackageId = PackageId;
+    routing.PackageVersion = PackageVersion;
+    routing.TargetFramework = TargetFramework;
+    routing.Directory = Directory;
+    routing.AssemblyName = AssemblyName;
+    routing.Namespace = Namespace;
+    routing.TypeName = TypeName;
+    routing.ShowCode = ShowCode;
+
     package = await PackageData.GetAsync(PackageId, PackageVersion, httpClient);
+    routing.package = package;
     Console.WriteLine ("PACKAGE = " + package);
-    authors = package.AuthorsOrOwners;
     versions = await PackageVersions.GetAsync(PackageId, httpClient, tokenSource.Token);
+    routing.versions = versions;
     versionSpec = package.Version;
+    routing.versionSpec = versionSpec;
     Console.WriteLine("READY FOR MORE");
 
     dependents = (await PackageDependents.GetAsync(PackageId, httpClient, tokenSource.Token)).DependentIds;
 
     string inputTargetFramework = (TargetFramework ?? "").ToString().Trim();
     framework = package.FindClosestTargetFramework(inputTargetFramework);
+    routing.framework = framework;
 
     content = default(PackageFile);
     string inputAssemblyName = (AssemblyName ?? "").ToString().Trim();
     string inputNamespace = (Namespace ?? "").ToString().Trim();
     isBuildAsm = "build".Equals(Directory);
     autodir = string.IsNullOrEmpty(Directory);
+    routing.autodir = autodir;
     dir = isBuildAsm ? "build" : "lib";
+    routing.dir = dir;
 
     diff = default(ApiDiff);
     asm = default(PackageAssembly);
@@ -467,6 +332,7 @@ protected override async Task OnInitializedAsync()
     {
         asm = framework?.GetAssembly(dir, inputAssemblyName);
     }
+    routing.asm = asm;
     asmDef = asm?.Definition;
     Console.WriteLine ("ASSEMBLY LOADED " + asmDef);
     var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
@@ -485,6 +351,7 @@ protected override async Task OnInitializedAsync()
             ns = namespaces.FirstOrDefault();
         }
     }
+    routing.ns = ns;
 
     string inputTypeName = (TypeName ?? "").ToString().Trim();
 
@@ -499,6 +366,7 @@ protected override async Task OnInitializedAsync()
     var hasFiles = hasContent || hasTools;
 
     nupkgName = package.Id + "." + package.Version + ".nupkg";
+    routing.nupkgName = nupkgName;
 
     showKlass = "package";
     var title = typ != null ? typ.GetFriendlyFullName() : package.Id + " " + package.Version;
@@ -527,98 +395,15 @@ protected override async Task OnInitializedAsync()
         description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
     }
 
-    packageIcon = "briefcase";
+    
 
     if (docs != null)
         docsHtml = (code) ?
             await docs.GetTypeCodeAsync() :
             docs.DocumentationHtml;
-#if BAD
-#endif
 }
 
-string GetIcon(object o)
-{
-    if (o == null)
-        return "";
-    if (o is PackageAssembly)
-        return "file";
-    if (o is Mono.Cecil.TypeDefinition t)
-    {
-        var isPublic = t.IsPublic;
-        var isEnum = t.IsEnum;
-        var isStruct = !isEnum && t.IsValueType;
-        var isDel = !(isEnum || isStruct) && t.IsDelegate();
-        var isIface = !(isEnum || isStruct || isDel) && (t.IsInterface || t.IsAbstract);
-        return isEnum ? "menu-hamburger" : (isDel ? "flash" : (isStruct ? "unchecked" : (isIface ? "star-empty" : "star")));
-    }
-    if (o is System.Linq.IGrouping<string, Mono.Cecil.TypeDefinition> g)
-    {
-        return "book";
-    }
-    if (o is PackageDependency d)
-        return packageIcon;
-    if (o is PackageData p)
-        return packageIcon;
-    if (o is PackageFile f)
-        return "file";
-    return "";
-}
 
-string GetUrl(object oid = null, object oversion = null, object otargetFramework = null, object odir = null, object oassemblyName = null, object onamespace = null, object otypeName = null, bool ocode = false)
-{
-    oid = (oid ?? package?.Id) ?? PackageId;
-    oversion = (oversion ?? package?.Version) ?? PackageVersion;
-    otargetFramework = (otargetFramework ?? framework?.Moniker) ?? TargetFramework;
-    odir = (odir ?? dir) ?? Directory;
-    if (autodir && oassemblyName == null && onamespace == null && otypeName == null && ocode == null)
-        odir = null;
-    oassemblyName = (oassemblyName ?? asm?.FileName) ?? ("diff".Equals(AssemblyName) ? null : AssemblyName);
-    onamespace = (onamespace ?? ns?.Key) ?? Namespace;
-    otypeName = otypeName ?? TypeName;
-    ocode = ShowCode;
-    var r = "/packages";
-    if (oid != null)
-    {
-        r += "/" + Uri.EscapeDataString(oid.ToString());
-        if (oversion != null)
-        {
-            r += "/" + Uri.EscapeDataString(oversion.ToString());
-            if (odir != null)
-            {
-                r += "/" + Uri.EscapeDataString(odir.ToString());
-                if (otargetFramework != null)
-                {
-                    r += "/" + Uri.EscapeDataString(otargetFramework.ToString());
-                    if (oassemblyName != null)
-                    {
-                        r += "/" + Uri.EscapeDataString(oassemblyName.ToString());
-                        if (onamespace != null)
-                        {
-                            r += "/" + Uri.EscapeDataString(onamespace.ToString());
-                            if (otypeName != null)
-                            {
-                                r += "/" + Uri.EscapeDataString(otypeName.ToString());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    if (ocode && package.AllowedToDecompile)
-    {
-        r += "?code=true";
-    }
-    return r;
-}
-
-string ShortDate(DateTime? date)
-{
-    if (date.HasValue)
-        return date.Value.ToString("d MMM yy");
-    return "";
-}
 
 
 
