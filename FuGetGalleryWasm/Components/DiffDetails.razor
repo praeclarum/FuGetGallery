@@ -1,0 +1,42 @@
+﻿    <h2>API Diff between @Diff.Package.Version and @Diff.OtherPackage.Version</h2>
+    @if (Diff.Error.Length > 0)
+    {
+        <p>@Diff.Error</p>
+    }
+    <p>
+        <span class="diff-Add">
+            <strong>@Diff.Namespaces.Sum(ni => ni.NumAdditions)</strong> Additions
+        </span>
+        <span class="diff-Remove" style="margin:0.5em;">
+            <strong>@Diff.Namespaces.Sum(ni => ni.NumRemovals)</strong> Removals
+        </span>
+    </p>
+    @foreach (var ni in Diff.Namespaces)
+    {
+        <h3 style="margin-bottom:0em;">@ni.Namespace</h3>
+        <ul class="diff-Types">
+            @foreach (var ti in ni.Types)
+            {
+                bool isExtensionClass = ti.Type.IsExtensionClass();
+                <li class="diff-@ti.Action diff-Type">
+                    <span class="inline-code">@(new MarkupString(ti.Type.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass)))</span>
+                    <ul class="diff-Members">
+                        @foreach (var mi in ti.Members)
+                        {
+                            <li class="diff-@mi.Action diff-Member"><span class="inline-code">@(new MarkupString(mi.Member.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass)))</span></li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+    }
+
+
+@code {
+
+    [Parameter]
+    public ApiDiff Diff { get; set; }
+}
+
+
+
