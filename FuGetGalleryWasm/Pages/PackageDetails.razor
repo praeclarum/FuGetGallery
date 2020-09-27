@@ -153,7 +153,6 @@
 
     <hr style="margin-top:2em;" />
 </header>
-@*
 @if (diff != null)
 {
 
@@ -190,7 +189,7 @@
         </ul>
     }
 }
-else
+else if (framework != null && package != null)
 {
 
     <div id="api" class="row" style="margin-bottom:4em;">
@@ -371,7 +370,7 @@ else
             </article>
         </div>
     </div>
-}*@
+}
 
 @code {
 
@@ -449,7 +448,6 @@ protected override async Task OnInitializedAsync()
 
     string inputTargetFramework = (TargetFramework ?? "").ToString().Trim();
     framework = package.FindClosestTargetFramework(inputTargetFramework);
-#if BAD
 
     content = default(PackageFile);
     string inputAssemblyName = (AssemblyName ?? "").ToString().Trim();
@@ -535,6 +533,7 @@ protected override async Task OnInitializedAsync()
         docsHtml = (code) ?
             await docs.GetTypeCodeAsync() :
             docs.DocumentationHtml;
+#if BAD
 #endif
 }
 
