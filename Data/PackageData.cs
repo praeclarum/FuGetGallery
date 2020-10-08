@@ -51,7 +51,6 @@ namespace FuGetGallery
 
         public string DownloadUrl { get; set; } = "";
         public long SizeInBytes { get; set; }
-        public ZipArchive Archive { get; set; }
         public List<PackageTargetFramework> TargetFrameworks { get; set; } = new List<PackageTargetFramework> ();
         public List<PackageFile> Content { get; } = new List<PackageFile> ();
         public List<PackageFile> Tools { get; } = new List<PackageFile> ();
@@ -112,15 +111,15 @@ namespace FuGetGallery
             return r;
         }
 
-        void Read (MemoryStream bytes, HttpClient httpClient)
+        void Read (Stream bytes, HttpClient httpClient)
         {
             SizeInBytes = bytes.Length;
-            Archive = new ZipArchive (bytes, ZipArchiveMode.Read);
+            var archive = new ZipArchive (bytes, ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
             Content.Clear();
             Tools.Clear();
             ZipArchiveEntry nuspecEntry = null;
-            foreach (var e in Archive.Entries.Where(x => x.Name != "_._").OrderBy (x => x.FullName)) {
+            foreach (var e in archive.Entries.Where(x => x.Name != "_._").OrderBy (x => x.FullName)) {
                 var n = e.FullName;                
                 var isBuild = n.StartsWith ("build/", StringComparison.InvariantCultureIgnoreCase);
                 var isLib = n.StartsWith ("lib/", StringComparison.InvariantCultureIgnoreCase);
@@ -404,12 +403,11 @@ namespace FuGetGallery
             {
                 //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
                 var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
-                var data = new MemoryStream ();
-                using (var s = await r.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
-                    await s.CopyToAsync (data, 16 * 1024, token).ConfigureAwait (false);
+                using (var content = r.Content) {
+                    using (var s = await content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+                        await Task.Run (() => package.Read (s, httpClient), token).ConfigureAwait (false);
+                    }
                 }
-                data.Position = 0;
-                await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
                 await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
                 await package.SaveDependenciesAsync ();
                 return package;
