@@ -404,11 +404,8 @@ namespace FuGetGallery
             {
                 //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
                 var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
-                try {
-                    r.EnsureSuccessStatusCode ();
-                }
-                catch (Exception ex) {
-                    throw new Exception($"Failed to download {package.DownloadUrl}", ex);
+                if (!r.IsSuccessStatusCode) {
+                    throw new Exception($"Failed to download {package.DownloadUrl} due to HTTP response status code {r.StatusCode}.");
                 }
                 var data = new MemoryStream ();
                 using (var s = await r.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
