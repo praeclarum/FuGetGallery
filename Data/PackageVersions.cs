@@ -28,7 +28,7 @@ namespace FuGetGallery
             var version = (inputVersion ?? "").ToString().Trim().ToLowerInvariant();
             var v = Versions.FirstOrDefault (x => x.ShortVersionString == version);
             if (v == null) {
-                v = Versions.LastOrDefault (x => !x.IsPreRelease);
+                v = Versions.LastOrDefault (x => !x.IsPreRelease) ?? Versions.LastOrDefault ();
             }
             if (v == null) {
                 v = new PackageVersion {
