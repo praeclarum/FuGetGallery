@@ -17,7 +17,9 @@ namespace FuGetGallery
     {
         public string Id { get; set; } = "";
         public string IndexId { get; set; } = "";
-        public string Version { get; set; } = "";
+        public PackageVersion Version { get; set; }
+
+        public string NuspecXml { get; set; } = "";
 
         public string Authors { get; set; } = "";
         public string Owners { get; set; } = "";
@@ -26,6 +28,18 @@ namespace FuGetGallery
         public string ProjectUrl { get; set; } = "";
         public string IconUrl { get; set; } = "";
         public string LicenseUrl { get; set; } = "";
+
+        public string RepositoryType { get; set; } = "";
+        public string RepositoryUrl { get; set; } = "";
+        public string RepositoryCommit { get; set; } = "";
+        public string RepositoryFullUrl =>
+            string.IsNullOrEmpty (RepositoryUrl) ? "" :
+            (string.IsNullOrEmpty (RepositoryCommit) ? RepositoryUrlWithoutGit : CombinedRepositoryUrlAndCommit);
+        string RepositoryUrlWithoutGit => RepositoryUrl.EndsWith(".git") ?
+            RepositoryUrl.Substring(0, RepositoryUrl.Length - 4) :
+            RepositoryUrl;
+        string CombinedRepositoryUrlAndCommit => RepositoryUrlWithoutGit + "/tree/" + RepositoryCommit;
+        public string RepositoryUrlTitle => "Source";
 
         public License MatchedLicense { get; set; }
 
@@ -42,21 +56,21 @@ namespace FuGetGallery
         public List<PackageFile> Content { get; } = new List<PackageFile> ();
         public List<PackageFile> Tools { get; } = new List<PackageFile> ();
         public Exception Error { get; set; }
+        public string DisplayUrl { get; set; }
+        public string PackageDetailsUrlFormat { get; set; }
 
         static readonly PackageDataCache cache = new PackageDataCache ();
 
         public string SafeIconUrl => string.IsNullOrEmpty (IconUrl) ? "/images/no-icon.png" : IconUrl;
 
-        public static Task<PackageData> GetAsync (object inputId, object inputVersion) => GetAsync (inputId, inputVersion, CancellationToken.None);
+        public static Task<PackageData> GetAsync (object inputId, object inputVersion, HttpClient client) => 
+            GetAsync (inputId, inputVersion, client, CancellationToken.None);
 
-        public static async Task<PackageData> GetAsync (object inputId, object inputVersion, CancellationToken token)
+        public static async Task<PackageData> GetAsync (object inputId, object inputVersion, HttpClient client, CancellationToken token)
         {
-            var cleanId = (inputId ?? "").ToString().Trim().ToLowerInvariant();
-
-            var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
+            var versions = await PackageVersions.GetAsync (inputId, client, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
-
-            return await cache.GetAsync (versions.LowerId, version.VersionString, token).ConfigureAwait (false);
+            return await cache.GetAsync (versions.LowerId, version, client, token).ConfigureAwait (false);
         }
 
         public PackageTargetFramework FindClosestTargetFramework (object inputTargetFramework)
@@ -98,11 +112,13 @@ namespace FuGetGallery
             return r;
         }
 
-        void Read (MemoryStream bytes)
+        void Read (MemoryStream bytes, HttpClient httpClient)
         {
             SizeInBytes = bytes.Length;
             Archive = new ZipArchive (bytes, ZipArchiveMode.Read);
             TargetFrameworks.Clear ();
+            Content.Clear();
+            Tools.Clear();
             ZipArchiveEntry nuspecEntry = null;
             foreach (var e in Archive.Entries.Where(x => x.Name != "_._").OrderBy (x => x.FullName)) {
                 var n = e.FullName;                
@@ -121,16 +137,20 @@ namespace FuGetGallery
                     }
                     var tf = TargetFrameworks.FirstOrDefault (x => x.Moniker == tfm);
                     if (tf == null) {
-                        tf = new PackageTargetFramework (this) {
+                        tf = new PackageTargetFramework (this, httpClient) {
                             Moniker = tfm,
                         };
                         TargetFrameworks.Add (tf);
                     }
                     if (n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase)) {
-                        var docs = new PackageAssemblyXmlDocs (e);
+                        var docs = new PackageAssemblyXmlLanguageDocs (e);
                         if (string.IsNullOrEmpty (docs.Error)) {
                             // System.Console.WriteLine(docs.AssemblyName);
-                            tf.AssemblyXmlDocs[docs.AssemblyName] = docs;
+                            if (!tf.AssemblyXmlDocs.TryGetValue (docs.AssemblyName, out var allLanguageDocs)) {
+                                allLanguageDocs = new PackageAssemblyXmlDocs (docs.AssemblyName);
+                                tf.AssemblyXmlDocs[docs.AssemblyName] = allLanguageDocs;
+                            }
+                            allLanguageDocs.AddLanguage (docs.LanguageCode, docs);
                         }
                     }
                     else if (isBuild) {
@@ -178,6 +198,7 @@ namespace FuGetGallery
                     if (u.ToLowerInvariant ().Contains ("_url_here_or_delete")) return "";
                     return u;
                 }
+                NuspecXml = xdoc.ToString (SaveOptions.OmitDuplicateNamespaces);
                 Id = GetS ("id", IndexId);
                 Authors = GetS ("authors");
                 Owners = GetS ("owners");
@@ -186,7 +207,13 @@ namespace FuGetGallery
                 if (LicenseUrl == ProjectUrl) LicenseUrl = "";
                 IconUrl = GetUrl ("iconUrl");
                 Description = GetS ("description");
-                var deps = meta.Element(ns + "dependencies");
+                var repo = meta.Element (ns + "repository");
+                if (repo != null) {
+                    RepositoryType = repo.Attribute ("type")?.Value ?? "";
+                    RepositoryUrl = repo.Attribute ("url")?.Value ?? "";
+                    RepositoryCommit = repo.Attribute ("commit")?.Value ?? "";
+                }
+                var deps = meta.Element (ns + "dependencies");
                 if (deps != null) {
                     // System.Console.WriteLine(deps);
                     foreach (var de in deps.Elements()) {
@@ -219,14 +246,14 @@ namespace FuGetGallery
             new Regex ("https?://bitbucket.org/[^/]+/[^/]+", RegexOptions.Compiled | RegexOptions.IgnoreCase),
         };
 
-        async Task MatchLicenseAsync ()
+        async Task MatchLicenseAsync(HttpClient httpClient)
         {
             if (!string.IsNullOrEmpty (LicenseUrl)) {
                 MatchedLicense = License.FindLicenseWithUrl (LicenseUrl);
 
                 if (MatchedLicense == null) {
                     try {
-                        var licenseText = await UrlExtensions.GetTextFileAsync (LicenseUrl).ConfigureAwait (false);
+                        var licenseText = await UrlExtensions.GetTextFileAsync (LicenseUrl, httpClient).ConfigureAwait (false);
                         MatchedLicense = License.FindLicenseWithText (licenseText);
                     }
                     catch (Exception ex) {
@@ -235,6 +262,46 @@ namespace FuGetGallery
                     }
                 }
             }
+        }
+
+        async Task SaveDependenciesAsync ()
+        {
+            var db = new Database ();
+
+            var depsq =
+                from tf in TargetFrameworks
+                from d in tf.Dependencies
+                where PackageWorthRemembering (d.PackageId)
+                select d.PackageId;
+            var deps = depsq.Distinct ();
+
+            var query = "select count(*) from StoredPackageDependency where LowerPackageId = ? and LowerDependentPackageId = ?";
+            var lid = Id.ToLowerInvariant ();
+            foreach (var d in deps) {
+                var ld = d.ToLowerInvariant ();
+                var count = await db.ExecuteScalarAsync<int> (query, ld, lid);
+                if (count == 0) {
+                    try {
+                        await db.InsertAsync (new StoredPackageDependency {
+                            LowerPackageId = ld,
+                            LowerDependentPackageId = lid,
+                            DependentPackageId = this.Id,
+                        });
+                        PackageDependents.Invalidate (ld);
+                    }
+                    catch (Exception ex) {
+                        Console.WriteLine (ex);
+                    }
+                }
+            }
+        }
+
+        static bool PackageWorthRemembering(string packageId)
+        {
+            return
+                !packageId.StartsWith ("NETStandard.", StringComparison.OrdinalIgnoreCase) &&
+                !packageId.StartsWith ("System.", StringComparison.OrdinalIgnoreCase) &&
+                !packageId.StartsWith ("Microsoft.", StringComparison.OrdinalIgnoreCase);
         }
 
         static string TargetFrameworkNameToMoniker (string name)
@@ -290,11 +357,14 @@ namespace FuGetGallery
             return r;
         }
 
-        class PackageDataCache : DataCache<string, string, PackageData>
+        class PackageDataCache : DataCache<string, PackageVersion, PackageData>
         {
-            public PackageDataCache () : base (TimeSpan.FromDays (365)) { }
-            readonly HttpClient httpClient = new HttpClient ();
-            protected override async Task<PackageData> GetValueAsync(string arg0, string arg1, CancellationToken token)
+            public PackageDataCache() : base(TimeSpan.FromDays(1))
+            {
+
+            }
+
+            protected override async Task<PackageData> GetValueAsync(string arg0, PackageVersion arg1, HttpClient httpClient, CancellationToken token)
             {
                 var id = arg0;
                 var version = arg1;
@@ -302,28 +372,49 @@ namespace FuGetGallery
                 var package = new PackageData {
                     Id = id,
                     IndexId = id,
-                    Version = version,
-                    SizeInBytes = 0,
-                    DownloadUrl = $"https://www.nuget.org/api/v2/package/{Uri.EscapeDataString(id)}/{Uri.EscapeDataString(version)}",
+                    Version = version
                 };
-                try {
-                    //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
-                    var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
-                    var data = new MemoryStream ();
-                    using (var s = await r.Content.ReadAsStreamAsync().ConfigureAwait(false)) {
-                        await s.CopyToAsync (data, 16*1024, token).ConfigureAwait(false);
+
+                var exceptions = new List<Exception> ();
+                foreach (var source in NugetPackageSources.PackageSources) {
+                    try {
+                        package.SizeInBytes = 0;
+                        package.DisplayUrl = source.DisplayUrl;
+                        package.PackageDetailsUrlFormat = source.PackageDetailsUrlFormat;
+                        package.DownloadUrl = string.Format (source.DownloadUrlFormat, Uri.EscapeDataString (id), Uri.EscapeDataString (version.ShortVersionString));
+                        return await ReadPackageFromUrl (package, httpClient, token);
                     }
-                    data.Position = 0;
-                    await Task.Run (() => package.Read (data), token).ConfigureAwait (false);
-                    await package.MatchLicenseAsync ().ConfigureAwait (false);
-                }
-                catch (OperationCanceledException) {
-                    throw;
-                }
-                catch (Exception ex) {
-                    package.Error = ex;
+                    catch (OperationCanceledException) {
+                        throw;
+                    }
+                    catch (Exception ex) {
+                        exceptions.Add(ex);
+                    }
                 }
 
+                // If we reach here, all urls failed, return the latest error.
+                package.Error = exceptions.Count == 1 
+                    ? exceptions[0] 
+                    : new AggregateException (exceptions);
+
+                return package;
+            }
+
+            private static async Task<PackageData> ReadPackageFromUrl (PackageData package, HttpClient httpClient, CancellationToken token)
+            {
+                //System.Console.WriteLine($"DOWNLOADING {package.DownloadUrl}");
+                var r = await httpClient.GetAsync (package.DownloadUrl, token).ConfigureAwait (false);
+                if (!r.IsSuccessStatusCode) {
+                    throw new Exception($"Failed to download {package.DownloadUrl} due to HTTP response status code {r.StatusCode}.");
+                }
+                var data = new MemoryStream ();
+                using (var s = await r.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+                    await s.CopyToAsync (data, 16 * 1024, token).ConfigureAwait (false);
+                }
+                data.Position = 0;
+                await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
+                await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
+                await package.SaveDependenciesAsync ();
                 return package;
             }
         }

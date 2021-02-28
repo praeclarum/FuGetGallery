@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ListDiff;
 using Mono.Cecil;
 using System.Linq;
+using System.Net.Http;
 
 namespace FuGetGallery
 {
@@ -30,6 +31,8 @@ namespace FuGetGallery
         {
             public string Namespace;
             public List<TypeDiffInfo> Types = new List<TypeDiffInfo> ();
+            public int NumAdditions => Types.Sum(x => x.NumAdditions);
+            public int NumRemovals => Types.Sum(x => x.NumRemovals);
         }
 
         public class TypeDiffInfo : DiffInfo
@@ -37,11 +40,31 @@ namespace FuGetGallery
             public TypeDefinition Type;
             public PackageTargetFramework Framework;
             public List<MemberDiffInfo> Members = new List<MemberDiffInfo> ();
+            public int NumAdditions {
+                get {
+                    switch (Action) {
+                        case ListDiffActionType.Remove: return 0;
+                        case ListDiffActionType.Update: return Members.Sum(x => x.NumAdditions);
+                        default: return 1 + Members.Sum(x => x.NumAdditions);
+                    }
+                }
+            }
+            public int NumRemovals {
+                get {
+                    switch (Action) {
+                        case ListDiffActionType.Remove: return 1;
+                        case ListDiffActionType.Update: return Members.Sum(x => x.NumRemovals);
+                        default: return 0;
+                    }
+                }
+            }
         }
 
         public class MemberDiffInfo : DiffInfo
         {
             public IMemberDefinition Member;
+            public int NumAdditions => Action == ListDiffActionType.Add ? 1 : 0;
+            public int NumRemovals => Action == ListDiffActionType.Remove ? 1 : 0;
         }
 
         public ApiDiff (PackageData package, PackageTargetFramework framework, PackageData otherPackage, PackageTargetFramework otherFramework)
@@ -139,29 +162,43 @@ namespace FuGetGallery
             Namespaces.Sort ((x, y) => string.Compare (x.Namespace, y.Namespace, StringComparison.Ordinal));
         }
 
-        public static async Task<ApiDiff> GetAsync (object inputId, object inputVersion, object inputFramework, object inputOtherVersion, CancellationToken token)
+        public static async Task<ApiDiff> GetAsync (
+            object inputId,
+            object inputVersion,
+            object inputFramework,
+            object inputOtherVersion,
+            HttpClient httpClient,
+            CancellationToken token)
         {
-            var cleanId = (inputId ?? "").ToString ().Trim ().ToLowerInvariant ();
-
-            var versions = await PackageVersions.GetAsync (inputId, token).ConfigureAwait (false);
+            var versions = await PackageVersions.GetAsync (inputId, httpClient, token).ConfigureAwait (false);
             var version = versions.GetVersion (inputVersion);
             var otherVersion = versions.GetVersion (inputOtherVersion);
             var framework = (inputFramework ?? "").ToString ().ToLowerInvariant ().Trim ();
 
-            return await cache.GetAsync (Tuple.Create (versions.LowerId, version.VersionString, framework), otherVersion.VersionString, token).ConfigureAwait (false);
+            return await cache.GetAsync(
+                    Tuple.Create (versions.LowerId, version.ShortVersionString, framework),
+                    otherVersion.ShortVersionString,
+                    httpClient,
+                    token)
+                .ConfigureAwait (false);
         }
 
         class ApiDiffCache : DataCache<Tuple<string, string, string>, string, ApiDiff>
         {
-            public ApiDiffCache () : base (TimeSpan.FromDays (365)) { }
-            protected override async Task<ApiDiff> GetValueAsync (Tuple<string, string, string> packageSpec, string otherVersion, CancellationToken token)
+            public ApiDiffCache () : base (TimeSpan.FromDays (1)) { }
+
+            protected override async Task<ApiDiff> GetValueAsync (
+                Tuple<string, string, string> packageSpec,
+                string otherVersion,
+                HttpClient httpClient,
+                CancellationToken token)
             {
                 var packageId = packageSpec.Item1;
                 var version = packageSpec.Item2;
                 var inputFramework = packageSpec.Item3;
 
-                var package = await PackageData.GetAsync (packageId, version, token).ConfigureAwait (false);
-                var otherPackage = await PackageData.GetAsync (packageId, otherVersion, token).ConfigureAwait (false);
+                var package = await PackageData.GetAsync (packageId, version, httpClient, token).ConfigureAwait (false);
+                var otherPackage = await PackageData.GetAsync (packageId, otherVersion, httpClient, token).ConfigureAwait (false);
 
                 var framework = package.FindClosestTargetFramework (inputFramework);
                 var otherFramework = otherPackage.FindClosestTargetFramework (inputFramework);

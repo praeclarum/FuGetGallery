@@ -1,7 +1,11 @@
 @page
+@using System.Net.Http
+@inject IHttpClientFactory HttpClientFactory
+
 @{
     var q = Request.Query["q"].FirstOrDefault() ?? "";
-    var results = await PackagesSearchResults.GetAsync (q);
+    var httpClient = HttpClientFactory.CreateClient();
+    var results = await PackagesSearchResults.GetAsync (q, httpClient);
     ViewData["Title"] = "Packages";
     ViewData["q"] = q;
 }
@@ -11,18 +15,20 @@
 @if (results != null) {
     if (results.Error != null) {
         <p>@results.Error</p>
+    } else if (results.Results.Count == 0) {
+        <p>No packages were found for <b>@q</b></p>
     }
     <ul class="media-list">
     @foreach (var r in results.Results) {
         <li class="media">
             <div class="media-left">
                 <a href="/packages/@Uri.EscapeDataString(@r.PackageId)">
-                    <img src="@r.SafeIconUrl" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
+                    <img src="@r.SafeIconUrl" class="package-icon-in-list" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
                 </a>
             </div>
             <div class="media-body">
                 <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a><small> by @r.Authors</small></h4>
-                <p style="max-height:3em;overflow:scroll">@r.Description</p>
+                <p style="max-height:5em;overflow:auto">@r.Description</p>
             </div>
         </li>
     }

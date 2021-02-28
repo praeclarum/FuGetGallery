@@ -30,31 +30,36 @@ namespace FuGetGallery
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler;
         readonly ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format;
+        private readonly string languageCode;
 
         public string SummaryText { get; }
         public string SummaryHtml { get; }
         public string DocumentationHtml { get; }
+        public MemberXmlDocs MemberXmlDocs { get; }
 
         readonly PackageAssemblyXmlDocs xmlDocs;
 
         public TypeDocumentation (TypeDefinition typeDefinition, PackageTargetFramework framework, PackageAssemblyXmlDocs xmlDocs,
             Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler, Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler,
-            ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format)
+            ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format,
+            string languageCode)
         {
             this.xmlDocs = xmlDocs;
+            this.languageCode = languageCode;
             this.typeDefinition = typeDefinition;
             this.framework = framework;
             this.decompiler = decompiler;
             this.idecompiler = idecompiler;
             this.format = format;
-
             SummaryHtml = "";
             SummaryText = "";
             DocumentationHtml = "";
 
             if (xmlDocs != null) {
                 var tn = typeDefinition.GetXmlName ();
-                if (xmlDocs.MemberDocs.TryGetValue (tn, out var td)) {                    
+                var ldocs = xmlDocs.GetLanguage (languageCode);
+                if (ldocs.MemberDocs.TryGetValue (tn, out var td)) {
+                    MemberXmlDocs = td;
                     SummaryHtml = XmlToHtml (td.SummaryXml);
                     SummaryText = XmlToText (td.SummaryXml);
                     if (ignoreSummaryTextRe.IsMatch (SummaryHtml)) {
@@ -74,14 +79,16 @@ namespace FuGetGallery
         void WriteDocumentation (TextWriter w)
         {
             var members = typeDefinition.GetPublicMembers ();
+            var isExtensionClass = typeDefinition.IsExtensionClass ();
+
             foreach (var m in members) {
 
                 var xmlName = m.GetXmlName ();
                 MemberXmlDocs mdocs = null;
-                xmlDocs?.MemberDocs.TryGetValue (xmlName, out mdocs);
+                xmlDocs?.GetLanguage(languageCode).MemberDocs.TryGetValue (xmlName, out mdocs);
 
                 w.WriteLine ("<div class='member-code'>");
-                m.WritePrototypeHtml (w, framework: framework, linkToCode: true);
+                m.WritePrototypeHtml (w, framework: framework, mdocs, linkToCode: true, isExtensionClass);
                 w.WriteLine ("</div>");
 
                 w.WriteLine ("<p>");
@@ -183,20 +190,42 @@ namespace FuGetGallery
                     w.Write (x.Attribute ("name")?.Value ?? "");
                     w.Write ("</span>");
                     break;
+                case "seealso":
                 case "see": {
                         var cref = x.Attribute ("cref");
                         if (cref != null && cref.Value.Length > 2) {
                             WriteMemberLinkHtml (cref.Value, w);
                         }
+                        else {
+                            var langword = x.Attribute ("langword");
+                            if (langword != null && !string.IsNullOrWhiteSpace (langword.Value)) {
+                                w.Write ("<span class=\"inline-code c-kw\">");
+                                WriteEncodedHtml (langword.Value, w);
+                                w.Write ("</span>");
+                            }
+                        }
                     }
+                    break;
+                case "typeparamref":
+                    w.Write ("<span class=\"inline-code c-tr\">");
+                    WriteEncodedHtml (x.Attribute ("name")?.Value ?? "", w);
+                    w.Write ("</span>");
                     break;
                 default:
                     //WriteEncodedHtml ($"<b>{x.Name.LocalName}</b>", w);
                     break;
             }
+            var trimming = true;
             foreach (var n in x.Nodes ()) {
-                if (n is XText t) WriteEncodedHtml (t.Value, w);
-                else if (n is XElement e) XmlToHtml (e, w);
+                if (n is XText t) {
+                    var v = trimming ? t.Value.TrimStart () : t.Value;
+                    trimming = trimming && string.IsNullOrWhiteSpace (v);
+                    WriteEncodedHtml (v, w);
+                }
+                else if (n is XElement e) {
+                    trimming = false;
+                    XmlToHtml (e, w);
+                }
             }
             if (endTag.Length > 0) {
                 w.Write (endTag);
@@ -207,7 +236,7 @@ namespace FuGetGallery
         {
             using (var w = new StringWriter ()) {
                 XmlToHtml (x, w);
-                return w.ToString ();
+                return w.ToString ().Trim ();
             }
         }
 

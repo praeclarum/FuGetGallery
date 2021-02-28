@@ -1,0 +1,37 @@
+@page
+@using System.Net.Http
+@inject IHttpClientFactory HttpClientFactory
+
+@{
+    var httpClient = HttpClientFactory.CreateClient();
+    var package = await PackageData.GetAsync (RouteData.Values["id"], RouteData.Values["version"], httpClient);
+    var authors = package.AuthorsOrOwners;
+
+    var dependents = (await PackageDependents.GetAsync (RouteData.Values["id"], httpClient, HttpContext.RequestAborted)).DependentIds;
+    dependents.Sort();
+
+    var title = package.Id + " Dependents";
+    var description = dependents.Count + " packages directly use " + package.Id;
+
+    ViewData["Title"] = title;
+
+    ViewData["meta"] = new Dictionary<string, string> {
+        { "twitter:card", "summary" },
+        { "og:url", Request.GetEncodedUrl () },
+        { "og:title", title },
+        { "og:description", description },
+        { "og:image", package.SafeIconUrl },
+    };
+}
+
+<h1 style="margin-bottom:0.5em"><a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Dependents</h1>
+
+<p>The following @dependents.Count packages directly use @(package.Id):</p>
+
+<ol>
+@foreach (var r in dependents) {
+    <li>
+        <a href="/packages/@Uri.EscapeDataString(@r)">@r</a>
+    </li>
+}
+</ol>

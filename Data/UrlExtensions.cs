@@ -8,10 +8,9 @@ namespace FuGetGallery
 {
     static class UrlExtensions
     {
-        public static Task<string> GetTextFileAsync (string url)
+        public static Task<string> GetTextFileAsync (string url, HttpClient client)
         {
             var rawUrl = GetRawTextUrl (url);
-            var client = new HttpClient ();
             //Debug.WriteLine ("GET " + rawUrl);
             return client.GetStringAsync (rawUrl);
         }

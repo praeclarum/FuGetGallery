@@ -16,8 +16,8 @@ namespace FuGetGallery
         readonly Lazy<AssemblyDefinition> definition;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> decompiler;
         readonly Lazy<ICSharpCode.Decompiler.CSharp.CSharpDecompiler> idecompiler;
-        readonly ConcurrentDictionary<TypeDefinition, TypeDocumentation> typeDocs =
-            new ConcurrentDictionary<TypeDefinition, TypeDocumentation> ();
+        readonly ConcurrentDictionary<Tuple<TypeDefinition, string>, TypeDocumentation> typeDocs =
+            new ConcurrentDictionary<Tuple<TypeDefinition, string>, TypeDocumentation> ();
 
         readonly ICSharpCode.Decompiler.CSharp.OutputVisitor.CSharpFormattingOptions format;
 
@@ -104,14 +104,19 @@ namespace FuGetGallery
             }, true);
         }
 
-        public TypeDocumentation GetTypeDocumentation (TypeDefinition typeDefinition)
+        public TypeDocumentation GetTypeDocumentation (TypeDefinition typeDefinition, string rawLanguageCode)
         {
-            if (typeDocs.TryGetValue (typeDefinition, out var docs)) {
+            var languageCode = rawLanguageCode.Trim ().ToLowerInvariant ();
+            if (string.IsNullOrEmpty (languageCode))
+                languageCode = "en";
+
+            var key = Tuple.Create (typeDefinition, languageCode);
+            if (typeDocs.TryGetValue (key, out var docs)) {
                 return docs;
             }
             var asmName = typeDefinition.Module.Assembly.Name.Name;
-            docs = new TypeDocumentation (typeDefinition, framework, XmlDocs, decompiler, idecompiler, format);
-            typeDocs.TryAdd (typeDefinition, docs);
+            docs = new TypeDocumentation (typeDefinition, framework, XmlDocs, decompiler, idecompiler, format, languageCode);
+            typeDocs.TryAdd (key, docs);
             return docs;
         }
 

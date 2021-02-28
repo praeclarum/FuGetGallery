@@ -32,7 +32,7 @@ namespace FuGetGallery
                 return;
             var dir = a.IsBuildAssembly ? "build" : "lib";
             var code = isPublic ? "" : (framework.Package.AllowedToDecompile ? "?code=true" : "");
-            var link = $"/packages/{Uri.EscapeDataString(package.Id)}/{Uri.EscapeDataString(package.Version)}/{framework.Moniker}/{dir}/{Uri.EscapeDataString(a.FileName)}/{Uri.EscapeDataString(m.Namespace)}/{Uri.EscapeDataString(m.Name)}{code}#{Uri.EscapeDataString(id)}";
+            var link = $"/packages/{Uri.EscapeDataString(package.Id)}/{Uri.EscapeDataString(package.Version.ShortVersionString)}/{framework.Moniker}/{dir}/{Uri.EscapeDataString(a.FileName)}/{Uri.EscapeDataString(m.Namespace)}/{Uri.EscapeDataString(m.Name)}{code}#{Uri.EscapeDataString(id)}";
             results.TryAdd (link, new PackageSearchResult {
                 Name = name,
                 Parent = parent,
