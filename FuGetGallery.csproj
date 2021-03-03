@@ -20,9 +20,6 @@
     <PackageReference Include="ListDiff" Version="1.0.7" />
   </ItemGroup>
   <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Resources\Licenses\Apache2.txt" />
     <EmbeddedResource Include="Resources\Licenses\GPL2.txt" />
     <EmbeddedResource Include="Resources\Licenses\MIT.txt" />
