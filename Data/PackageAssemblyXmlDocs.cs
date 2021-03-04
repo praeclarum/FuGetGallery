@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -37,15 +37,26 @@ namespace FuGetGallery
 
     public class PackageAssemblyXmlLanguageDocs
     {
-        readonly XDocument doc;
+        XDocument doc;
 
-        public string LanguageCode { get; }
+        Entry entry;
+        public string LanguageCode { get; private set; }
 
-        public string Error { get; }
+        public string Error { get; private set; }
 
-        public string AssemblyName { get; }
+        public string AssemblyName { get; private set; }
 
-        public Dictionary<string, MemberXmlDocs> MemberDocs { get; } = new Dictionary<string, MemberXmlDocs> ();
+        Dictionary<string, MemberXmlDocs> members;
+
+        public Dictionary<string, MemberXmlDocs> MemberDocs { 
+            get {
+                // lazily load members to avoid accessing the stream
+                // unless we need it
+                if (members == null)
+                    LoadMembers (entry);
+                return members;
+            }
+        }
 
         public PackageAssemblyXmlLanguageDocs (string assemblyName, string languageCode)
         {
@@ -56,7 +67,7 @@ namespace FuGetGallery
 
         static readonly char[] pathSplitChars = new[] { '/', '\\' };
 
-        public PackageAssemblyXmlLanguageDocs (ZipArchiveEntry entry)
+        public PackageAssemblyXmlLanguageDocs (Entry entry)
         {
             LanguageCode = "en";
 
@@ -68,11 +79,16 @@ namespace FuGetGallery
                 if (pathParts.Length == 4) {
                     LanguageCode = pathParts[2];
                 }
+                // TODO: verify this is legit
+                AssemblyName = Path.GetFileNameWithoutExtension (pathParts[pathParts.Length - 1]);
             }
             catch (Exception ex) {
                 Console.WriteLine (ex);
             }
+        }
 
+        void LoadMembers (Entry entry)
+        {
             try {
                 using (var s = entry.Open ()) {
                     doc = XDocument.Load (s);

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Linq;
 using Mono.Cecil;
@@ -38,17 +37,18 @@ namespace FuGetGallery
 
         public override string ToString () => Definition.Name.Name;
 
-        public PackageAssembly (ZipArchiveEntry entry, PackageTargetFramework framework)
+        public PackageAssembly (Entry entry, PackageTargetFramework framework)
             : base (entry)
         {
             this.framework = framework;
-            var ms = new MemoryStream ((int)ArchiveEntry.Length);
-            using (var es = entry.Open ()) {
-                es.CopyTo (ms);
-                ms.Position = 0;
-            }
+            
             definition = new Lazy<AssemblyDefinition> (() => {
                 try {
+                    var ms = new MemoryStream ((int)ArchiveEntry.Length);
+                    using (var es = entry.Open ()) {
+                        es.CopyTo (ms);
+                        ms.Position = 0;
+                    }
                     return AssemblyDefinition.ReadAssembly (ms, new ReaderParameters {
                         AssemblyResolver = framework.AssemblyResolver,
                     });
