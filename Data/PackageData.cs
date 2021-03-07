@@ -66,11 +66,20 @@ namespace FuGetGallery
             req.Headers.Add ("Range", "bytes=" + deflateStart + "-" + (deflateStart + CompressedSize - 1));
 
             resp = await client.SendAsync (req);
-            var stream = await resp.Content.ReadAsStreamAsync();
+            Stream stream = await resp.Content.ReadAsStreamAsync ();
+            if (Mode == 8)  // deflate
+            {
+                stream = new DeflateStream (stream, CompressionMode.Decompress, false);
+            }
+            else {
+                if (Mode != 0) { // store
+                    throw new NotSupportedException ("Compression mode " + Mode + " not supported");
+                }
+            }
 
-            var ds = new DeflateStream (stream, CompressionMode.Decompress, false);
-            ds.CopyTo (ms);
+            stream.CopyTo (ms);
             ms.Position = 0;
+            stream.Dispose ();
             return ms;
         }
     }
