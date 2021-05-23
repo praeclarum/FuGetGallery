@@ -105,7 +105,7 @@
     string GetIcon(object o)
     {
         if (o == null) return "";
-        if (o is PackageAssembly) return "file";
+        if (o is PackageAssembly) return "assembly";
         if (o is Mono.Cecil.TypeDefinition t)
         {
             var isPublic = t.IsPublic;
@@ -113,11 +113,11 @@
             var isStruct = !isEnum && t.IsValueType;
             var isDel = !(isEnum || isStruct) && t.IsDelegate();
             var isIface = !(isEnum || isStruct || isDel) && (t.IsInterface || t.IsAbstract);
-            return isEnum ? "menu-hamburger" : (isDel ? "flash" : (isStruct ? "unchecked" : (isIface ? "star-empty" : "star")));
+            return isEnum ? "enum" : (isDel ? "delegate" : (isStruct ? "struct" : (isIface ? "interface" : "class")));
         }
         if (o is System.Linq.IGrouping<string, Mono.Cecil.TypeDefinition> g)
         {
-            return "book";
+            return "namespace";
         }
         if (o is PackageDependency d) return packageIcon;
         if (o is PackageData p) return packageIcon;
@@ -303,7 +303,7 @@
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
                    href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
-                    <span class="glyphicon glyphicon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec
+                    <span class="fugeticon fugeticon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec
                 </a>
             }
         </nav>
@@ -403,7 +403,7 @@ else
                                 <a class="@cls"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
                                    title="@a.Definition.Name.Version.ToString()">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
+                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
                         }
@@ -420,7 +420,7 @@ else
                             <li>
                                 <a class="@cls"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
+                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
                         }
@@ -440,7 +440,7 @@ else
                                 <li>
                                     <a class="@cls"
                                        href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
-                                        <span class="glyphicon glyphicon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key
+                                        <span class="fugeticon fugeticon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key
                                     </a>
                                 </li>
                             }
@@ -460,7 +460,7 @@ else
                                 <li>
                                     <a class="@cls"
                                        href="@GetUrl(otypeName:t.Name)">
-                                        <span class="glyphicon glyphicon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()
+                                        <span class="fugeticon fugeticon-@GetIcon(t)" aria-hidden="true"></span>&nbsp;@t.GetFriendlyName()
                                     </a>
                                 </li>
                             }
@@ -478,7 +478,7 @@ else
                             <li>
                                 <a style="font-weight:@bold;color:@color;"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)
+                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)
                                 </a>
                             </li>
                         }
@@ -495,7 +495,7 @@ else
                             <li>
                                 <a style="font-weight:@bold;color:@color;"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
-                                    <span class="glyphicon glyphicon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)
+                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)
                                 </a>
                             </li>
                         }
@@ -507,7 +507,7 @@ else
             <article>
                 @if (showKlass == "type")
                 {
-                    <h1 id="type" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
+                    <h1 id="type" style="margin-top:0"><span class="fugeticon fugeticon-@GetIcon(typ)" aria-hidden="true"></span>&nbsp;@typ.GetFriendlyName()</h1>
                     <div class="member-code" style="font-size:120%">
                         @Html.Raw(typ.GetPrototypeHtml(framework: framework, docs?.MemberXmlDocs, linkToCode: false, inExtensionClass: false))
                     </div>
@@ -536,17 +536,17 @@ else
                 }
                 else if (showKlass == "namespace")
                 {
-                    <h1 id="namespace" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
+                    <h1 id="namespace" style="margin-top:0"><span class="fugeticon fugeticon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
                     <p class="description-section">@description</p>
                 }
                 else if (showKlass == "assembly")
                 {
-                    <h1 id="assembly" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
+                    <h1 id="assembly" style="margin-top:0"><span class="fugeticon fugeticon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
                     <p class="description-section">@description</p>
                 }
                 else
                 {
-                    <h1 id="package" style="margin-top:0"><span class="glyphicon glyphicon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
+                    <h1 id="package" style="margin-top:0"><span class="fugeticon fugeticon-@GetIcon(package)" aria-hidden="true"></span>&nbsp;@package.Id <small>@package.Version</small></h1>
                     <p class="description-section">@description</p>
                     <pre><code>@package.NuspecXml</code></pre>
                 }

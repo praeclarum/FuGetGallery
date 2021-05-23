@@ -181,6 +181,28 @@ li.diff-Member {
 }
 
 
+.fugeticon {
+    display: inline-block;
+    padding: 0;
+    position: relative;
+    top: 1px;
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+}
+.fugeticon:before {
+    content: "\00A0";
+}
+.fugeticon-assembly { background-image: url(/images/code/Assembly_16x.svg); }
+.fugeticon-namespace { background-image: url(/images/code/Namespace_16x.svg); }
+.fugeticon-class { background-image: url(/images/code/Class_16x.svg); }
+.fugeticon-staticclass { background-image: url(/images/code/ClassSealed_16x.svg); }
+.fugeticon-abstractclass { background-image: url(/images/code/AbstractClass_16x.svg); }
+.fugeticon-interface { background-image: url(/images/code/CSInterface_16x.svg); }
+.fugeticon-enum { background-image: url(/images/code/Enumerator_16x.svg); }
+.fugeticon-delegate { background-image: url(/images/code/Event_16x.svg); }
+.fugeticon-struct { background-image: url(/images/code/Structure_16x.svg); }
+
 
 @media (prefers-color-scheme: dark) {
     body, .dropdown-menu, ul.dropdown-menu>li>a {
