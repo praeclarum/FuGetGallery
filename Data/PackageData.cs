@@ -412,7 +412,7 @@ namespace FuGetGallery
                 var idString = $"{package.Id}-{package.Version}";
                 var idHashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(idString));
                 var idHash = BitConverter.ToString(idHashBytes).Replace("-", "").ToLowerInvariant();
-                System.Console.WriteLine($"ID STRING {idString}={idHash}");
+                // System.Console.WriteLine($"ID STRING {idString}={idHash}");
                 var fileCacheName = idHash + ".zip";
 
                 var fileCacheDir = Path.Combine(
@@ -453,7 +453,8 @@ namespace FuGetGallery
                     throw new Exception("Failed to download the package");
                 }
 
-                var data = File.Open(fileCachePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateFromFile(fileCachePath);
+                var data = mmf.CreateViewStream();
 
                 await Task.Run (() => package.Read (data, httpClient), token).ConfigureAwait (false);
                 await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
