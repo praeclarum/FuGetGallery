@@ -100,7 +100,7 @@
         description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
     }
 
-    var packageIcon = "briefcase";
+    var packageIcon = "package";
 
     string GetIcon(object o)
     {
@@ -317,7 +317,7 @@
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
                    href="/packages/@Uri.EscapeDataString(d)">
-                    <span class="glyphicon glyphicon-@packageIcon" aria-hidden="true"></span>&nbsp;@d
+                    <span class="fugeticon fugeticon-@packageIcon" aria-hidden="true"></span>&nbsp;@d
                 </a>
             }
             @if (dependents.Count > maxDisplayDependents)
