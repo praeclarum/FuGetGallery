@@ -40,6 +40,7 @@ namespace FuGetGallery
         XDocument doc;
 
         Entry entry;
+
         public string LanguageCode { get; private set; }
 
         public string Error { get; private set; }
@@ -52,8 +53,12 @@ namespace FuGetGallery
             get {
                 // lazily load members to avoid accessing the stream
                 // unless we need it
-                if (members == null)
-                    LoadMembers (entry);
+                if (members == null) {
+                    members = new Dictionary<string, MemberXmlDocs>();
+                    if (entry != null) {
+                        LoadMembers ();
+                    }
+                }
                 return members;
             }
         }
@@ -69,6 +74,7 @@ namespace FuGetGallery
 
         public PackageAssemblyXmlLanguageDocs (Entry entry)
         {
+            this.entry = entry;
             LanguageCode = "en";
 
             try {
@@ -86,7 +92,7 @@ namespace FuGetGallery
             }
         }
 
-        void LoadMembers (Entry entry)
+        void LoadMembers ()
         {
             try {
                 using (var s = entry.Open ()) {
@@ -103,7 +109,7 @@ namespace FuGetGallery
                         var m = new MemberXmlDocs (me);
                         // System.Console.WriteLine(m.Name);
                         if (!string.IsNullOrEmpty (m.Name)) {
-                            MemberDocs[m.Name] = m;
+                            members[m.Name] = m;
                         }
                     }
                 }
