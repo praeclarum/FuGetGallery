@@ -79,7 +79,6 @@ namespace FuGetGallery
                 if (pathParts.Length == 4) {
                     LanguageCode = pathParts[2];
                 }
-                // TODO: verify this is legit
                 AssemblyName = Path.GetFileNameWithoutExtension (pathParts[pathParts.Length - 1]);
             }
             catch (Exception ex) {

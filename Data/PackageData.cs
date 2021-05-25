@@ -17,6 +17,7 @@ namespace FuGetGallery
     {
         public PackageData Package { get; set; }
         public string FullName { get; set; }
+        public string Name { get; set; }
         public int Mode { get; set; }
         public int CompressedSize { get; set; }
         public int ExpandedSize { get; set; }
@@ -268,6 +269,7 @@ namespace FuGetGallery
                 var entry = new Entry {
                     Package = this,
                     FullName = name,
+                    Name = Path.GetFileName(name),
                     CompressedSize = compSize,
                     ExpandedSize = expSize,
                     Mode = compressionMethod,

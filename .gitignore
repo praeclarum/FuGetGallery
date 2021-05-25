@@ -3,6 +3,9 @@
 # Autosave files
 *~
 .vs/
+.azure/
+
+*.sqlite3
 
 # build
 [Oo]bj/
