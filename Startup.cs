@@ -24,6 +24,7 @@ namespace FuGetGallery
         {
             new Database ().MigrateAsync ().Wait ();
             services.AddScoped<Database, Database> ();
+            services.AddControllers();
             services.AddRazorPages(options =>
             {
                 options.Conventions.AddPageRoute("/packages/details", "packages/{id}");
