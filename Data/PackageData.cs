@@ -44,6 +44,7 @@ namespace FuGetGallery
                 RequestUri = new Uri (url, UriKind.Absolute),
                 Version = new Version (1, 1),
             };
+            PackageData.AddDataRequestHeaders(req);
             req.Headers.Add ("Range", "bytes=" + EntryOffset + "-" + (EntryOffset + 30 -1));
 
             var resp = await client.SendAsync (req);
@@ -54,12 +55,12 @@ namespace FuGetGallery
 
             var ms = new MemoryStream (this.ExpandedSize);
 
-
             req = new HttpRequestMessage () {
                 Method = HttpMethod.Get,
                 RequestUri = new Uri (url, UriKind.Absolute),
                 Version = new Version (1, 1),
             };
+            PackageData.AddDataRequestHeaders(req);
 
             var deflateStart = EntryOffset + 30 + fileNameLen + fileExtraLen;
 
@@ -200,6 +201,18 @@ namespace FuGetGallery
 
         static Regex ContentRangeRegex = new Regex (@"^bytes (\d+)-(\d+)/(\d+)$", RegexOptions.Compiled);
 
+        // Magic string: https://github.com/praeclarum/FuGetGallery/pull/139#issuecomment-848272330
+        static string DownloadUserAgent = $"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; AppInsights) FuGetGallery/1.0.0 ({Environment.OSVersion}; +https://github.com/praeclarum/FuGetGallery)";
+
+        public static void AddDataRequestHeaders(HttpRequestMessage req)
+        {
+            req.Headers.UserAgent.Clear();
+            req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("Mozilla", "5.0"));
+            req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("(compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; AppInsights)"));
+            req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("FuGetGallery", "1.0"));
+            req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("(+https://github.com/praeclarum/FuGetGallery)"));
+        }
+
         async Task<List<Entry>> ReadEntriesAsync (HttpClient client, string file)
         {
             var req = new HttpRequestMessage () {
@@ -207,6 +220,7 @@ namespace FuGetGallery
                 RequestUri = new Uri (file, UriKind.Absolute),
                 Version = new Version (1, 1),
             };
+            AddDataRequestHeaders(req);
             req.Headers.Add ("Range", "bytes=0-1");
             var resp = await client.SendAsync (req);
             var buf = await resp.Content.ReadAsByteArrayAsync ();
@@ -219,6 +233,7 @@ namespace FuGetGallery
                 RequestUri = new Uri (file, UriKind.Absolute),
                 Version = new Version (1, 1),
             };
+            AddDataRequestHeaders(req);
 
             // this only works if the zip doesn't have a comment. which I think, should always be true, but who knows.
             req.Headers.Add ("Range", "bytes=" + (len - 22) + "-" + (len - 1));
@@ -240,6 +255,7 @@ namespace FuGetGallery
                 RequestUri = new Uri (file, UriKind.Absolute),
                 Version = new Version (1, 1),
             };
+            AddDataRequestHeaders(req);
 
             req.Headers.Add ("Range", "bytes=" + (centralDirOff) + "-" + (centralDirOff + centralDirLen - 1));
 
