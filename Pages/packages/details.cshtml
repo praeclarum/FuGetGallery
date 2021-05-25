@@ -402,7 +402,9 @@ else
                             <li>
                                 <a class="@cls"
                                    href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
-                                   title="@a.Definition.Name.Version.ToString()">
+                                   @*Rendering this title is problematic because it attempts to load the assembly*@
+                                   @*title="@a.Definition.Name.Version.ToString()"*@
+                                   >
                                     <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>

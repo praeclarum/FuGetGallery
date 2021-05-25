@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -37,15 +37,31 @@ namespace FuGetGallery
 
     public class PackageAssemblyXmlLanguageDocs
     {
-        readonly XDocument doc;
+        XDocument doc;
 
-        public string LanguageCode { get; }
+        Entry entry;
 
-        public string Error { get; }
+        public string LanguageCode { get; private set; }
 
-        public string AssemblyName { get; }
+        public string Error { get; private set; }
 
-        public Dictionary<string, MemberXmlDocs> MemberDocs { get; } = new Dictionary<string, MemberXmlDocs> ();
+        public string AssemblyName { get; private set; }
+
+        Dictionary<string, MemberXmlDocs> members;
+
+        public Dictionary<string, MemberXmlDocs> MemberDocs { 
+            get {
+                // lazily load members to avoid accessing the stream
+                // unless we need it
+                if (members == null) {
+                    members = new Dictionary<string, MemberXmlDocs>();
+                    if (entry != null) {
+                        LoadMembers ();
+                    }
+                }
+                return members;
+            }
+        }
 
         public PackageAssemblyXmlLanguageDocs (string assemblyName, string languageCode)
         {
@@ -56,8 +72,9 @@ namespace FuGetGallery
 
         static readonly char[] pathSplitChars = new[] { '/', '\\' };
 
-        public PackageAssemblyXmlLanguageDocs (ZipArchiveEntry entry)
+        public PackageAssemblyXmlLanguageDocs (Entry entry)
         {
+            this.entry = entry;
             LanguageCode = "en";
 
             try {
@@ -68,11 +85,15 @@ namespace FuGetGallery
                 if (pathParts.Length == 4) {
                     LanguageCode = pathParts[2];
                 }
+                AssemblyName = Path.GetFileNameWithoutExtension (pathParts[pathParts.Length - 1]);
             }
             catch (Exception ex) {
                 Console.WriteLine (ex);
             }
+        }
 
+        void LoadMembers ()
+        {
             try {
                 using (var s = entry.Open ()) {
                     doc = XDocument.Load (s);
@@ -88,7 +109,7 @@ namespace FuGetGallery
                         var m = new MemberXmlDocs (me);
                         // System.Console.WriteLine(m.Name);
                         if (!string.IsNullOrEmpty (m.Name)) {
-                            MemberDocs[m.Name] = m;
+                            members[m.Name] = m;
                         }
                     }
                 }
