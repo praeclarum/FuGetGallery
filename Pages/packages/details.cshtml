@@ -112,8 +112,10 @@
             var isEnum = t.IsEnum;
             var isStruct = !isEnum && t.IsValueType;
             var isDel = !(isEnum || isStruct) && t.IsDelegate();
-            var isIface = !(isEnum || isStruct || isDel) && (t.IsInterface || t.IsAbstract);
-            return isEnum ? "enum" : (isDel ? "delegate" : (isStruct ? "struct" : (isIface ? "interface" : "class")));
+            var isIface = !(isEnum || isStruct || isDel) && t.IsInterface;
+            var isSclass = !(isEnum || isStruct || isDel || isIface) && t.IsAbstract && t.IsSealed;
+            var isAclass = !(isEnum || isStruct || isDel || isIface || isSclass) && t.IsAbstract;
+            return isEnum ? "enum" : (isDel ? "delegate" : (isStruct ? "struct" : (isIface ? "interface" : (isSclass ? "staticclass" : (isAclass ? "abstractclass" : "class")))));
         }
         if (o is System.Linq.IGrouping<string, Mono.Cecil.TypeDefinition> g)
         {
