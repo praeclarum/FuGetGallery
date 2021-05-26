@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/netcoreapp2.1/FuGetGallery.dll",
+            "program": "${workspaceFolder}/bin/Debug/net5.0/FuGetGallery.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
