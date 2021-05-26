@@ -193,6 +193,7 @@ li.diff-Member {
 .fugeticon:before {
     content: "\00A0";
 }
+.fugeticon-file { background-image: url(/images/code/Document_16x.svg); }
 .fugeticon-package { background-image: url(/images/code/CSPackage_16x.svg); }
 .fugeticon-assembly { background-image: url(/images/code/Assembly_16x.svg); }
 .fugeticon-namespace { background-image: url(/images/code/Namespace_16x.svg); }
