@@ -31,6 +31,7 @@
     var diff = default(ApiDiff);
     var asm = default(PackageAssembly);
 
+    var autoasm = string.IsNullOrEmpty(inputAssemblyName);
     if (inputAssemblyName == "diff")
     {
         diff = await ApiDiff.GetAsync(package.Id, package.Version.ShortVersionString, framework.Moniker, inputNamespace, httpClient, HttpContext.RequestAborted);
@@ -41,7 +42,7 @@
     }
     var asmDef = asm?.Definition;
 
-    var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : new Mono.Cecil.TypeDefinition[0];
+    var types = asmDef != null ? (IEnumerable<Mono.Cecil.TypeDefinition>)asmDef.MainModule.Types : Array.Empty<Mono.Cecil.TypeDefinition>();
 
     var namespaces = types.GroupBy(x => x.Namespace).OrderBy(x => x.Key).Where(x => !string.IsNullOrEmpty(x.Key)).ToList();
 
@@ -91,13 +92,13 @@
     {
         showKlass = "namespace";
         title = ns.Key;
-        description = $"Namespace with {ns.Count():#,0} types";
+        description = $"Namespace with {ns.Count(x => x.IsPublic):#,0} public types";
     }
-    else if (asmDef != null && !autons && asm.FileName.Equals(inputAssemblyName, StringComparison.InvariantCultureIgnoreCase))
+    else if (asmDef != null && !autoasm)
     {
         showKlass = "assembly";
         title = asm.FileName ?? asmDef.Name.Name;
-        description = $"Assembly with {types.Count():#,0} types ({asm.SizeInBytes:#,0} bytes)";
+        description = $"Assembly with {namespaces.Count(x => x.Any(y => y.IsPublic)):#,0} public namespaces ({asm.SizeInBytes:#,0} bytes)";
     }
 
     var packageIcon = "package";
@@ -544,6 +545,10 @@ else
                 {
                     <h1 id="assembly" style="margin-top:0"><span class="fugeticon fugeticon-@GetIcon(asm)" aria-hidden="true"></span>&nbsp;@asm.FileName <small>@asmDef.Name.Version</small></h1>
                     <p class="description-section">@description</p>
+                    @foreach (var n in namespaces.Where(x => x.Any(y => y.IsPublic)).OrderBy(x => x.Key))
+                    {
+                        <h4><a class="public-api" href="@GetUrl(onamespace:n.Key)"><span class="fugeticon fugeticon-namespace" aria-hidden="true"></span>&nbsp;@n.Key</a> <small>with @n.Count(x => x.IsPublic) public types</small></h4>
+                    }
                 }
                 else
                 {
