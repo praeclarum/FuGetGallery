@@ -185,10 +185,11 @@ li.diff-Member {
     display: inline-block;
     padding: 0;
     position: relative;
-    top: 1px;
-    width: 16px;
-    height: 16px;
+    top: 0.167em;
+    width: 1em;
+    height: 1em;
     background-repeat: no-repeat;
+    background-size: 1em 1em;
 }
 .fugeticon:before {
     content: "\00A0";
