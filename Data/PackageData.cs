@@ -201,11 +201,9 @@ namespace FuGetGallery
 
         static Regex ContentRangeRegex = new Regex (@"^bytes (\d+)-(\d+)/(\d+)$", RegexOptions.Compiled);
 
-        // Magic string: https://github.com/praeclarum/FuGetGallery/pull/139#issuecomment-848272330
-        static string DownloadUserAgent = $"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; AppInsights) FuGetGallery/1.0.0 ({Environment.OSVersion}; +https://github.com/praeclarum/FuGetGallery)";
-
         public static void AddDataRequestHeaders(HttpRequestMessage req)
         {
+            // Magic string: https://github.com/praeclarum/FuGetGallery/pull/139#issuecomment-848272330
             req.Headers.UserAgent.Clear();
             req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("Mozilla", "5.0"));
             req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("(compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; AppInsights)"));
@@ -312,9 +310,11 @@ namespace FuGetGallery
                 var n = e.FullName;
                 var isBuild = n.StartsWith ("build/", StringComparison.InvariantCultureIgnoreCase);
                 var isLib = n.StartsWith ("lib/", StringComparison.InvariantCultureIgnoreCase);
+                var isResources = n.EndsWith (".resources.dll", StringComparison.InvariantCultureIgnoreCase);
                 if ((isBuild || isLib) && (n.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase) ||
                                            n.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase) ||
-                                           n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase))) {
+                                           n.EndsWith(".xml", StringComparison.InvariantCultureIgnoreCase))
+                                       && !isResources) {
                     var parts = n.Split ('/', StringSplitOptions.RemoveEmptyEntries);
                     string tfm;
                     if (parts.Length >= 3) {
