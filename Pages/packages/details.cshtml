@@ -312,7 +312,7 @@
     @if (dependents.Count > 0)
     {
         <nav style="margin-top:0em;line-height:2.75em;">
-            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
+            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Used By</h4>
             @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents).OrderBy(x => x))
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
@@ -401,11 +401,8 @@ else
                             var cls = (active ? "active " : "") + "public-api";
                             <li>
                                 <a class="@cls"
-                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
-                                   @*Rendering this title is problematic because it attempts to load the assembly*@
-                                   @*title="@a.Definition.Name.Version.ToString()"*@
-                                   >
-                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
+                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+                                   <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
                         }
