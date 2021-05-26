@@ -569,9 +569,12 @@ else
         function showResults(r) {
             function c(t) { return document.createElement(t); }
             function getIcon(t) {
-                if (t == "type") return "star";
-                if (t == "method") return "flash";
-                return "minus";
+                if (t == "type") return "class";
+                if (t == "method") return "method";
+                if (t == "field") return "field";
+                if (t == "event") return "event";
+                if (t == "property") return "property";
+                return "unknown";
             }
             function getColor(t) {
                 if (t == "type") return "c-tr";
@@ -593,7 +596,7 @@ else
                 var g = c("span");
                 var sm = c("small");
                 sm.appendChild(document.createTextNode (e.parent));
-                g.className = "glyphicon glyphicon-" + getIcon(e.type);
+                g.className = "fugeticon fugeticon-" + getIcon(e.type);
                 li.appendChild(a);
                 a.className = "link " + getColor(e.type);
                 a.appendChild(g);

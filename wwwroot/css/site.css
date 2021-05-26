@@ -185,7 +185,7 @@ li.diff-Member {
     display: inline-block;
     padding: 0;
     position: relative;
-    top: 0.167em;
+    top: 0.125em;
     width: 1em;
     height: 1em;
     background-repeat: no-repeat;
@@ -205,6 +205,11 @@ li.diff-Member {
 .fugeticon-enum { background-image: url(/images/code/Enumerator_16x.svg); }
 .fugeticon-delegate { background-image: url(/images/code/Event_16x.svg); }
 .fugeticon-struct { background-image: url(/images/code/Structure_16x.svg); }
+.fugeticon-method { background-image: url(/images/code/Method_16x.svg); }
+.fugeticon-field { background-image: url(/images/code/Field_16x.svg); }
+.fugeticon-event { background-image: url(/images/code/Event_16x.svg); }
+.fugeticon-property { background-image: url(/images/code/Property_16x.svg); }
+.fugeticon-unknown { background-image: url(/images/code/Cube_16x.svg); }
 
 
 @media (prefers-color-scheme: dark) {
@@ -323,5 +328,11 @@ li.diff-Member {
     .fugeticon-enum { background-image: url(/images/code/Enumerator_16x_dark.svg); }
     .fugeticon-delegate { background-image: url(/images/code/Event_16x_dark.svg); }
     .fugeticon-struct { background-image: url(/images/code/Structure_16x_dark.svg); }
-    }
+    .fugeticon-method { background-image: url(/images/code/Method_16x_dark.svg); }
+    .fugeticon-field { background-image: url(/images/code/Field_16x_dark.svg); }
+    .fugeticon-event { background-image: url(/images/code/Event_16x_dark.svg); }
+    .fugeticon-property { background-image: url(/images/code/Property_16x_dark.svg); }
+    .fugeticon-unknown { background-image: url(/images/code/Cube_16x_dark.svg); }
+
+}
 
