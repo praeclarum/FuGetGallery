@@ -212,6 +212,33 @@ li.diff-Member {
 .fugeticon-unknown { background-image: url(/images/code/Cube_16x.svg); }
 
 
+.boxcontents {
+    display: inline-block;
+    width: 18em;
+    
+    min-height: 4em;
+    border:1px solid rgb(128,128,128,0.5);
+    vertical-align: top;
+    margin: 0.5em 0.25em;
+    padding: 0.25em;
+    border-radius: 0.5em;
+    text-align: center;
+    color: #333 !important;
+}
+.boxcontents:hover { background-color: #EEE; }
+a .boxcontents {
+    text-decoration: none;
+}
+.boxcontents .title {
+    overflow:hidden;
+}
+.boxcontents small {
+    display: block;
+    opacity: 65%;
+}
+
+
+
 @media (prefers-color-scheme: dark) {
     body, .dropdown-menu, ul.dropdown-menu>li>a {
         background-color: #181818;
@@ -333,6 +360,9 @@ li.diff-Member {
     .fugeticon-event { background-image: url(/images/code/Event_16x_dark.svg); }
     .fugeticon-property { background-image: url(/images/code/Property_16x_dark.svg); }
     .fugeticon-unknown { background-image: url(/images/code/Cube_16x_dark.svg); }
+
+    .boxcontents { color: #ddd !important; }
+    .boxcontents:hover { background-color: #333; }
 
 }
 

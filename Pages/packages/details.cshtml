@@ -540,6 +540,32 @@ else
                 {
                     <h1 id="namespace" style="margin-top:0"><span class="fugeticon fugeticon-@GetIcon(ns)" aria-hidden="true"></span>&nbsp;@ns.Key</h1>
                     <p class="description-section">@description</p>
+                    @if (ns != null) {
+                        var pubTypes = ns.Where(x => x.IsPublic).ToList();
+                        var byIcon = pubTypes.GroupBy(x => GetIcon(x));
+                        var groupings = new[] { 
+                            ("class", "Classes"),
+                            ("struct", "Structures"),
+                            ("enum", "Enumerations"),
+                            ("staticclass", "Static Classes"),
+                            ("abstractclass", "Abstract Classes"),
+                            ("interface", "Interfaces"),
+                        };
+                        foreach (var (icon, groupTitle) in groupings) {
+                            var gtypes = byIcon.FirstOrDefault(x => x.Key == icon);
+                            if (gtypes == null) continue;
+                            <h3><span class="fugeticon fugeticon-@icon" aria-hidden="true"></span>&nbsp;@groupTitle</h3>
+                            foreach (var t in gtypes.OrderBy(x => x.Name))
+                            {
+                                var tdocs = asm?.GetTypeDocumentation(t, languageCode);
+                                <a href="@GetUrl(otypeName:t.Name)">
+                                    <div class="boxcontents boxcontents-type">
+                                        <span class="title"><span class="fugeticon fugeticon-@icon" aria-hidden="true"></span>&nbsp;@t.Name</span>
+                                        <small>@tdocs.SummaryText</small>
+                                    </div></a>
+                            }
+                        }
+                    }
                 }
                 else if (showKlass == "assembly")
                 {
