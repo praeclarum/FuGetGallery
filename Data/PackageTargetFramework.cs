@@ -59,7 +59,7 @@ namespace FuGetGallery
                 return url;
 
             var types =
-                from a in Assemblies.Where(a => !a.FileName.Contains(".resources.", StringComparison.OrdinalIgnoreCase)).Concat (BuildAssemblies)
+                from a in Assemblies.Concat (BuildAssemblies)
                 from m in a.Definition?.Modules ?? Enumerable.Empty<ModuleDefinition> ()
                 select new { a, t = m?.GetType (typeFullName) };
             var at = types.FirstOrDefault (x => x.t != null);
