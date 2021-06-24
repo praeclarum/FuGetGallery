@@ -452,36 +452,39 @@ namespace FuGetGallery
             }
         }
 
-        async Task SaveDependenciesAsync ()
+        Task SaveDependenciesAsync ()
         {
-            var db = new Database ();
+            //
+            // ISSUE #155: Diabled due to database corruption.
+            //
+            return Task.CompletedTask;
 
-            var depsq =
-                from tf in TargetFrameworks
-                from d in tf.Dependencies
-                where PackageWorthRemembering (d.PackageId)
-                select d.PackageId;
-            var deps = depsq.Distinct ();
-
-            var query = "select count(*) from StoredPackageDependency where LowerPackageId = ? and LowerDependentPackageId = ?";
-            var lid = Id.ToLowerInvariant ();
-            foreach (var d in deps) {
-                var ld = d.ToLowerInvariant ();
-                var count = await db.ExecuteScalarAsync<int> (query, ld, lid);
-                if (count == 0) {
-                    try {
-                        await db.InsertAsync (new StoredPackageDependency {
-                            LowerPackageId = ld,
-                            LowerDependentPackageId = lid,
-                            DependentPackageId = this.Id,
-                        });
-                        PackageDependents.Invalidate (ld);
-                    }
-                    catch (Exception ex) {
-                        Console.WriteLine (ex);
-                    }
-                }
-            }
+            //var db = new Database ();
+            //var depsq =
+            //    from tf in TargetFrameworks
+            //    from d in tf.Dependencies
+            //    where PackageWorthRemembering (d.PackageId)
+            //    select d.PackageId;
+            //var deps = depsq.Distinct ();
+            //var query = "select count(*) from StoredPackageDependency where LowerPackageId = ? and LowerDependentPackageId = ?";
+            //var lid = Id.ToLowerInvariant ();
+            //foreach (var d in deps) {
+            //    var ld = d.ToLowerInvariant ();
+            //    var count = await db.ExecuteScalarAsync<int> (query, ld, lid);
+            //    if (count == 0) {
+            //        try {
+            //            await db.InsertAsync (new StoredPackageDependency {
+            //                LowerPackageId = ld,
+            //                LowerDependentPackageId = lid,
+            //                DependentPackageId = this.Id,
+            //            });
+            //            PackageDependents.Invalidate (ld);
+            //        }
+            //        catch (Exception ex) {
+            //            Console.WriteLine (ex);
+            //        }
+            //    }
+            //}
         }
 
         static bool PackageWorthRemembering(string packageId)

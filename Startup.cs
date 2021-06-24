@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
@@ -22,8 +23,13 @@ namespace FuGetGallery
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            new Database ().MigrateAsync ().Wait ();
-            services.AddScoped<Database, Database> ();
+            try {
+                new Database ().MigrateAsync ().Wait ();
+                services.AddScoped<Database, Database> ();
+            }
+            catch (Exception dbex) {
+                Console.WriteLine ($"Failed to open the database: {dbex}");
+            }
             services.AddControllers();
             services.AddRazorPages(options =>
             {
