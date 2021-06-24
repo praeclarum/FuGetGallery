@@ -3,7 +3,7 @@ name: Deploy to Azure Web App
 on:
   push:
     branches:
-      - deployed
+      - master
 
 env:
   AZURE_WEBAPP_NAME: fuget
