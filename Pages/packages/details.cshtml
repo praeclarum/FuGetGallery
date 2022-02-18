@@ -140,7 +140,7 @@
         onamespace = (onamespace ?? ns?.Key) ?? RouteData.Values["namespace"];
         otypeName = otypeName ?? RouteData.Values["typeName"];
         ocode = ocode ?? Request.Query["code"].FirstOrDefault();
-        var r = "/packages";
+        var r = "~/packages";
         if (oid != null)
         {
             r += "/" + Uri.EscapeDataString(oid.ToString());
@@ -173,7 +173,7 @@
         {
             r += "?code=true";
         }
-        return r;
+        return Url.Content(r);
     }
 
     string ShortDate(DateTime? date)
