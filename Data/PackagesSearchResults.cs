@@ -114,6 +114,6 @@ namespace FuGetGallery
 
         public override string ToString() => PackageId;
 
-        public string SafeIconUrl => string.IsNullOrEmpty (IconUrl) ? "/images/no-icon.png" : IconUrl;
+        public string SafeIconUrl => string.IsNullOrEmpty (IconUrl) ? "~/images/no-icon.png" : IconUrl;
     }
 }
