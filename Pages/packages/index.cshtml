@@ -23,7 +23,7 @@
         <li class="media">
             <div class="media-left">
                 <a href="~/packages/@Uri.EscapeDataString(@r.PackageId)">
-                    <img src="@r.SafeIconUrl" class="package-icon-in-list" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
+                    <img src="@r.SafeIconUrl" class="package-icon-in-list" width="64" height="64" onError="this.onerror=null;this.src='@Url.Content("~/images/no-icon.png")';" />
                 </a>
             </div>
             <div class="media-body">
