@@ -22,12 +22,12 @@
     @foreach (var r in results.Results) {
         <li class="media">
             <div class="media-left">
-                <a href="/packages/@Uri.EscapeDataString(@r.PackageId)">
-                    <img src="@r.SafeIconUrl" class="package-icon-in-list" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
+                <a href="~/packages/@Uri.EscapeDataString(@r.PackageId)">
+                    <img src="@r.SafeIconUrl" class="package-icon-in-list" width="64" height="64" onError="this.onerror=null;this.src='@Url.Content("~/images/no-icon.png")';" />
                 </a>
             </div>
             <div class="media-body">
-                <h4><a href="/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a><small> by @r.Authors</small></h4>
+                <h4><a href="~/packages/@Uri.EscapeDataString(@r.PackageId)">@r.PackageId</a><small> by @r.Authors</small></h4>
                 <p style="max-height:5em;overflow:auto">@r.Description</p>
             </div>
         </li>
