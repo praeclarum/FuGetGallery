@@ -23,7 +23,6 @@ namespace FuGetGallery
         public int ExpandedSize { get; set; }
         public int EntryOffset { get; set; }
         public int Length => ExpandedSize;
-
         public override string ToString ()
         {
             return $"{FullName} {Mode}";
@@ -35,27 +34,6 @@ namespace FuGetGallery
         }
 
         public async Task<Stream> OpenAsync () {
-                        
-            var cacheDir =
-                Path.Combine (
-                    Path.GetTempPath (),
-                    "FugetFileCache",
-                    this.Package.Id.ToLowerInvariant (), // might run on linux?
-                    this.Package.Version.ToString ().ToLowerInvariant (),
-                    Path.GetDirectoryName (this.FullName)
-                );
-            Directory.CreateDirectory (cacheDir);
-            var cacheFile = Path.Combine (cacheDir, this.Name);
-
-            if (File.Exists (cacheFile)) {
-                try {
-                    var cachedFileStream = File.OpenRead (cacheFile);
-                    Debug.WriteLine ("Using cached file: " + cacheFile);
-                    return cachedFileStream;
-                }
-                catch {
-                }
-            }
 
             Debug.WriteLine ("Downloading: " + this.FullName + " " + this.CompressedSize);
             var url = this.Package.DownloadUrl;
@@ -69,8 +47,8 @@ namespace FuGetGallery
             PackageData.AddDataRequestHeaders(req);
             req.Headers.Add ("Range", "bytes=" + EntryOffset + "-" + (EntryOffset + 30 -1));
 
-            var resp = await client.SendAsync (req).ConfigureAwait(false);
-            var buf = await resp.Content.ReadAsByteArrayAsync ().ConfigureAwait (false);
+            var resp = await client.SendAsync (req);
+            var buf = await resp.Content.ReadAsByteArrayAsync ();
 
             var fileNameLen = buf.GetInt16 (26);
             var fileExtraLen = buf.GetInt16 (28);
@@ -86,10 +64,11 @@ namespace FuGetGallery
 
             var deflateStart = EntryOffset + 30 + fileNameLen + fileExtraLen;
 
+
             req.Headers.Add ("Range", "bytes=" + deflateStart + "-" + (deflateStart + CompressedSize - 1));
 
-            resp = await client.SendAsync (req).ConfigureAwait (false);
-            Stream stream = await resp.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+            resp = await client.SendAsync (req);
+            Stream stream = await resp.Content.ReadAsStreamAsync ();
             if (Mode == 8)  // deflate
             {
                 stream = new DeflateStream (stream, CompressionMode.Decompress, false);
@@ -102,28 +81,6 @@ namespace FuGetGallery
 
             stream.CopyTo (ms);
             ms.Position = 0;
-            var tempFile = Path.GetTempFileName ();
-            try {
-
-                using (var cacheFileStream = new FileStream (tempFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 0x1000, true)) {
-                    await ms.CopyToAsync (cacheFileStream).ConfigureAwait (false);
-                }
-                File.Move (tempFile, cacheFile);
-            }
-            catch {
-                Debug.WriteLine ("Exception writing cached file: " + cacheFile);
-                try {
-                    File.Delete (cacheFile);
-                }
-                catch { }
-            }
-            try {
-                // this should usually fail, since the file should have been moved.
-                File.Delete (tempFile);
-            }
-            catch { }
-            ms.Position = 0;
-
             stream.Dispose ();
             return ms;
         }
@@ -254,108 +211,59 @@ namespace FuGetGallery
             req.Headers.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("(+https://github.com/praeclarum/FuGetGallery)"));
         }
 
-        async Task<List<Entry>> ReadEntriesAsync (HttpClient client)
+        async Task<List<Entry>> ReadEntriesAsync (HttpClient client, string file)
         {
-            var tocCacheFile =
-               Path.Combine (
-                   Path.GetTempPath (),
-                   "FugetFileCache",
-                   this.Id.ToLowerInvariant (),
-                   this.Version.ToString().ToLowerInvariant() + ".toc"
-               );
+            var req = new HttpRequestMessage () {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri (file, UriKind.Absolute),
+                Version = new Version (1, 1),
+            };
+            AddDataRequestHeaders(req);
+            req.Headers.Add ("Range", "bytes=0-1");
+            var resp = await client.SendAsync (req);
+            var buf = await resp.Content.ReadAsByteArrayAsync ();
+            var str = resp.Content.Headers.GetValues ("Content-Range").Single ();
+            var m = ContentRangeRegex.Match (str);
+            var len = int.Parse (m.Groups[3].Value);
 
-            byte[] buf;
-            int entryCount;
-            int offset = 0;
+            req = new HttpRequestMessage () {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri (file, UriKind.Absolute),
+                Version = new Version (1, 1),
+            };
+            AddDataRequestHeaders(req);
 
-            if (File.Exists (tocCacheFile)) 
-            {
-                buf = await File.ReadAllBytesAsync (tocCacheFile);
-                entryCount = BitConverter.ToInt32 (buf, 0);
-                offset = 4;
-            }
-            else 
-            {
-                var file = this.DownloadUrl;
+            // this only works if the zip doesn't have a comment. which I think, should always be true, but who knows.
+            req.Headers.Add ("Range", "bytes=" + (len - 22) + "-" + (len - 1));
 
-                var req = new HttpRequestMessage () {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri (file, UriKind.Absolute),
-                    Version = new Version (1, 1),
-                };
-                AddDataRequestHeaders (req);
-                req.Headers.Add ("Range", "bytes=0-1");
-                var resp = await client.SendAsync (req);
-                buf = await resp.Content.ReadAsByteArrayAsync ();
-                var str = resp.Content.Headers.GetValues ("Content-Range").Single ();
-                var m = ContentRangeRegex.Match (str);
-                var len = int.Parse (m.Groups[3].Value);
+            resp = await client.SendAsync (req);
 
-                req = new HttpRequestMessage () {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri (file, UriKind.Absolute),
-                    Version = new Version (1, 1),
-                };
-                AddDataRequestHeaders (req);
+            buf = await resp.Content.ReadAsByteArrayAsync ();
 
-                // this only works if the zip doesn't have a comment. which I think, should always be true, but who knows.
-                req.Headers.Add ("Range", "bytes=" + (len - 22) + "-" + (len - 1));
+            var sig = buf.GetInt32 (0);
+            if (sig != 0x06054b50) // likely because there was a comment
+                throw new Exception ("Package format doesn't support quick access");
 
-                resp = await client.SendAsync (req);
+            int entryCount = buf.GetInt16 (8);
+            int centralDirLen = buf.GetInt32 (12);
+            int centralDirOff = buf.GetInt32 (16);
 
-                buf = await resp.Content.ReadAsByteArrayAsync ();
+            req = new HttpRequestMessage () {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri (file, UriKind.Absolute),
+                Version = new Version (1, 1),
+            };
+            AddDataRequestHeaders(req);
 
-                var sig = buf.GetInt32 (0);
-                if (sig != 0x06054b50) // likely because there was a comment
-                    throw new Exception ("Package format doesn't support quick access");
+            req.Headers.Add ("Range", "bytes=" + (centralDirOff) + "-" + (centralDirOff + centralDirLen - 1));
 
-                entryCount = buf.GetInt16 (8);
-                int centralDirLen = buf.GetInt32 (12);
-                int centralDirOff = buf.GetInt32 (16);
-
-                req = new HttpRequestMessage () {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri (file, UriKind.Absolute),
-                    Version = new Version (1, 1),
-                };
-                AddDataRequestHeaders (req);
-
-                req.Headers.Add ("Range", "bytes=" + (centralDirOff) + "-" + (centralDirOff + centralDirLen - 1));
-
-                resp = await client.SendAsync (req);
-                buf = await resp.Content.ReadAsByteArrayAsync ();
-
-                var tempFile = Path.GetTempFileName ();
-                try {
-
-                    using (var cacheFileStream = new FileStream (tempFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 0x1000, true)) 
-                    {
-                        byte[] b = new byte[4];
-                        BitConverter.TryWriteBytes (b, entryCount);
-                        await cacheFileStream.WriteAsync (b, 0, 4);
-                        await cacheFileStream.WriteAsync (buf, 0, buf.Length);
-                    }
-                    Directory.CreateDirectory (Path.GetDirectoryName (tocCacheFile));
-                    File.Move (tempFile, tocCacheFile);
-                }
-                catch {
-                    Debug.WriteLine ("Exception writing cached file: " + tocCacheFile);
-                    try {
-                        File.Delete (tocCacheFile);
-                    }
-                    catch { }
-                }
-                try {
-                    File.Delete (tempFile);
-                }
-                catch { }
-            }
-
+            resp = await client.SendAsync (req);
+            buf = await resp.Content.ReadAsByteArrayAsync ();
 
             var entries = new List<Entry> (entryCount);
-            
+            var offset = 0;
             for (int i = 0; i < entryCount; i++) {
-                var sig = buf.GetInt32 (offset + 0);
+                sig = buf.GetInt32 (offset + 0);
                 if (sig != 0x02014b50)
                     throw new Exception ();
                 var compressionMethod = buf.GetInt16 (offset + 10);
@@ -389,10 +297,10 @@ namespace FuGetGallery
             return entries;
         }
 
-        async Task ReadAsync (HttpClient httpClient)
+        async Task ReadAsync (HttpClient httpClient, string packageUri)
         {
             this.Client = httpClient;
-            var entries = await ReadEntriesAsync (httpClient);
+            var entries = await ReadEntriesAsync (httpClient, packageUri);
 
             TargetFrameworks.Clear ();
             Content.Clear();
@@ -469,7 +377,8 @@ namespace FuGetGallery
                     throw new Exception ("Failed to find metadata in " + xdoc);
                 }
                 string GetS (string name, string def = "") {
-                    return meta.Element(ns + name)?.Value.Trim() ?? def;
+                    try { return meta.Element(ns + name).Value.Trim(); }
+                    catch { return def; }
                 }
                 string GetUrl (string name) {
                     var u = GetS (name);
@@ -684,7 +593,7 @@ namespace FuGetGallery
 
             private static async Task<PackageData> ReadPackageFromUrl (PackageData package, HttpClient httpClient, CancellationToken token)
             {
-                await package.ReadAsync (httpClient);
+                await package.ReadAsync (httpClient, package.DownloadUrl);
                 await package.MatchLicenseAsync (httpClient).ConfigureAwait (false);
                 await package.SaveDependenciesAsync ();
                 return package;
