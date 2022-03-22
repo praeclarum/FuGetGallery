@@ -24,14 +24,14 @@
     };
 }
 
-<h1 style="margin-bottom:0.5em"><a href="~/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Dependents</h1>
+<h1 style="margin-bottom:0.5em"><a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a> Dependents</h1>
 
 <p>The following @dependents.Count packages directly use @(package.Id):</p>
 
 <ol>
 @foreach (var r in dependents) {
     <li>
-        <a href="~/packages/@Uri.EscapeDataString(@r)">@r</a>
+        <a href="/packages/@Uri.EscapeDataString(@r)">@r</a>
     </li>
 }
 </ol>

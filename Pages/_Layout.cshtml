@@ -34,8 +34,8 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button> -->
-                <a href="~/" class="navbar-brand" style="padding-right:2em">fuget.org</a>
-                <form id="searchForm" class="input-group" action="~/packages" method="GET" style="margin-top:0.6em;width:20em">
+                <a href="/" class="navbar-brand" style="padding-right:2em">fuget.org</a>
+                <form id="searchForm" class="input-group" action="/packages" method="GET" style="margin-top:0.6em;width:20em">
                     <input name="q" id="packageSearch" value="@ViewData["q"]" type="text" class="form-control" placeholder="Search Packages"
                            style="background-color:#444;border-color:#444;color:#fff;border-radius:0.5em;outline:none;box-shadow:none;"
                            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
@@ -63,9 +63,9 @@
                     <li class="private-api"><span class="fugeticon fugeticon-class" aria-hidden="true"></span>&nbsp;Grayed out is non-public</li>
                 </ul>
             </div>
-            <p><a href="~/">fuget.org</a> is &copy; @DateTime.UtcNow.Year Frank A. Krueger</p>
+            <p><a href="/">fuget.org</a> is &copy; @DateTime.UtcNow.Year Frank A. Krueger</p>
             <p>help me <a href="https://github.com/praeclarum/FuGetGallery">build this on github</a></p>
-            <p><a href="~/privacy">privacy policy</a></p>
+            <p><a href="/privacy">privacy policy</a></p>
             
         </footer>
     </div>

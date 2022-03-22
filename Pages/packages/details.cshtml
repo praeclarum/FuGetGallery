@@ -140,7 +140,7 @@
         onamespace = (onamespace ?? ns?.Key) ?? RouteData.Values["namespace"];
         otypeName = otypeName ?? RouteData.Values["typeName"];
         ocode = ocode ?? Request.Query["code"].FirstOrDefault();
-        var r = "~/packages";
+        var r = "/packages";
         if (oid != null)
         {
             r += "/" + Uri.EscapeDataString(oid.ToString());
@@ -173,8 +173,7 @@
         {
             r += "?code=true";
         }
-
-		return Url.Content(r);
+        return r;
     }
 
     string ShortDate(DateTime? date)
@@ -197,12 +196,12 @@
 
 <header>
     <h1>
-        <a href="~/packages/@Uri.EscapeDataString(package.Id)">
-            <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='@Url.Content("~/images/no-icon.png")';" />
+        <a href="/packages/@Uri.EscapeDataString(package.Id)">
+            <img src="@package.SafeIconUrl" class="package-icon" width="64" height="64" onError="this.onerror=null;this.src='/images/no-icon.png';" />
         </a>
-        <a href="~/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
+        <a href="/packages/@Uri.EscapeDataString(package.Id)">@package.Id</a>
         <small>by @authors</small>
-        <a href="~/packages/@Uri.EscapeDataString(package.Id)/badges"><img src="~/packages/@Uri.EscapeDataString(package.Id)/badge.svg?v=@Uri.EscapeDataString(versionSpec.ShortVersionString)" /></a>
+        <a href="/packages/@Uri.EscapeDataString(package.Id)/badges"><img src="/packages/@Uri.EscapeDataString(package.Id)/badge.svg?v=@Uri.EscapeDataString(versionSpec.ShortVersionString)" /></a>
     </h1>
     <nav>
         <div class="btn-group" style="display: inline-block">
@@ -306,7 +305,7 @@
             @foreach (var d in framework.Dependencies.OrderBy(x => x.PackageId))
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
-                   href="~/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
+                   href="/packages/@Uri.EscapeDataString(d.PackageId)/@Uri.EscapeDataString(d.VersionSpec)">
                     <span class="fugeticon fugeticon-@GetIcon(d)" aria-hidden="true"></span>&nbsp;@d.PackageId&nbsp;@d.VersionSpec
                 </a>
             }
@@ -320,14 +319,14 @@
             @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents).OrderBy(x => x))
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
-                   href="~/packages/@Uri.EscapeDataString(d)">
+                   href="/packages/@Uri.EscapeDataString(d)">
                     <span class="fugeticon fugeticon-@packageIcon" aria-hidden="true"></span>&nbsp;@d
                 </a>
             }
             @if (dependents.Count > maxDisplayDependents)
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
-                   href="~/packages/@Uri.EscapeDataString(package.Id)/dependents">@(dependents.Count - maxDisplayDependents) more...</a>
+                   href="/packages/@Uri.EscapeDataString(package.Id)/dependents">@(dependents.Count - maxDisplayDependents) more...</a>
             }
         </nav>
     }
@@ -405,7 +404,7 @@ else
                             var cls = (active ? "active " : "") + "public-api";
                             <li>
                                 <a class="@cls"
-                                   href="~/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
@@ -422,7 +421,7 @@ else
                             var cls = (active ? "active " : "") + "public-api";
                             <li>
                                 <a class="@cls"
-                                   href="~/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/build/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
                                     <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
@@ -442,7 +441,7 @@ else
                             {
                                 <li>
                                     <a class="@cls"
-                                       href="~/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
+                                       href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/@Uri.EscapeDataString(dir)/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(asm.FileName)/@Uri.EscapeDataString(n.Key)">
                                         <span class="fugeticon fugeticon-@GetIcon(n)" aria-hidden="true"></span>&nbsp;@n.Key
                                     </a>
                                 </li>
@@ -480,7 +479,7 @@ else
                             var color = bold == "bold" ? "#000" : "#777";
                             <li>
                                 <a style="font-weight:@bold;color:@color;"
-                                   href="~/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
+                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/content/@a.ArchiveEntry.FullName.Substring(8)">
                                     <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(8)
                                 </a>
                             </li>
@@ -497,7 +496,7 @@ else
                             var color = bold == "bold" ? "#000" : "#777";
                             <li>
                                 <a style="font-weight:@bold;color:@color;"
-                                   href="~/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
+                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/tools/@a.ArchiveEntry.FullName.Substring(6)">
                                     <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.ArchiveEntry.FullName.Substring(6)
                                 </a>
                             </li>
