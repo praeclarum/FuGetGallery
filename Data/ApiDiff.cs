@@ -31,8 +31,9 @@ namespace FuGetGallery
         {
             public string Namespace;
             public List<TypeDiffInfo> Types = new List<TypeDiffInfo> ();
-            public int NumAdditions => Types.Sum(x => x.NumAdditions);
-            public int NumRemovals => Types.Sum(x => x.NumRemovals);
+            public int NumAdditions => Types.Sum (x => x.NumAdditions);
+            public int NumRemovals => Types.Sum (x => x.NumRemovals);
+            public int NumObsolete => Types.Sum (x => x.NumObsolete);
         }
 
         public class TypeDiffInfo : DiffInfo
@@ -43,18 +44,37 @@ namespace FuGetGallery
             public int NumAdditions {
                 get {
                     switch (Action) {
-                        case ListDiffActionType.Remove: return 0;
-                        case ListDiffActionType.Update: return Members.Sum(x => x.NumAdditions);
-                        default: return 1 + Members.Sum(x => x.NumAdditions);
+                        case ListDiffActionType.Remove:
+                            return 0;
+                        case ListDiffActionType.Update:
+                            return Members.Sum (x => x.NumAdditions);
+                        default:
+                            return 1 + Members.Sum (x => x.NumAdditions);
                     }
                 }
             }
             public int NumRemovals {
                 get {
                     switch (Action) {
-                        case ListDiffActionType.Remove: return 1;
-                        case ListDiffActionType.Update: return Members.Sum(x => x.NumRemovals);
-                        default: return 0;
+                        case ListDiffActionType.Remove:
+                            return 1;
+                        case ListDiffActionType.Update:
+                            return Members.Sum (x => x.NumRemovals);
+                        default:
+                            return 0;
+                    }
+                }
+            }
+
+            public int NumObsolete {
+                get {
+                    switch (Action) {
+                        case ListDiffActionType.Remove:
+                            return 0;
+                        case ListDiffActionType.Update:
+                            return Members.Sum (x => x.NumObsolete);
+                        default:
+                            return 0;
                     }
                 }
             }
@@ -65,6 +85,8 @@ namespace FuGetGallery
             public IMemberDefinition Member;
             public int NumAdditions => Action == ListDiffActionType.Add ? 1 : 0;
             public int NumRemovals => Action == ListDiffActionType.Remove ? 1 : 0;
+            public int NumObsolete;
+            public string ObsoleteMessage;
         }
 
         public ApiDiff (PackageData package, PackageTargetFramework framework, PackageData otherPackage, PackageTargetFramework otherFramework)
@@ -128,6 +150,8 @@ namespace FuGetGallery
                             break;
                     }
 
+
+
                     if (ta.ActionType == ListDiffActionType.Remove) {
                         types.Add (ti);
                         continue;
@@ -146,6 +170,13 @@ namespace FuGetGallery
                                 break;
                             default:
                                 mi.Member = ma.DestinationItem;
+
+                                var (isObsolete, message) = ValidateObsolete (mi.Member);
+                                if (isObsolete) {
+                                    mi.NumObsolete++;
+                                    mi.ObsoleteMessage = message;
+                                    ti.Members.Add (mi);
+                                }
                                 break;
                         }
                     }
@@ -175,12 +206,24 @@ namespace FuGetGallery
             var otherVersion = versions.GetVersion (inputOtherVersion);
             var framework = (inputFramework ?? "").ToString ().ToLowerInvariant ().Trim ();
 
-            return await cache.GetAsync(
+            return await cache.GetAsync (
                     Tuple.Create (versions.LowerId, version.ShortVersionString, framework),
                     otherVersion.ShortVersionString,
                     httpClient,
                     token)
                 .ConfigureAwait (false);
+        }
+
+        private static (bool, string) ValidateObsolete (ICustomAttributeProvider member)
+        {
+            if (!member.HasCustomAttributes)
+                return (false, null);
+
+            foreach (var ca in member.CustomAttributes.Where (ca => ca.AttributeType.FullName == "System.ObsoleteAttribute")) {
+                return (true, ca.ConstructorArguments.First ().Value.ToString ());
+            }
+
+            return (false, null);
         }
 
         class ApiDiffCache : DataCache<Tuple<string, string, string>, string, ApiDiff>
