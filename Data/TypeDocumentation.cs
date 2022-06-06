@@ -86,10 +86,20 @@ namespace FuGetGallery
                 var xmlName = m.GetXmlName ();
                 MemberXmlDocs mdocs = null;
                 xmlDocs?.GetLanguage(languageCode).MemberDocs.TryGetValue (xmlName, out mdocs);
+                var (isObsolete, obsoleteMessage) = ApiDiff.ValidateObsolete (m);
+                if (isObsolete && obsoleteMessage == null) {
+                    obsoleteMessage = m.Name + " is deprecated";
+                }
 
                 w.WriteLine ("<div class='member-code'>");
                 m.WritePrototypeHtml (w, framework: framework, mdocs, linkToCode: true, isExtensionClass);
                 w.WriteLine ("</div>");
+                
+                if (isObsolete) {
+                    w.Write ("<div class='member-obsolete'><b>Obsolete:</b> ");
+                    CecilExtensions.WriteEncoded (obsoleteMessage, w);
+                    w.Write ("</div>");
+                }
 
                 w.WriteLine ("<p>");
                 if (mdocs != null) {

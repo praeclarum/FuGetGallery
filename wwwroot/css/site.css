@@ -81,6 +81,11 @@ footer { margin-top: 10em; }
     margin-bottom: 0.5em;
 }
 
+.member-obsolete {
+    padding: 0 8px;
+    background-color: rgba(255, 213, 128, 0.5);
+}
+
 .code {
     font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
     font-size: 13px;
@@ -262,6 +267,9 @@ a .boxcontents {
     }
     .add-package-code, .member-code {
         background-color: #111;
+    }
+    .member-obsolete {
+        background-color: rgba(253, 143, 33, 0.3);
     }
     #asearch {
         color: #fff;
