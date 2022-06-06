@@ -161,7 +161,7 @@ li.diff-Member {
     margin: 0.5em;
 }
 
-.diff-Add, .diff-Remove, .diff-Update {
+.diff-Add, .diff-Remove, .diff-Update, .diff-Obsolete {
     border:solid 1px;
     border-radius: 0.5em;
     padding: 0.5em;
@@ -178,6 +178,10 @@ li.diff-Member {
 .diff-Update {
     border-color: rgba(188, 193, 211, 0.75);
     background-color: rgba(129, 133, 145, 0.05);
+}
+.diff-Obsolete {
+    border-color: rgba(42, 36, 74, 0.75);
+    background-color: rgba(42, 36, 74, 0.15);
 }
 
 
