@@ -220,7 +220,7 @@ namespace FuGetGallery
                 return (false, null);
 
             foreach (var ca in member.CustomAttributes.Where (ca => ca.AttributeType.FullName == "System.ObsoleteAttribute")) {
-                return (true, ca.ConstructorArguments.First ().Value.ToString ());
+                return (true, ca.ConstructorArguments.FirstOrDefault().Value?.ToString ());
             }
 
             return (false, null);
