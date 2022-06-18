@@ -7,6 +7,7 @@ using ListDiff;
 using Mono.Cecil;
 using System.Linq;
 using System.Net.Http;
+using FuGetGallery.Data;
 
 namespace FuGetGallery
 {
@@ -171,10 +172,10 @@ namespace FuGetGallery
                             default:
                                 mi.Member = ma.DestinationItem;
 
-                                var (isObsolete, message) = ValidateObsolete (mi.Member);
+                                var (isObsolete, obsoleteMessage) = mi.Member.GetObsoleteMessage ();
                                 if (isObsolete) {
                                     mi.NumObsolete++;
-                                    mi.ObsoleteMessage = message;
+                                    mi.ObsoleteMessage = obsoleteMessage;
                                     ti.Members.Add (mi);
                                 }
                                 break;
@@ -213,19 +214,7 @@ namespace FuGetGallery
                     token)
                 .ConfigureAwait (false);
         }
-
-        protected internal static (bool, string) ValidateObsolete (ICustomAttributeProvider member)
-        {
-            if (!member.HasCustomAttributes)
-                return (false, null);
-
-            foreach (var ca in member.CustomAttributes.Where (ca => ca.AttributeType.FullName == "System.ObsoleteAttribute")) {
-                return (true, ca.ConstructorArguments.FirstOrDefault().Value?.ToString ());
-            }
-
-            return (false, null);
-        }
-
+        
         class ApiDiffCache : DataCache<Tuple<string, string, string>, string, ApiDiff>
         {
             public ApiDiffCache () : base (TimeSpan.FromDays (1)) { }

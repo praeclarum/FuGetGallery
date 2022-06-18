@@ -16,6 +16,7 @@ using ICSharpCode.Decompiler.CSharp.Resolver;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using System.Xml.Linq;
 using System.Text;
+using FuGetGallery.Data;
 using ICSharpCode.Decompiler.TypeSystem.Implementation;
 using ICSharpCode.Decompiler.Documentation;
 
@@ -86,9 +87,9 @@ namespace FuGetGallery
                 var xmlName = m.GetXmlName ();
                 MemberXmlDocs mdocs = null;
                 xmlDocs?.GetLanguage(languageCode).MemberDocs.TryGetValue (xmlName, out mdocs);
-                var (isObsolete, obsoleteMessage) = ApiDiff.ValidateObsolete (m);
+                var (isObsolete, obsoleteMessage) = m.GetObsoleteMessage ();
                 if (isObsolete && obsoleteMessage == null) {
-                    obsoleteMessage = m.Name + " is deprecated";
+                    obsoleteMessage = m.Name + " is obsolete";
                 }
 
                 w.WriteLine ("<div class='member-code'>");
