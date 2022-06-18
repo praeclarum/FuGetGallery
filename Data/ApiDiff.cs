@@ -7,7 +7,6 @@ using ListDiff;
 using Mono.Cecil;
 using System.Linq;
 using System.Net.Http;
-using FuGetGallery.Data;
 
 namespace FuGetGallery
 {

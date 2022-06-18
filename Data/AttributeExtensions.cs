@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Mono.Cecil;
 
-namespace FuGetGallery.Data
+namespace FuGetGallery
 {
     internal static class AttributeExtensions
     {
