@@ -214,7 +214,7 @@ namespace FuGetGallery
                 .ConfigureAwait (false);
         }
 
-        private static (bool, string) ValidateObsolete (ICustomAttributeProvider member)
+        protected internal static (bool, string) ValidateObsolete (ICustomAttributeProvider member)
         {
             if (!member.HasCustomAttributes)
                 return (false, null);
