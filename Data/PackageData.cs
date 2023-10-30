@@ -125,7 +125,14 @@ namespace FuGetGallery
         string RepositoryUrlWithoutGit => RepositoryUrl.EndsWith(".git") ?
             RepositoryUrl.Substring(0, RepositoryUrl.Length - 4) :
             RepositoryUrl;
-        string CombinedRepositoryUrlAndCommit => RepositoryUrlWithoutGit + "/tree/" + RepositoryCommit;
+        string CombinedRepositoryUrlAndCommit {
+            get {
+                if (RepositoryUrl.StartsWith ("https://dev.azure.com/"))
+                    return RepositoryUrlWithoutGit + "?version=GC" + RepositoryCommit;
+                else
+                    return RepositoryUrlWithoutGit + "/tree/" + RepositoryCommit;
+            }
+        }
         public string RepositoryUrlTitle => "Source";
 
         public License MatchedLicense { get; set; }
