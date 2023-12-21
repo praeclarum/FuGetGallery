@@ -47,7 +47,7 @@ namespace FuGetGallery
                         Version = (string)x["version"],
                         Description = (string)x["description"],
                         IconUrl = (string)x["iconUrl"],
-                        TotalDownloads = ((int?)x["totalDownloads"]) ?? 0,
+                        TotalDownloads = ((long?)x["totalDownloads"]) ?? 0,
                         Authors = string.Join (", ", x["authors"]),
                     });
                 }
@@ -57,7 +57,7 @@ namespace FuGetGallery
                         existingResult.Version = newVersion;
                         existingResult.Description = (string)x["description"];
                         existingResult.IconUrl = (string)x["iconUrl"];
-                        existingResult.TotalDownloads = ((int?)x["totalDownloads"]) ?? 0;
+                        existingResult.TotalDownloads = ((long?)x["totalDownloads"]) ?? 0;
                         existingResult.Authors = string.Join (", ", x["authors"]);
                     }
                 }
@@ -109,7 +109,7 @@ namespace FuGetGallery
         public string Version { get; set; } = "";
         public string Description { get; set; } = "";
         public string IconUrl { get; set; } = "";
-        public int TotalDownloads { get; set; } = 0;
+        public long TotalDownloads { get; set; } = 0;
         public string Authors { get; set; } = "";
 
         public override string ToString() => PackageId;
