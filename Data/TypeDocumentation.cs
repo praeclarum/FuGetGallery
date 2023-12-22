@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -13,7 +12,6 @@ using ICSharpCode.Decompiler.CSharp.TypeSystem;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.CSharp.Resolver;
-using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using System.Xml.Linq;
 using System.Text;
 using ICSharpCode.Decompiler.TypeSystem.Implementation;
@@ -86,10 +84,20 @@ namespace FuGetGallery
                 var xmlName = m.GetXmlName ();
                 MemberXmlDocs mdocs = null;
                 xmlDocs?.GetLanguage(languageCode).MemberDocs.TryGetValue (xmlName, out mdocs);
+                var (isObsolete, obsoleteMessage) = m.GetObsoleteMessage ();
+                if (isObsolete && obsoleteMessage == null) {
+                    obsoleteMessage = m.Name + " is obsolete";
+                }
 
                 w.WriteLine ("<div class='member-code'>");
                 m.WritePrototypeHtml (w, framework: framework, mdocs, linkToCode: true, isExtensionClass);
                 w.WriteLine ("</div>");
+                
+                if (isObsolete) {
+                    w.Write ("<div class='member-obsolete'><b>Obsolete:</b> ");
+                    CecilExtensions.WriteEncoded (obsoleteMessage, w);
+                    w.Write ("</div>");
+                }
 
                 w.WriteLine ("<p>");
                 if (mdocs != null) {

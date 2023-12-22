@@ -65,7 +65,7 @@ namespace FuGetGallery
             return Mono.Cecil.Rocks.DocCommentId.GetDocCommentId (member);
         }
 
-        static void WriteEncoded (string s, TextWriter w)
+        public static void WriteEncoded (string s, TextWriter w)
         {
             for (var i = 0; i < s.Length; i++) {
                 switch (s[i]) {

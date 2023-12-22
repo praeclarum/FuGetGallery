@@ -343,11 +343,14 @@
         <p>@diff.Error</p>
     }
     <p>
-        <span class="diff-Add">
+        <span class="diff-Add" style="margin-right:0.5em;">
             <strong>@diff.Namespaces.Sum(ni => ni.NumAdditions)</strong> Additions
         </span>
-        <span class="diff-Remove" style="margin:0.5em;">
+        <span class="diff-Remove"style="margin-right:0.5em;">
             <strong>@diff.Namespaces.Sum(ni => ni.NumRemovals)</strong> Removals
+        </span>
+        <span class="diff-Obsolete">
+            <strong>@diff.Namespaces.Sum(ni => ni.NumObsolete)</strong> Obsolete
         </span>
     </p>
     @foreach (var ni in diff.Namespaces)
@@ -362,7 +365,13 @@
                     <ul class="diff-Members">
                         @foreach (var mi in ti.Members)
                         {
-                            <li class="diff-@mi.Action diff-Member"><span class="inline-code">@Html.Raw(mi.Member.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass))</span></li>
+                            <li class="diff-@mi.Action diff-Member @(mi.NumObsolete > 0 ? "diff-Obsolete" : "")">
+                                <span class="inline-code">@Html.Raw(mi.Member.GetPrototypeHtml(framework: ti.Framework, null, linkToCode: false, isExtensionClass))</span>
+                                @if (!string.IsNullOrWhiteSpace(mi.ObsoleteMessage))
+                                {
+                                    <p style="margin-top: 1em; margin-bottom: 0em;">@mi.ObsoleteMessage</p>
+                                }
+                            </li>
                         }
                     </ul>
                 </li>
