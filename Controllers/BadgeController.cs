@@ -24,7 +24,7 @@ namespace FuGetGallery.Controllers
 
             var content = DrawBadge (package);
 
-            HttpContext.Response.Headers.Add ("Cache-Control", "max-age=3600");
+            HttpContext.Response.Headers["Cache-Control"] = "max-age=3600";
             var r = Content(content);
             r.ContentType = "image/svg+xml";
             return r;

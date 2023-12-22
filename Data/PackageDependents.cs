@@ -33,7 +33,7 @@ namespace FuGetGallery
         {
             public PackageDependentsCache () : base (TimeSpan.FromMinutes (20)) { }
             
-            protected override async Task<PackageDependents> GetValueAsync (string lowerId, HttpClient httpClient, CancellationToken token)
+            protected override Task<PackageDependents> GetValueAsync (string lowerId, HttpClient httpClient, CancellationToken token)
             {
                 //
                 // ISSUE #155: Diabled due to database corruption.
@@ -48,7 +48,7 @@ namespace FuGetGallery
                 //catch (Exception ex) {
                 //    Console.WriteLine (ex);
                 //}
-                return deps;
+                return Task.FromResult(deps);
             }
         }
     }
