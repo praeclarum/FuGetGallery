@@ -386,10 +386,13 @@ else
                 <small style="color:#777;">@((package.Content.Sum(x=>x.SizeInBytes)+package.Tools.Sum(x=>x.SizeInBytes)).ToString("#,0")) bytes</small>
             }
 
-            <form class="form-inline" style="margin-top: 0.5em;">
-                <input id="asearch" type="search" class="form-control" placeholder="Search"
-                       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                       style="margin-bottom:1em;" />
+            <form id="asearchform" class="form-inline" style="margin-top: 0.5em;">
+                <div class="form-group has-feedback">
+                    <input id="asearch" type="search" class="form-control" placeholder="Search"
+                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                           style="margin-bottom: 1em;"/>
+                    <span id="asearchloading" class="loader form-control-feedback hidden"></span>
+                </div>
             </form>
 
             <nav id="anav">
@@ -593,10 +596,22 @@ else
     var packageDescription = @Html.Raw(Json.Serialize(package.Description));
 
     var asearch = document.getElementById("asearch");
+    var asearchloading = document.getElementById("asearchloading");
+    var asearchform = document.getElementById("asearchform");
     var anav = document.getElementById("anav");
     if (asearch && anav) {
         var searchResults = {};
         var rhtml = null;
+        function showSearchLoading() {
+            if (asearchloading.classList.contains("hidden")) {
+                asearchloading.classList.remove("hidden");
+            }
+        }
+        function hideSearchLoading() {
+            if (!asearchloading.classList.contains("hidden")) {
+                asearchloading.classList.add("hidden");
+            }
+        }
         function showResults(r) {
             function c(t) { return document.createElement(t); }
             function getIcon(t) {
@@ -637,11 +652,13 @@ else
                 ul.appendChild(li);
             });
             anav.hidden = true;
-            asearch.parentElement.appendChild (rhtml);
+            asearchform.appendChild (rhtml);
+            hideSearchLoading();
         }
         function hideResults() {
             if (rhtml) rhtml.remove ();
             anav.hidden = false;
+            hideSearchLoading();
         }
         function queryResults(text, k) {
             var req = new XMLHttpRequest();
@@ -655,6 +672,7 @@ else
             req.send();
         }
         function doSearch() {
+            showSearchLoading();
             var text = (asearch.value+"").trim();
             if (text.length == 0) {
                 hideResults();
@@ -673,6 +691,9 @@ else
         }
         asearch.addEventListener("input", function (e) {
             doSearch();
+        });
+        asearchform.addEventListener("submit", function(e) {
+            e?.preventDefault();
         });
     }
 </script>
